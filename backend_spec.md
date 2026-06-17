@@ -196,6 +196,52 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-```
 During pdf load or ingestion calls, you can run a background task that calls `manager.broadcast` to send real-time percentage reports.
+
+---
+
+## 4. Grounded Answer Generation (RAG QA)
+
+**Status**: ✅ Implemented — `POST /rag/answer` via `AnswerGenerator.generate()`
+(`app/api/routes/rag.py`, `app/generation/generator.py`).
+
+Retrieve relevant text chunks from the vector database and generate a grounded, context-aware compliance answer using the local LLM.
+
+* **Endpoint**: `POST /rag/answer`
+* **Request Type**: `application/json`
+* **Request Schema**: `AnswerRequest`
+* **Response Type**: `application/json`
+* **Response Schema**: `AnswerResponse`
+
+### `AnswerRequest` JSON Schema:
+```json
+{
+  "query": "What are the suspicious transaction thresholds?",
+  "k": 5,
+  "doc_type": "policy" // Optional: "policy" | "action" | null
+}
+```
+
+### `AnswerResponse` JSON Schema:
+```json
+{
+  "answer": "According to the AML policy section 4.2, any transaction exceeding $10,000 USD must be reported [1]. Transactions that appear split to avoid the threshold are also flagged [2].",
+  "citations": [
+    {
+      "id": "1",
+      "source": "anti_money_laundering_act.pdf",
+      "page": 12,
+      "score": 0.895
+    },
+    {
+      "id": "2",
+      "source": "suspicious_activity_guidelines.pdf",
+      "page": 3,
+      "score": 0.841
+    }
+  ],
+  "used_context": true
+}
+```
+
 

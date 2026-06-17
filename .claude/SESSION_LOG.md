@@ -12,6 +12,34 @@ Format:
 
 ---
 
+## 2026-06-17 — Augmented generation via Ollama (F9, task #4)
+**Done:** New modular `backend/app/generation/`: config.py (GenerationConfig, default model
+gemma4:e2b, env OLLAMA_MODEL/OLLAMA_BASE_URL), prompt.py (pure build_prompt — answer only
+from context, cite [id], admit gaps), generator.py (AnswerGenerator depends on search_fn +
+complete_fn str->str → decoupled from store+LLM; Answer{answer,citations,used_context};
+build_answer_generator wires ChatOllama). Endpoint `POST /rag/answer` (async, asyncio.to_thread
+so loop/WS stay free; 503 if Ollama down). Schemas AnswerRequest/CitationOut/AnswerResponse.
+deps.get_generator (lru_cache). Added langchain-ollama. Tests: test_generation.py (4, fake LLM)
++ API test_answer (FakeGenerator override). Suite 31 pass. REAL e2e with gemma4:e2b: grounded
+cited answer ('...exceeding 10,000 USD... [policy-ctr]'), used_context=True, ~43s CPU latency.
+docs/generation.md, backend README, FEATURES F9 ✅. Task #4 done → #3 (RAG Triad) unblocked.
+**State:** Full RAG loop done (retrieve→augment→generate). NOTE: user emptied backend/data/
+(no aml_sample.json/PDFs) — eval run.py default corpus path now missing; ingest via UI/API or
+pass --corpus. Ollama must be running for /rag/answer.
+**Next:** F10/#3 RAG Triad eval (groundedness/answer-relevance/context-relevance, LLM judge).
+Optional: stream tokens; frontend Ask/Chat view; live generation monitoring.
+
+## 2026-06-17 — Live search monitoring → MLflow (F14)
+**Done:** `app/evaluation/monitoring.py`: pure `search_metrics()` + best-effort `log_search()`
+(try/except, never breaks search) → experiment `rag-search-monitoring` in same backend/mlflow.db.
+Wired into GET /rag/search via FastAPI BackgroundTasks (no added response latency). Metrics:
+latency_ms, n_results, top_score, mean_score, k; tags query+doc_type. Tests: test_monitoring.py
+(2, pure) + stubbed log_search in API fixture. Suite 26 pass. Real e2e: endpoint search logged
+a run (latency 23ms, n_results 3, top_score 0.71). Two MLflow experiments now: rag-retrieval
+(offline) + rag-search-monitoring (live). Task #6 done.
+**State:** Live monitoring complete. `mlflow ui --backend-store-uri sqlite:///mlflow.db`.
+**Next:** F9/#4 LLM generation, F10/#3 RAG Triad. F12 frontend npm.
+
 ## 2026-06-17 — Fix WS event-loop blocking
 **Done:** WS frames weren't streaming (frontend fell back to HTTP) because sync
 `rag.ingest`/`load_pdfs` blocked the async event loop. Fixed: offload both to

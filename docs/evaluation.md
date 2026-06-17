@@ -39,6 +39,22 @@ Each run logs params (`k`, `n_queries`, `embedding_model`) and the metrics above
 SQLite MLflow store (`backend/mlflow.db`), so runs are comparable over time. Evaluation
 ingests the corpus into a throwaway store — it never touches the live database.
 
+## Live search monitoring
+
+Separate from offline eval: every real `/rag/search` call is logged to MLflow in the
+background (FastAPI `BackgroundTasks`, so it adds no response latency and never breaks a
+search). Experiment **rag-search-monitoring** in the same `backend/mlflow.db`.
+
+Per search it logs metrics `latency_ms`, `n_results`, `top_score`, `mean_score`, `k` and
+tags `query`, `doc_type`. View alongside the offline runs:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db    # from backend/
+```
+
+Two experiments appear: `rag-retrieval` (offline accuracy) and `rag-search-monitoring`
+(live usage/latency). Logging is best-effort (`app/evaluation/monitoring.py`).
+
 ## Design
 
 - `metrics.py` — pure IR metric functions over ranked id lists (model/store-independent).
