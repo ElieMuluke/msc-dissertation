@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '===== PERSISTENT LEARNINGS (standing rules) =====\\n'; cat .claude/LEARNINGS.md 2>/dev/null; printf '\\n===== SESSION LOG (where you left off) =====\\n'; cat .claude/SESSION_LOG.md 2>/dev/null"
+          }
+        ]
+      }
+    ]
+  }
+}
