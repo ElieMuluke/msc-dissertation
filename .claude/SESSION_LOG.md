@@ -12,6 +12,22 @@ Format:
 
 ---
 
+## 2026-06-17 — RAG Triad eval (F10, task #3)
+**Done:** `app/evaluation/triad.py`: reference-free LLM-judge triad — pure prompt builders
+(context_relevance/groundedness/answer_relevance), `parse_score` (regex + clamp [0,1]),
+`make_llm_judge(complete_fn)`, `evaluate_triad(records, judge_fn)` (judge injected → pure,
+fake-testable). `triad_run.py` CLI: ingest corpus → generate answers → judge → log MLflow
+experiment `rag-triad`. Datasets triad_corpus.json + triad_questions.jsonl. Refactored
+generation: added `build_completion` (DRY, shared by generator + judge), `Answer.contexts`
+field (retrieved texts, needed for judging). Tests test_triad.py (6, fake judge). Suite 41
+pass. REAL run (Ollama gemma judge): context_relevance 0.575, groundedness 1.0,
+answer_relevance 1.0 → logged. docs/evaluation.md triad section, FEATURES F10 ✅. Task #3 done.
+**State:** Eval complete on both axes — retrieval (rag-retrieval) + generation (rag-triad) +
+live search monitoring (rag-search-monitoring), all in MLflow. Triad run needs Ollama (slow:
+generate+judge LLM calls). User also marked backend_spec §4 (generation) ✅.
+**Next:** Optional — token streaming, frontend Ask/Chat view, live generation monitoring,
+restore backend/data corpus for retrieval eval default path.
+
 ## 2026-06-17 — Augmented generation via Ollama (F9, task #4)
 **Done:** New modular `backend/app/generation/`: config.py (GenerationConfig, default model
 gemma4:e2b, env OLLAMA_MODEL/OLLAMA_BASE_URL), prompt.py (pure build_prompt — answer only

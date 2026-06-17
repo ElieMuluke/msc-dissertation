@@ -16,7 +16,7 @@ Status: 🔵 requested · 🟡 in progress · ✅ done · ⛔ blocked
 | F7 | List ingested documents | ✅ | `GET /rag/documents` (spec §1) |
 | F8 | Delete single document by filename | ✅ | `DELETE /rag/documents/{filename}` (spec §2) |
 | F9 | LLM answer-generation over retrieved docs | ✅ | Ollama gemma4:e2b; `POST /rag/answer` |
-| F10 | RAG Triad generation evaluation | 🔵 | task #3; now unblocked (F9 done) |
+| F10 | RAG Triad generation evaluation | ✅ | LLM-judge; `triad_run` → MLflow rag-triad |
 | F11 | Frontend Tailwind restyle | ✅ | user-implemented |
 | F12 | Run frontend (`npm install`) end-to-end | 🔵 | not run yet |
 | F13 | Realtime ingestion progress (WebSocket `/ws`) | ✅ | spec §3; per-file frames |
