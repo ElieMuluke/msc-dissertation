@@ -90,3 +90,83 @@ export async function deleteIngestedFile(filename: string): Promise<void> {
   );
   if (!res.ok) throw new Error(await res.text());
 }
+
+export interface Citation {
+  id: string;
+  source: string;
+  page?: number;
+  score: number;
+}
+
+export interface AnswerResponse {
+  answer: string;
+  citations: Citation[];
+  used_context: boolean;
+}
+
+export async function askQuestion(
+  query: string,
+  docType?: DocType,
+  k = 5
+): Promise<AnswerResponse> {
+  try {
+    const res = await fetch(`${API_URL}/rag/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        k,
+        doc_type: docType || null,
+      }),
+    });
+    
+    if (!res.ok) {
+      throw new Error(`RAG answer failed with status ${res.status}: ${await res.text()}`);
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.warn("Backend RAG generation (/rag/answer) failed or is unavailable. Using client-side search fallback.", error);
+    
+    try {
+      const searchHits = await search(query, k, docType);
+      
+      if (searchHits.length === 0) {
+        return {
+          answer: "I searched the compliance database but found no relevant document sections matching your query. Please ensure your documents are ingested properly and try rephrasing your question.",
+          citations: [],
+          used_context: false,
+        };
+      }
+      
+      const citations: Citation[] = searchHits.map((hit) => ({
+        id: hit.id,
+        source: String(hit.metadata.source || hit.metadata.filename || "Unknown Source"),
+        page: hit.metadata.page ? Number(hit.metadata.page) : undefined,
+        score: hit.score,
+      }));
+
+      // Generate a structured mock response by presenting findings with sources
+      let simulatedAnswer = `Based on the compliance documents retrieved from the vector database, here are the relevant findings:\n\n`;
+      
+      searchHits.forEach((hit) => {
+        // Clean up paragraph text to be concise
+        const cleanText = hit.text.replace(/\s+/g, " ").trim();
+        const shortText = cleanText.length > 200 ? `${cleanText.substring(0, 197)}...` : cleanText;
+        simulatedAnswer += `* **[${hit.id}]** From *${hit.metadata.source || "Document"}* (Page ${hit.metadata.page || "?"}): "${shortText}"\n\n`;
+      });
+      
+      simulatedAnswer += `\n*Note: The local LLM backend is currently unavailable or unconfigured. This response is a structured synthesis of the top retrieved vector search passages.*`;
+
+      return {
+        answer: simulatedAnswer,
+        citations,
+        used_context: true,
+      };
+    } catch (searchErr) {
+      console.error("Vector search fallback also failed:", searchErr);
+      throw new Error("Both the RAG generation and search fallback are currently unreachable. Please check if the backend server is running.");
+    }
+  }
+}
+

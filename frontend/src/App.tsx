@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { UploadDocs } from "./components/UploadDocs";
 import { SearchDocs } from "./components/SearchDocs";
+import { ChatDocs } from "./components/ChatDocs";
 import { ManageDatabase } from "./components/ManageDatabase";
 import { FileManager, type IngestedFile } from "./components/FileManager";
 import { getIngestedFiles, deleteIngestedFile } from "./api";
@@ -19,6 +20,7 @@ export default function App() {
 
   const [filesList, setFilesList] = useState<IngestedFile[]>([]);
   const [isBackendDbSupported, setIsBackendDbSupported] = useState(true);
+  const [activeTab, setActiveTab] = useState<"search" | "chat">("search");
 
   // Sync dark mode
   useEffect(() => {
@@ -191,9 +193,35 @@ export default function App() {
             <ManageDatabase onClearSuccess={handleClearDatabase} />
           </div>
 
-          {/* Right panel: Search and Exploration */}
-          <div className="lg:col-span-7">
-            <SearchDocs />
+          {/* Right panel: Search and Chat Workspace */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Modern Tab Selector */}
+            <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 max-w-xs">
+              <button
+                type="button"
+                onClick={() => setActiveTab("search")}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 uppercase tracking-wider ${
+                  activeTab === "search"
+                    ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
+                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
+                }`}
+              >
+                Semantic Search
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 uppercase tracking-wider ${
+                  activeTab === "chat"
+                    ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
+                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
+                }`}
+              >
+                Compliance Chat
+              </button>
+            </div>
+
+            {activeTab === "search" ? <SearchDocs /> : <ChatDocs />}
           </div>
         </div>
       </main>

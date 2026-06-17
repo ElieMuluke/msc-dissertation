@@ -17,8 +17,8 @@ The RAG system is currently **retrieval-only**, so evaluation covers retrieval q
 | `ndcg@k` | Rank-weighted relevance (binary). |
 | `hit_rate@k` | Share of queries with ≥1 relevant doc in top-k. |
 
-Generation metrics (faithfulness, answer-relevancy) come later, once an LLM answer step
-exists — they plug into the same `evaluate` runner (e.g. via Ragas).
+Generation quality is covered by the **RAG Triad** (below), now that an LLM answer step
+exists.
 
 ## Dataset
 
@@ -38,6 +38,31 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db    # dashboard at http://local
 Each run logs params (`k`, `n_queries`, `embedding_model`) and the metrics above to a local
 SQLite MLflow store (`backend/mlflow.db`), so runs are comparable over time. Evaluation
 ingests the corpus into a throwaway store — it never touches the live database.
+
+## RAG Triad (generation quality)
+
+Reference-free, LLM-as-judge evaluation of generated answers. Each dimension is scored in
+`[0, 1]` by a local Ollama model (regulatory data never leaves the machine):
+
+| Metric | Question |
+| --- | --- |
+| `context_relevance` | Are the retrieved contexts relevant to the question? |
+| `groundedness` | Is the answer supported by the context (no hallucination)? |
+| `answer_relevance` | Does the answer address the question? |
+
+Dataset: `datasets/triad_corpus.json` (corpus) + `datasets/triad_questions.jsonl`
+(questions — no reference answers needed). The runner ingests the corpus into a throwaway
+store, generates an answer per question, then judges each dimension.
+
+```bash
+# from backend/ — needs Ollama running (generation + judge)
+python -m app.evaluation.triad_run --k 3
+```
+
+Logs to MLflow experiment **rag-triad** (params: k, n_questions, judge_model). Design:
+`triad.py` has pure prompt builders + `evaluate_triad(records, judge_fn)` (judge injected →
+unit-tested with a fake judge); `make_llm_judge(complete_fn)` parses a 0–1 score from the
+model's reply.
 
 ## Live search monitoring
 
