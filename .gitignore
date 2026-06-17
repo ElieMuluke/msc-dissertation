@@ -1,0 +1,13 @@
+.venv/
+chroma_db/
+__pycache__/
+*.pyc
+.pytest_cache/
+mlruns/
+mlflow.db
+mlartifacts/
+chroma_eval/
+node_modules/
+frontend/dist/
+.env
+backend/data/aml_financial_actions/Assessment-Follow-Up-ICRG-Procedures-2022.pdf.coredownload.inline.pdf
