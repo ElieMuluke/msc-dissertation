@@ -5,13 +5,24 @@ from __future__ import annotations
 import asyncio
 import shutil
 import tempfile
+import time
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile
 
-from app.api.schemas import DeleteResponse, IngestedDocument, IngestResponse, SearchHit
-from app.deps import get_rag
+from app.api.schemas import (
+    AnswerRequest,
+    AnswerResponse,
+    CitationOut,
+    DeleteResponse,
+    IngestedDocument,
+    IngestResponse,
+    SearchHit,
+)
+from app.deps import get_generator, get_rag
+from app.evaluation.monitoring import log_search
+from app.generation import AnswerGenerator
 from app.ingestion.rag import DocumentType, RagSystem, load_pdfs
 from app.realtime import manager, progress_frame
 
@@ -89,11 +100,46 @@ def delete_document(filename: str, rag: RagSystem = Depends(get_rag)) -> DeleteR
 
 @router.get("/search", response_model=list[SearchHit])
 def search(
+    background_tasks: BackgroundTasks,
     q: str = Query(..., min_length=1, description="Search query"),
     k: int = Query(5, ge=1, le=50),
     doc_type: Optional[DocumentType] = None,
     rag: RagSystem = Depends(get_rag),
 ) -> list[SearchHit]:
     """Semantic search over the corpus, optionally filtered by document type."""
+    start = time.perf_counter()
     results = rag.search(q, k=k, doc_type=doc_type)
+    latency_ms = (time.perf_counter() - start) * 1000.0
+    # Monitor the search in the background so logging never adds response latency.
+    background_tasks.add_task(
+        log_search, q, k, doc_type.value if doc_type else None, results, latency_ms
+    )
     return [SearchHit(**vars(r)) for r in results]
+
+
+@router.post("/answer", response_model=AnswerResponse)
+async def answer(
+    request: AnswerRequest,
+    generator: AnswerGenerator = Depends(get_generator),
+) -> AnswerResponse:
+    """Retrieve context and generate a grounded answer with citations (local LLM)."""
+    try:
+        # Offload the blocking LLM call so the event loop stays free.
+        result = await asyncio.to_thread(
+            generator.generate, request.query, request.k, request.doc_type
+        )
+    except Exception as exc:  # noqa: BLE001 - surface LLM/connection issues clearly
+        raise HTTPException(status_code=503, detail=f"Generation failed (is Ollama running?): {exc}")
+    return AnswerResponse(
+        answer=result.answer,
+        citations=[
+            CitationOut(
+                id=c.id,
+                source=c.source,
+                page=c.page if isinstance(c.page, int) else None,
+                score=c.score,
+            )
+            for c in result.citations
+        ],
+        used_context=result.used_context,
+    )

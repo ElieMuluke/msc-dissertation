@@ -6,9 +6,20 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.routes.rag as rag_route
-from app.deps import get_rag
+from app.deps import get_generator, get_rag
+from app.generation.generator import Answer, Citation
 from app.ingestion.rag.models import Document, DocumentType, SearchResult, SourceInfo
 from app.main import app
+
+
+class FakeGenerator:
+    def generate(self, query, k=5, doc_type=None):
+        return Answer(
+            answer=f"Answer to: {query} [a1]",
+            citations=[Citation("a1", "a.pdf", 2, 0.9)],
+            used_context=True,
+            contexts=["ctx"],
+        )
 
 
 class FakeRag:
@@ -38,8 +49,11 @@ class FakeRag:
 def client(monkeypatch):
     fake = FakeRag()
     app.dependency_overrides[get_rag] = lambda: fake
+    app.dependency_overrides[get_generator] = lambda: FakeGenerator()
     # Each fake PDF yields one page so ingested count == number of files.
     monkeypatch.setattr(rag_route, "load_pdfs", lambda path, dt: [Document(path, "t", dt)])
+    # Don't write MLflow during tests.
+    monkeypatch.setattr(rag_route, "log_search", lambda *a, **k: None)
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -89,6 +103,15 @@ def test_delete_document(client):
 def test_delete_document_not_found(client):
     res = client.delete("/rag/documents/missing.pdf")
     assert res.status_code == 404
+
+
+def test_answer(client):
+    res = client.post("/rag/answer", json={"query": "What is the CTR threshold?", "k": 3})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["used_context"] is True
+    assert body["citations"][0] == {"id": "a1", "source": "a.pdf", "page": 2, "score": 0.9}
+    assert "[a1]" in body["answer"]
 
 
 def test_ws_ingestion_progress(client):

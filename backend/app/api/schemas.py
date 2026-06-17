@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.ingestion.rag import DocumentType
@@ -30,3 +32,22 @@ class DeleteResponse(BaseModel):
     status: str
     deleted_filename: str
     chunks_removed: int
+
+
+class AnswerRequest(BaseModel):
+    query: str
+    k: int = 5
+    doc_type: Optional[DocumentType] = None
+
+
+class CitationOut(BaseModel):
+    id: str
+    source: str
+    page: Optional[int] = None
+    score: float
+
+
+class AnswerResponse(BaseModel):
+    answer: str
+    citations: list[CitationOut]
+    used_context: bool

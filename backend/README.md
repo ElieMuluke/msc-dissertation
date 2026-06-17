@@ -17,6 +17,7 @@ uvicorn app.main:app --reload        # http://localhost:8000  (docs at /docs)
 | GET | `/health` | Liveness check. |
 | POST | `/rag/documents/pdf` | Upload one or more PDFs (`files`, `doc_type=policy\|action`); ingests one doc per page. |
 | GET | `/rag/search?q=&k=&doc_type=` | Semantic search; returns scored hits. |
+| POST | `/rag/answer` | Grounded answer + citations from a local LLM (`{query, k, doc_type}`). Needs Ollama. |
 | GET | `/rag/documents` | List ingested source files (filename, doc_type, pages, ingested_at). |
 | DELETE | `/rag/documents` | Clear the entire corpus (resets the collection). |
 | DELETE | `/rag/documents/{filename}` | Delete all documents from one source file. |
@@ -32,6 +33,7 @@ app/
     routes/rag.py    # endpoints
     schemas.py       # Pydantic request/response models
   ingestion/rag/     # RAG feature (see ../docs/rag.md)
+  generation/        # augmented generation via Ollama (see ../docs/generation.md)
   evaluation/        # retrieval eval + MLflow (see ../docs/evaluation.md)
 tests/               # python -m pytest
 ```

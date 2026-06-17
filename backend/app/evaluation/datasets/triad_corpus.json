@@ -1,0 +1,20 @@
+[
+  {
+    "id": "policy-ctr",
+    "text": "Financial institutions must file a Currency Transaction Report for any cash transaction exceeding 10,000 USD in a single business day.",
+    "doc_type": "policy",
+    "metadata": {"source": "bsa.pdf", "page": 1}
+  },
+  {
+    "id": "policy-kyc",
+    "text": "Customer Due Diligence requires verifying customer identity and assessing money-laundering risk before onboarding.",
+    "doc_type": "policy",
+    "metadata": {"source": "mlr.pdf", "page": 4}
+  },
+  {
+    "id": "policy-pep",
+    "text": "Enhanced due diligence applies to politically exposed persons and customers from high-risk jurisdictions.",
+    "doc_type": "policy",
+    "metadata": {"source": "amld5.pdf", "page": 2}
+  }
+]
