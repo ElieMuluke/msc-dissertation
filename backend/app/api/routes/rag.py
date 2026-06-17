@@ -1,0 +1,99 @@
+"""RAG endpoints: ingest documents and search the corpus."""
+
+from __future__ import annotations
+
+import asyncio
+import shutil
+import tempfile
+from pathlib import Path
+from typing import Optional
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+
+from app.api.schemas import DeleteResponse, IngestedDocument, IngestResponse, SearchHit
+from app.deps import get_rag
+from app.ingestion.rag import DocumentType, RagSystem, load_pdfs
+from app.realtime import manager, progress_frame
+
+router = APIRouter(prefix="/rag", tags=["rag"])
+
+
+@router.post("/documents/pdf", response_model=IngestResponse)
+async def ingest_pdfs(
+    files: list[UploadFile] = File(...),
+    doc_type: DocumentType = Form(DocumentType.POLICY),
+    rag: RagSystem = Depends(get_rag),
+) -> IngestResponse:
+    """Ingest one or more uploaded PDFs (one document per page).
+
+    Broadcasts per-file progress frames over the ``/ws`` WebSocket gateway.
+    """
+    ingested = 0
+    # Persist under original filenames so ids/source metadata stay meaningful.
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        for file in files:
+            name = Path(file.filename or "").name
+            try:
+                if not (file.filename or "").lower().endswith(".pdf"):
+                    raise HTTPException(status_code=400, detail=f"Expected a .pdf file: {file.filename}")
+                await manager.broadcast(progress_frame(name, 10, "uploading"))
+                dest = Path(tmp_dir) / name
+                with dest.open("wb") as out:
+                    shutil.copyfileobj(file.file, out)
+                await manager.broadcast(progress_frame(name, 40, "parsing"))
+                # Offload blocking PDF parsing + embedding to a thread so the event loop
+                # stays free and progress frames stream in realtime.
+                documents = await asyncio.to_thread(load_pdfs, str(dest), doc_type)
+                await manager.broadcast(progress_frame(name, 70, "vectorizing"))
+                ingested += await asyncio.to_thread(rag.ingest, documents)
+                await manager.broadcast(progress_frame(name, 100, "completed"))
+            except HTTPException as exc:
+                await manager.broadcast(progress_frame(name, 0, "error", str(exc.detail)))
+                raise
+            except Exception as exc:  # noqa: BLE001 - report then surface
+                await manager.broadcast(progress_frame(name, 0, "error", str(exc)))
+                raise
+
+    return IngestResponse(ingested=ingested)
+
+
+@router.get("/documents", response_model=list[IngestedDocument])
+def list_documents(rag: RagSystem = Depends(get_rag)) -> list[IngestedDocument]:
+    """List ingested source files (aggregated by source)."""
+    return [
+        IngestedDocument(
+            filename=source.filename,
+            doc_type=source.doc_type,
+            pages=source.pages,
+            ingested_at=source.ingested_at,
+        )
+        for source in rag.list_sources()
+    ]
+
+
+@router.delete("/documents")
+def clear_documents(rag: RagSystem = Depends(get_rag)) -> dict[str, str]:
+    """Clear the entire corpus."""
+    rag.clear()
+    return {"status": "cleared"}
+
+
+@router.delete("/documents/{filename}", response_model=DeleteResponse)
+def delete_document(filename: str, rag: RagSystem = Depends(get_rag)) -> DeleteResponse:
+    """Delete all documents from one source file."""
+    removed = rag.delete_by_source(filename)
+    if removed == 0:
+        raise HTTPException(status_code=404, detail=f"Document '{filename}' not found")
+    return DeleteResponse(status="success", deleted_filename=filename, chunks_removed=removed)
+
+
+@router.get("/search", response_model=list[SearchHit])
+def search(
+    q: str = Query(..., min_length=1, description="Search query"),
+    k: int = Query(5, ge=1, le=50),
+    doc_type: Optional[DocumentType] = None,
+    rag: RagSystem = Depends(get_rag),
+) -> list[SearchHit]:
+    """Semantic search over the corpus, optionally filtered by document type."""
+    results = rag.search(q, k=k, doc_type=doc_type)
+    return [SearchHit(**vars(r)) for r in results]

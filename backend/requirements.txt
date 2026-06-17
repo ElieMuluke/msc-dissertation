@@ -1,0 +1,13 @@
+# Direct dependencies only (langchain-core, chromadb, etc. come transitively).
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+langchain-chroma
+langchain-huggingface
+langchain-text-splitters
+langchain-community
+sentence-transformers
+pypdf
+mlflow
+pytest

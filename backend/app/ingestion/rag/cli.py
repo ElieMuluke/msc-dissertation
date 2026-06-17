@@ -1,0 +1,90 @@
+"""Command-line interface for the AML RAG system.
+
+Examples:
+    python -m src.ingestion.rag.cli ingest data/aml_sample.json
+    python -m src.ingestion.rag.cli search "cash transaction reporting threshold" -k 3
+    python -m src.ingestion.rag.cli search "wire to shell company" --type action
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from typing import Optional, Sequence
+
+from . import build_rag
+from .config import RagConfig
+from .loaders import load_pdfs
+from .models import Document, DocumentType
+
+
+def _load_documents(path: str) -> list[Document]:
+    """Load documents from a JSON array of {id, text, doc_type, metadata?} objects."""
+    with open(path, encoding="utf-8") as handle:
+        rows = json.load(handle)
+    return [
+        Document(
+            id=row["id"],
+            text=row["text"],
+            doc_type=DocumentType(row["doc_type"]),
+            metadata=row.get("metadata", {}),
+        )
+        for row in rows
+    ]
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="aml-rag", description="Ingest and search AML policies and financial actions."
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    ingest = sub.add_parser("ingest", help="Ingest documents from a JSON file")
+    ingest.add_argument("path", help="Path to a JSON array of documents")
+
+    pdf = sub.add_parser("ingest-pdf", help="Ingest a PDF file or directory of PDFs")
+    pdf.add_argument("path", help="Path to a .pdf file or a directory of PDFs")
+    pdf.add_argument(
+        "--type",
+        dest="doc_type",
+        choices=[t.value for t in DocumentType],
+        default=DocumentType.POLICY.value,
+        help="Document type for the loaded pages (default policy)",
+    )
+
+    search = sub.add_parser("search", help="Search the corpus")
+    search.add_argument("query", help="Natural-language query")
+    search.add_argument("-k", type=int, default=5, help="Number of results (default 5)")
+    search.add_argument(
+        "--type",
+        dest="doc_type",
+        choices=[t.value for t in DocumentType],
+        default=None,
+        help="Restrict to policy or action",
+    )
+    return parser
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    args = _build_parser().parse_args(argv)
+    rag = build_rag(RagConfig())
+
+    if args.command == "ingest":
+        count = rag.ingest(_load_documents(args.path))
+        print(f"Ingested {count} documents.")
+    elif args.command == "ingest-pdf":
+        docs = load_pdfs(args.path, DocumentType(args.doc_type))
+        print(f"Ingested {rag.ingest(docs)} pages from {args.path}.")
+    elif args.command == "search":
+        doc_type = DocumentType(args.doc_type) if args.doc_type else None
+        results = rag.search(args.query, k=args.k, doc_type=doc_type)
+        if not results:
+            print("No matches.")
+        for result in results:
+            print(f"[{result.score:.3f}] ({result.doc_type.value}) {result.id}: {result.text[:120]}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
