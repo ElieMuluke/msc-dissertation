@@ -1,0 +1,23 @@
+description = "Strip frontend experiment/scratch code so only the final implementation remains."
+
+prompt = """
+You are running the `cleanup-experiment` routine for the FRONTEND (Gemini) side.
+After experimentation, strip everything that isn't the final, documented implementation.
+
+Target: {{args}}
+
+Steps:
+1. Scan the feature's files for residue:
+   - `console.log` / debug logging used for poking around.
+   - Commented-out JSX / dead branches / unused props and state.
+   - Scratch components, `tmp_*`, throwaway demos.
+   - Unused imports/vars, hardcoded sample data in production paths.
+2. Remove them. If a piece is genuinely useful:
+   - A reusable bit → extract into a proper component/hook.
+   - A demo → move to the `docs/frontend/<feature>.md` usage section.
+3. Re-verify the app still builds (`npm run build`) after removal.
+4. Confirm what was removed in a short list.
+
+Guard: do NOT delete files you didn't create or that look like real source without
+flagging first. Stay inside `frontend/` (GEMINI.md rule 1).
+"""

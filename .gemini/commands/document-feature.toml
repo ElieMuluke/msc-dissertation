@@ -1,0 +1,28 @@
+description = "Write docs for a completed frontend feature before declaring it done."
+
+prompt = """
+You are running the `document-feature` routine for the FRONTEND (Gemini) side.
+A feature is not done until documented. Run this as the last implementation step.
+
+Feature: {{args}}
+
+Steps:
+1. In-code docs: add/refresh TSDoc/JSDoc on every exported component, hook, type, and
+   `src/api.ts` function (purpose, props/args, returns, notable behavior).
+2. Feature doc: create/update `docs/frontend/<feature>.md`:
+   - What it does (one paragraph).
+   - Usage: minimal example (component import + props, or api.ts call).
+   - Public surface: exported components/functions involved.
+   - Design notes: SOLID/DRY choices, where network calls live (api.ts), state model.
+   - Limitations / TODO.
+3. README: if user-facing, add a bullet to `README.md`'s feature list.
+4. Keep docs DRY — link, don't restate. Match existing doc style.
+5. Verify the usage example matches the real component/api signatures.
+
+Done check:
+- [ ] Exported surface has TSDoc.
+- [ ] `docs/frontend/<feature>.md` exists and is accurate.
+- [ ] README updated if user-facing.
+
+Stay inside `frontend/` (GEMINI.md rule 1).
+"""

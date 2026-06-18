@@ -1,0 +1,25 @@
+description = "Persist a user remark/preference about HOW to work into .gemini/LEARNINGS.md so it survives across sessions."
+
+prompt = """
+You are running the `remark` routine for the FRONTEND (Gemini) side.
+
+Goal: never let a "how to work" preference live only in chat. Record it so it is read
+every future session (GEMINI.md rule 0).
+
+Remark to capture: {{args}}
+
+Steps:
+1. Identify the remark's essence in one sentence (the rule, not a one-off task).
+2. Open `.gemini/LEARNINGS.md`. Check for an existing entry on the same topic.
+   - If found: update it in place (refine the rule). Do not duplicate.
+   - Else: prepend a new entry directly under the `---` separator (newest first):
+     ## <today YYYY-MM-DD> — <short title>
+     **Remark:** <what the user said / the preference>
+     **Apply:** <how to act on it going forward>
+3. If the remark changes a workflow rule, also reflect it in `GEMINI.md`.
+4. Apply the remark to the current work immediately.
+5. Confirm in one line: `Captured: <title>`.
+
+Scope guard: only capture standing preferences. A one-off task is NOT a remark — do the
+task, don't log it. Stay inside the frontend boundary (GEMINI.md rule 1).
+"""
