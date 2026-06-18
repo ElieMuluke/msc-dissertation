@@ -289,7 +289,11 @@ function SearchHitCard({ hit, query }: { hit: SearchHit; query: string }) {
   );
 }
 
-export function SearchDocs() {
+interface SearchDocsProps {
+  dbStatus?: "connected" | "disconnected";
+}
+
+export function SearchDocs({ dbStatus }: SearchDocsProps) {
   const [query, setQuery] = useState("");
   const [docType, setDocType] = useState<DocType | "">("");
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -323,6 +327,15 @@ export function SearchDocs() {
           Query Workspace
         </h2>
 
+        {dbStatus === "disconnected" && (
+          <div className="mb-4 p-4 rounded-xl text-xs bg-rose-500/10 text-rose-600 dark:text-rose-455 border border-rose-500/20 flex items-center space-x-2.5">
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span><strong>Vector Database Offline:</strong> Semantic search queries are disabled until connection is restored.</span>
+          </div>
+        )}
+
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="relative">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
@@ -335,7 +348,8 @@ export function SearchDocs() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search compliance documents, e.g. transaction threshold"
-              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none input-minimalist"
+              disabled={dbStatus === "disconnected"}
+              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm placeholder-neutral-400 dark:placeholder-neutral-600 focus:outline-none input-minimalist disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -365,14 +379,14 @@ export function SearchDocs() {
 
             <button
               type="submit"
-              disabled={!query.trim()}
+              disabled={!query.trim() || dbStatus === "disconnected"}
               className={`w-full sm:w-auto px-6 py-2 rounded-xl text-sm font-semibold tracking-tight text-white transition-all duration-300 ${
-                !query.trim()
+                !query.trim() || dbStatus === "disconnected"
                   ? "bg-neutral-300 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98]"
               }`}
             >
-              Execute Search
+              {dbStatus === "disconnected" ? "Database Offline" : "Execute Search"}
             </button>
           </div>
         </form>

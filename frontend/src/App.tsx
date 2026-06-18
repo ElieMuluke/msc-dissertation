@@ -4,7 +4,7 @@ import { SearchDocs } from "./components/SearchDocs";
 import { ChatDocs } from "./components/ChatDocs";
 import { ManageDatabase } from "./components/ManageDatabase";
 import { FileManager, type IngestedFile } from "./components/FileManager";
-import { getIngestedFiles, deleteIngestedFile } from "./api";
+import { getIngestedFiles, deleteIngestedFile, checkSystemHealth } from "./api";
 
 export default function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -21,6 +21,21 @@ export default function App() {
   const [filesList, setFilesList] = useState<IngestedFile[]>([]);
   const [isBackendDbSupported, setIsBackendDbSupported] = useState(true);
   const [activeTab, setActiveTab] = useState<"search" | "chat">("search");
+
+  const [dbStatus, setDbStatus] = useState<"connected" | "disconnected">("connected");
+  const [llmStatus, setLlmStatus] = useState<"connected" | "disconnected">("connected");
+
+  // Poll system connection health
+  useEffect(() => {
+    async function updateHealth() {
+      const status = await checkSystemHealth();
+      setDbStatus(status.database);
+      setLlmStatus(status.llm);
+    }
+    updateHealth();
+    const interval = setInterval(updateHealth, 8000); // Poll every 8s
+    return () => clearInterval(interval);
+  }, []);
 
   // Sync dark mode
   useEffect(() => {
@@ -113,7 +128,7 @@ export default function App() {
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#000000] dark:text-[#f5f5f7] transition-colors duration-500 flex flex-col font-sans">
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] bg-[rgba(245,245,247,0.7)] dark:bg-[rgba(0,0,0,0.7)] backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-[1650px] mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <svg
               className="w-6 h-6 text-blue-600 dark:text-blue-500"
@@ -134,14 +149,43 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                Vector DB Connected
-              </span>
+            {/* Dynamic System Status Indicators */}
+            <div className="flex items-center space-x-3.5">
+              {/* Database Status Indicator */}
+              <div className="flex items-center space-x-1.5" title={dbStatus === "connected" ? "Vector Database online" : "Vector Database offline"}>
+                <span className="relative flex h-2 w-2">
+                  {dbStatus === "connected" ? (
+                    <>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </>
+                  ) : (
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  )}
+                </span>
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-semibold tracking-tight uppercase">
+                  {dbStatus === "connected" ? "Vector DB" : "DB Offline"}
+                </span>
+              </div>
+
+              <span className="text-neutral-300 dark:text-neutral-800 text-[10px] select-none">|</span>
+
+              {/* LLM Status Indicator */}
+              <div className="flex items-center space-x-1.5" title={llmStatus === "connected" ? "Local LLM (Ollama) generation responsive" : "Local LLM (Ollama) disconnected/unconfigured"}>
+                <span className="relative flex h-2 w-2">
+                  {llmStatus === "connected" ? (
+                    <>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </>
+                  ) : (
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  )}
+                </span>
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-semibold tracking-tight uppercase">
+                  {llmStatus === "connected" ? "LLM Ready" : "LLM Offline"}
+                </span>
+              </div>
             </div>
 
             <button
@@ -184,17 +228,17 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10">
+      <main className="flex-1 max-w-[1650px] w-full mx-auto px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left panel: Administration (Ingestion, File Manager & Clear) */}
-          <div className="lg:col-span-5 space-y-8">
-            <UploadDocs onUploadSuccess={handleUploadSuccess} />
+          <div className="lg:col-span-3 space-y-8">
+            <UploadDocs onUploadSuccess={handleUploadSuccess} dbStatus={dbStatus} />
             <FileManager files={filesList} onDelete={handleDeleteFile} />
             <ManageDatabase onClearSuccess={handleClearDatabase} />
           </div>
 
           {/* Right panel: Search and Chat Workspace */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-9 space-y-6">
             {/* Modern Tab Selector */}
             <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 max-w-xs">
               <button
@@ -221,7 +265,11 @@ export default function App() {
               </button>
             </div>
 
-            {activeTab === "search" ? <SearchDocs /> : <ChatDocs />}
+            {activeTab === "search" ? (
+              <SearchDocs dbStatus={dbStatus} />
+            ) : (
+              <ChatDocs dbStatus={dbStatus} llmStatus={llmStatus} />
+            )}
           </div>
         </div>
       </main>

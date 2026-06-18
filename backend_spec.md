@@ -244,4 +244,78 @@ Retrieve relevant text chunks from the vector database and generate a grounded, 
 }
 ```
 
+---
+
+## 5. System Health Check (`GET /health`)
+
+**Status**: ✅ Implemented — `GET /health` probes both backends and returns
+`{status, database, llm}`. DB check via `RagSystem.ping()` (lightweight Chroma `get`);
+LLM check via `build_llm_ping()` (HTTP GET `{base_url}/api/tags` on Ollama, 2s timeout).
+`status` is `"ok"` when both connected, else `"degraded"`. Probes injected as
+dependencies (`get_rag`, `get_llm_ping`) — no Chroma collection or ChatOllama leaked.
+
+To drive the dynamic status badges in the header, the `/health` endpoint should return status reports for both the database and the local LLM generation client (Ollama).
+
+* **Endpoint**: `GET /health`
+* **Response Type**: `application/json`
+* **Response Schema**:
+```json
+{
+  "status": "ok",
+  "database": "connected", // "connected" | "disconnected"
+  "llm": "connected"      // "connected" | "disconnected"
+}
+```
+
+---
+
+## 6. Document Ingestion Text-Cleanup (Feature Request)
+
+**Status**: ✅ Implemented — pure `clean_pdf_text` in
+`app/ingestion/rag/cleaning.py` (own module, SRP), applied to each page in `load_pdfs`
+before building `Document` models. **Deviation from sketch:** the recommended regex
+`[...\x7f-\xff]` was narrowed to `\x7f-\x9f` — the original range deletes the `©` it just
+inserted and strips every accented/Latin-1 char (é, ü, £) that real AML docs contain.
+Single-break→space uses lookarounds so paragraph gaps (`\n\n`) survive. Unit-tested in
+`tests/test_cleaning.py`.
+
+To remove extraction noise, headers/footers, and layout artifacts from uploaded PDFs before creating vector embeddings, the text content extracted from pages must be normalized and cleaned at the load phase.
+
+### Ingestion Cleaning Requirements:
+1. **Symbol Normalization**: Replace proprietary or mis-extracted PDF ligatures/glyphs with standard characters (e.g. replace `` with `©`).
+2. **Control Character Removal**: Strip non-printable and control characters (e.g., `\x00-\x08`, `\x0b`, `\x0c`, `\x0e-\x1f`, `\x7f-\xff`) that clutter the embeddings vector space.
+3. **Hyphenated Line-Join**: Join words that were split across line breaks with a trailing hyphen (e.g., `trans- \n action` -> `transaction`).
+4. **Paragraph Spacing Normalization**: Replace single line breaks inside running paragraphs with standard spaces, while preserving actual paragraph gaps (double line breaks `\n\n`).
+5. **Whitespace Collapsing**: Collapse multiple consecutive horizontal spaces and tabs into a single space, and strip leading/trailing whitespace.
+
+### Recommended Implementation (loaders.py):
+The backend agent should implement a `clean_pdf_text` helper in `backend/app/ingestion/rag/loaders.py` and run it on page content:
+
+```python
+import re
+
+def clean_pdf_text(text: str) -> str:
+    if not text:
+        return ""
+    
+    # 1. Normalize ligatures & symbols
+    text = text.replace("", "©")
+    
+    # 2. Strip non-printable/control characters
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]", "", text)
+    
+    # 3. Join hyphenated words split by line breaks
+    text = re.sub(r"(\w+)-\s*\n\s*(\w+)", r"\1\2", text)
+    
+    # 4. Join single line breaks inside paragraphs
+    text = re.sub(r"([^\n])\n([^\n])", r"\1 \2", text)
+    
+    # 5. Collapse spaces
+    text = re.sub(r"[ \t]+", " ", text)
+    
+    return text.strip()
+```
+Apply this utility to `page.page_content` inside `load_pdfs` prior to initializing `Document` models.
+
+
 

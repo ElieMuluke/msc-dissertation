@@ -1,12 +1,20 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { uploadPdfs, type DocType } from "../api";
 import { useWebSocket } from "../hooks/useWebSocket";
 
 interface UploadDocsProps {
+  /** Callback fired after successfully uploading and initiating/completing ingestion. */
   onUploadSuccess: (files: File[], docType: DocType, totalPages: number) => void;
+  /** Status of the vector database connection. Ingestion is disabled if disconnected. */
+  dbStatus?: "connected" | "disconnected";
 }
 
-export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
+/**
+ * UploadDocs component handles document file selection, drag-and-drop,
+ * metadata classification, and uploading documents to the ingestion pipeline.
+ * It listens to real-time ingestion progress updates via WebSockets.
+ */
+export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [docType, setDocType] = useState<DocType>("policy");
   const [status, setStatus] = useState<{ type: "success" | "error" | "info" | null; message: string }>({
@@ -18,8 +26,11 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeUploadsRef = useRef<Set<string>>(new Set());
 
-  // Listen to WebSocket pushed progress updates
-  const { isConnected: isWsConnected } = useWebSocket((msg) => {
+  /**
+   * WebSocket message handler that processes ingestion progress updates.
+   * Updates state with upload progress percentages and success/error notifications.
+   */
+  const handleWsMessage = useCallback((msg: any) => {
     if (msg.event === "ingestion_progress") {
       const { filename, progress, status: wsStatus, error_message } = msg.data;
       if (activeUploadsRef.current.has(filename)) {
@@ -58,7 +69,10 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
         }
       }
     }
-  });
+  }, []);
+
+  // Listen to WebSocket pushed progress updates
+  const { isConnected: isWsConnected } = useWebSocket(handleWsMessage);
 
   function handleDrag(e: React.DragEvent) {
     e.preventDefault();
@@ -161,15 +175,17 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
       <form onSubmit={onSubmit} className="space-y-5">
         {/* Drag and Drop Zone */}
         <div
-          onDragEnter={handleDrag}
-          onDragOver={handleDrag}
-          onDragLeave={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center min-h-[160px] ${
-            isDragActive
-              ? "border-blue-500 bg-blue-500/5 dark:bg-blue-500/10"
-              : "border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 bg-white/40 dark:bg-white/[0.02]"
+          onDragEnter={dbStatus === "disconnected" ? undefined : handleDrag}
+          onDragOver={dbStatus === "disconnected" ? undefined : handleDrag}
+          onDragLeave={dbStatus === "disconnected" ? undefined : handleDrag}
+          onDrop={dbStatus === "disconnected" ? undefined : handleDrop}
+          onClick={dbStatus === "disconnected" ? undefined : () => fileInputRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[160px] ${
+            dbStatus === "disconnected"
+              ? "border-rose-300/60 bg-rose-500/5 dark:bg-rose-950/10 cursor-not-allowed"
+              : isDragActive
+              ? "border-blue-500 bg-blue-500/5 dark:bg-blue-500/10 cursor-pointer"
+              : "border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-700 bg-white/40 dark:bg-white/[0.02] cursor-pointer"
           }`}
         >
           <input
@@ -178,12 +194,17 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
             accept="application/pdf"
             multiple
             onChange={handleFileChange}
+            disabled={dbStatus === "disconnected"}
             className="hidden"
           />
 
           <svg
             className={`w-10 h-10 mb-3 transition-transform duration-300 ${
-              isDragActive ? "scale-110 text-blue-500" : "text-neutral-400 dark:text-neutral-600"
+              dbStatus === "disconnected"
+                ? "text-rose-400 dark:text-rose-600/70"
+                : isDragActive
+                ? "scale-110 text-blue-500"
+                : "text-neutral-400 dark:text-neutral-600"
             }`}
             fill="none"
             stroke="currentColor"
@@ -198,10 +219,16 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
           </svg>
 
           <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            {isDragActive ? "Drop files here" : "Drag & drop PDF files"}
+            {dbStatus === "disconnected"
+              ? "Ingestion Offline"
+              : isDragActive
+              ? "Drop files here"
+              : "Drag & drop PDF files"}
           </p>
           <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-            or click to browse from device
+            {dbStatus === "disconnected"
+              ? "Vector Database disconnected"
+              : "or click to browse from device"}
           </p>
         </div>
 
@@ -286,14 +313,18 @@ export function UploadDocs({ onUploadSuccess }: UploadDocsProps) {
         {/* Submit Action */}
         <button
           type="submit"
-          disabled={files.length === 0}
+          disabled={files.length === 0 || dbStatus === "disconnected"}
           className={`w-full py-2.5 px-4 rounded-xl text-sm font-semibold tracking-tight text-white transition-all duration-300 ${
-            files.length === 0
+            files.length === 0 || dbStatus === "disconnected"
               ? "bg-neutral-300 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-600 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98]"
           }`}
         >
-          {files.length > 0 ? `Ingest ${files.length} Document(s)` : "Select PDF files"}
+          {dbStatus === "disconnected"
+            ? "Database Disconnected"
+            : files.length > 0
+            ? `Ingest ${files.length} Document(s)`
+            : "Select PDF files"}
         </button>
       </form>
 
