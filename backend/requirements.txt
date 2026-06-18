@@ -6,9 +6,14 @@ httpx
 langchain-chroma
 langchain-huggingface
 langchain-text-splitters
-langchain-community
+# Pinned <0.4: ragas 0.2.x hard-imports langchain_community.chat_models.vertexai,
+# which was removed in langchain-community 0.4.x. 0.3.30 is the newest release that
+# still has it while supporting langchain-core 1.x (needed by langchain-chroma/
+# -huggingface/-ollama). See app/evaluation/ragas_eval.py.
+langchain-community==0.3.30
 langchain-ollama
 sentence-transformers
 pypdf
 mlflow
+ragas==0.2.15
 pytest

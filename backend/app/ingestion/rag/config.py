@@ -27,5 +27,5 @@ class RagConfig:
     collection_name: str = "aml_corpus"
     embedding_model: str = "all-MiniLM-L6-v2"
     distance: str = "cosine"
-    chunk_size: int = 0
-    chunk_overlap: int = 200
+    chunk_size: int = 900
+    chunk_overlap: int = 150

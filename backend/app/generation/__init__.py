@@ -12,15 +12,21 @@ from .generator import (
     Answer,
     AnswerGenerator,
     Citation,
+    StreamedAnswer,
     build_answer_generator,
     build_completion,
+    build_llm_ping,
+    build_stream_completion,
 )
 
 __all__ = [
     "GenerationConfig",
     "Answer",
     "Citation",
+    "StreamedAnswer",
     "AnswerGenerator",
     "build_answer_generator",
     "build_completion",
+    "build_stream_completion",
+    "build_llm_ping",
 ]

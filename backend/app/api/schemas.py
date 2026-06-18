@@ -34,9 +34,15 @@ class DeleteResponse(BaseModel):
     chunks_removed: int
 
 
+class HealthResponse(BaseModel):
+    status: str  # "ok" | "degraded"
+    database: str  # "connected" | "disconnected"
+    llm: str  # "connected" | "disconnected"
+
+
 class AnswerRequest(BaseModel):
     query: str
-    k: int = 5
+    k: int = 4
     doc_type: Optional[DocumentType] = None
 
 

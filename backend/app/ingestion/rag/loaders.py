@@ -7,6 +7,7 @@ from typing import Optional
 
 from langchain_community.document_loaders import PyPDFLoader
 
+from .cleaning import clean_pdf_text
 from .models import Document, DocumentType
 
 
@@ -32,7 +33,7 @@ def load_pdfs(
             documents.append(
                 Document(
                     id=f"{pdf.stem}-p{page_no}",
-                    text=page.page_content,
+                    text=clean_pdf_text(page.page_content),
                     doc_type=doc_type,
                     metadata={**base_meta, "source": pdf.name, "page": page_no},
                 )

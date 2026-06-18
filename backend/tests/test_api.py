@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
 import app.api.routes.rag as rag_route
-from app.deps import get_generator, get_rag
-from app.generation.generator import Answer, Citation
+from app.deps import get_generator, get_llm_ping, get_rag
+from app.generation.generator import Answer, Citation, StreamedAnswer
 from app.ingestion.rag.models import Document, DocumentType, SearchResult, SourceInfo
 from app.main import app
 
@@ -19,6 +21,13 @@ class FakeGenerator:
             citations=[Citation("a1", "a.pdf", 2, 0.9)],
             used_context=True,
             contexts=["ctx"],
+        )
+
+    def stream(self, query, k=5, doc_type=None):
+        return StreamedAnswer(
+            citations=[Citation("a1", "a.pdf", 2, 0.9)],
+            used_context=True,
+            tokens=iter(["Answer ", "to ", f"{query} [a1]"]),
         )
 
 
@@ -44,12 +53,16 @@ class FakeRag:
     def delete_by_source(self, filename):
         return 0 if filename == "missing.pdf" else 2
 
+    def ping(self):
+        return True
+
 
 @pytest.fixture
 def client(monkeypatch):
     fake = FakeRag()
     app.dependency_overrides[get_rag] = lambda: fake
     app.dependency_overrides[get_generator] = lambda: FakeGenerator()
+    app.dependency_overrides[get_llm_ping] = lambda: (lambda: True)
     # Each fake PDF yields one page so ingested count == number of files.
     monkeypatch.setattr(rag_route, "load_pdfs", lambda path, dt: [Document(path, "t", dt)])
     # Don't write MLflow during tests.
@@ -112,6 +125,41 @@ def test_answer(client):
     assert body["used_context"] is True
     assert body["citations"][0] == {"id": "a1", "source": "a.pdf", "page": 2, "score": 0.9}
     assert "[a1]" in body["answer"]
+
+
+def test_answer_stream(client):
+    res = client.post("/rag/answer/stream", json={"query": "CTR?"})
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/event-stream")
+    body = res.text
+    assert "event: token" in body
+    assert "event: done" in body
+    # The streamed tokens concatenate to the full answer.
+    tokens = [
+        json.loads(line[len("data: ") :])["text"]
+        for block in body.split("\n\n")
+        if "event: token" in block
+        for line in block.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert "".join(tokens) == "Answer to CTR? [a1]"
+    done = [b for b in body.split("\n\n") if "event: done" in b][0]
+    payload = json.loads(done.splitlines()[-1][len("data: ") :])
+    assert payload["used_context"] is True
+    assert payload["citations"][0]["id"] == "a1"
+
+
+def test_health_ok(client):
+    res = client.get("/health")
+    assert res.status_code == 200
+    assert res.json() == {"status": "ok", "database": "connected", "llm": "connected"}
+
+
+def test_health_degraded_when_llm_down(client):
+    app.dependency_overrides[get_llm_ping] = lambda: (lambda: False)
+    res = client.get("/health")
+    assert res.status_code == 200
+    assert res.json() == {"status": "degraded", "database": "connected", "llm": "disconnected"}
 
 
 def test_ws_ingestion_progress(client):

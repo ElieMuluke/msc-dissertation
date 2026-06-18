@@ -45,6 +45,12 @@ rag.ingest(docs)
 `load_pdfs` produces one `Document` per page with `source` filename and `page` number in
 metadata (regulatory traceability); ids are `<filename>-p<page>`.
 
+Each page's text is normalized by `clean_pdf_text` (`cleaning.py`) before a `Document` is
+built: mis-extracted glyphs/ligatures mapped to standard chars, control characters
+stripped (printable Latin-1 like `©`/`é` preserved), hyphen line-splits rejoined, single
+line breaks turned into spaces while paragraph gaps (`\n\n`) are kept, and runs of
+spaces/tabs collapsed. This keeps extraction noise out of the embedding space.
+
 ### CLI
 
 ```bash

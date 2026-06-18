@@ -9,11 +9,16 @@ generate with citations.
 [Ollama](https://ollama.com) running locally with the model pulled:
 
 ```bash
-ollama serve            # if not already running
-ollama pull gemma4:e2b  # default model
+ollama serve             # if not already running
+ollama pull qwen3.5:2b   # default model — small, fast on CPU, supports tool calling
 ```
 
 Override via env: `OLLAMA_MODEL`, `OLLAMA_BASE_URL`.
+
+`qwen3.5:2b` is the default because it stays responsive on CPU-only hosts and supports
+native tool calling (for the planned agent layer); `gemma`-family models do not. Latency
+is bounded by `GenerationConfig`: `num_predict` (max output tokens), `num_ctx` (context
+window), and `keep_alive` (keeps the model resident so it is not reloaded per request).
 
 ## Usage
 
@@ -36,6 +41,20 @@ Response:
 
 Returns **503** if Ollama is unreachable.
 
+### Streaming (SSE)
+
+`POST /rag/answer/stream` returns the same answer token-by-token as Server-Sent Events —
+use it for interactive UIs so text appears immediately. Frames: `token` `{"text": ...}`
+repeatedly, then `done` `{"citations": [...], "used_context": bool}`, or `error`
+`{"message": ...}` on failure. Request body matches `/rag/answer`. Frontend consumption
+guide (fetch + ReadableStream, since `EventSource` can't POST) is in `frontend_spec.md`.
+
+```bash
+curl -N -X POST http://localhost:8000/rag/answer/stream \
+  -H 'content-type: application/json' \
+  -d '{"query": "What is the cash transaction reporting threshold?", "k": 4}'
+```
+
 ### Python
 
 ```python
@@ -51,9 +70,11 @@ print(answer.answer, answer.citations)
 
 - `prompt.py` — `build_prompt(query, results)`: pure; instructs the model to answer ONLY
   from context, cite by `[id]`, and admit when context is insufficient.
-- `generator.py` — `AnswerGenerator` depends on a `search_fn` and a `complete_fn`
-  (`str -> str`), so it is decoupled from both the vector store and the LLM and is
-  unit-tested with fakes. `Answer` carries `citations` + `used_context`.
+- `generator.py` — `AnswerGenerator` depends on a `search_fn`, a `complete_fn`
+  (`str -> str`), and an optional `stream_fn` (`str -> Iterator[str]`), so it is decoupled
+  from both the vector store and the LLM and is unit-tested with fakes. `generate` returns
+  an `Answer`; `stream` returns a `StreamedAnswer` (citations known up front, text as a
+  token iterator). `Answer` carries `citations` + `used_context`.
 - `config.py` — `GenerationConfig` (model, base_url, temperature); env-overridable.
 - `build_answer_generator(rag, config)` wires a `RagSystem` + LangChain `ChatOllama`.
 

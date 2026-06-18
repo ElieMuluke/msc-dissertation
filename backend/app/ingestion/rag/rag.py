@@ -64,6 +64,14 @@ class RagSystem:
         """Delete all documents by resetting the underlying collection."""
         self._store.reset_collection()
 
+    def ping(self) -> bool:
+        """Return ``True`` if the vector store is reachable."""
+        try:
+            self._store.get(limit=1)
+            return True
+        except Exception:  # noqa: BLE001 - any failure means unreachable
+            return False
+
     def list_sources(self) -> list[SourceInfo]:
         """List ingested source files, aggregating pages/chunks per source."""
         data = self._store.get(include=["metadatas"])
