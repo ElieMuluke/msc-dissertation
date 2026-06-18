@@ -10,6 +10,50 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-06-18 — Streaming answers (SSE)
+**Done:** Added `POST /rag/answer/stream` — SSE token streaming for perceived latency.
+Generator: optional `stream_fn` injected; `AnswerGenerator.stream()` → `StreamedAnswer`
+(citations up front, tokens as iterator); `build_stream_completion` via `llm.stream()`;
+DRY'd ChatOllama construction into `_build_chat_ollama`. Route emits `token`/`done`/`error`
+frames, runs in threadpool (sync generator) so blocking LLM never blocks event loop.
+Exported `StreamedAnswer`/`build_stream_completion`. New test `test_answer_stream`; 50 pass.
+Wrote `frontend_spec.md` (backend→frontend contract: SSE schema + fetch/ReadableStream TS
+guide, since EventSource can't POST). Updated docs/generation.md, FEATURES F18.
+**State:** Backend streaming complete + tested. `/rag/answer` (non-stream) unchanged.
+**Next:** Frontend (Gemini) implements `frontend_spec.md` §1. Then agents (qwen tool calls).
+
+## 2026-06-17 — LLM latency optimization
+**Done:** Slow answers root-caused to hardware, not RAG: CPU-only, ~2GB RAM free, model
+`gemma4:e2b`=7.2GB → swapping/reloading per call. Fixes: default model → `qwen3.5:4b`
+(3.4GB, already pulled; fast on CPU, **supports tool calling** for future agents; gemma
+does not). Added `num_predict=384`, `num_ctx=4096`, `keep_alive=30m` to GenerationConfig +
+passed to ChatOllama. RagConfig `chunk_size 0→900`, `overlap 200→150` (smaller prompts =
+less CPU prefill). AnswerRequest default `k 5→4`. Suite 49 pass. docs/generation.md updated.
+**User action:** free RAM; **re-ingest** corpus (existing chroma_db was ingested unchunked —
+chunking only applies to new ingests).
+**State:** Config-only optimization, no API shape change. Tests green.
+**Next:** Optional streaming (`/rag/answer` → SSE) for perceived latency. Then F12 / agents.
+
+## 2026-06-17 — PDF ingestion text-cleanup (backend spec §6)
+**Done:** Added pure `clean_pdf_text` in new `app/ingestion/rag/cleaning.py` (SRP — own
+module, no langchain dep), applied to each page in `load_pdfs` before building Documents.
+Glyph/ligature mapping, control-char strip, hyphen line-join, single-break→space (paragraph
+`\n\n` preserved via lookarounds), space collapse. **Fixed spec bug:** narrowed control
+regex `\x7f-\xff`→`\x7f-\x9f` so the inserted `©` and accented Latin-1 chars survive. 6
+unit tests `tests/test_cleaning.py`. Suite 49 pass. Updated backend_spec §6, FEATURES F17,
+docs/rag.md.
+**State:** Feature complete + documented + tested. Backend matches backend_spec §1–6.
+**Next:** F12 frontend (Gemini-owned). Backend idle — await next backend_spec item.
+
+## 2026-06-17 — `/health` connectivity (backend spec §5)
+**Done:** Implemented real `/health` (was stub `{status:ok}`). Added `RagSystem.ping()`
+(Chroma `get(limit=1)`) and `build_llm_ping()` in generation pkg (HTTP GET
+`{base_url}/api/tags`, 2s timeout) — both injected via `get_rag`/`get_llm_ping` deps, no
+collection/ChatOllama leaked. `HealthResponse` schema; `status` ok/degraded. 2 new API
+tests (ok + llm-down). Full suite 43 pass. Updated backend_spec §5, FEATURES F15.
+**State:** Backend feature-complete vs backend_spec (§1–5 ✅). All tests green.
+**Next:** F12 — run frontend (`npm install`) end-to-end; wire header badges to `/health`.
+
 ---
 
 ## 2026-06-17 — RAG Triad eval (F10, task #3)

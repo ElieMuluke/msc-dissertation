@@ -1,7 +1,13 @@
 # CLAUDE.md — Project Operating Rules
 
 Multi-Agent System for Regulatory Risk and Compliance in Banking Workflows.
-Python. RAG via ChromaDB + sentence-transformers. Source under `src/`.
+Python. RAG via ChromaDB + sentence-transformers. Backend under `backend/`.
+
+**Ownership split:** Claude owns the **backend** (`backend/` — FastAPI + Python).
+Gemini owns the **frontend** (`frontend/`, rules in `GEMINI.md` + `.gemini/`). Edit only
+`backend/` (+ shared root trackers); never edit `frontend/`. `backend_spec.md` (repo root)
+is the contract between the two: frontend records backend needs there, Claude implements
+them and marks them done.
 
 These rules are binding for every session. They are self-improving: when the user
 gives a remark, it is captured to `.claude/LEARNINGS.md` and applied from then on.
