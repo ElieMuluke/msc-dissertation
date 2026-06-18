@@ -21,5 +21,11 @@ Status: 🔵 requested · 🟡 in progress · ✅ done · ⛔ blocked
 | F12 | Run frontend (`npm install`) end-to-end | 🔵 | not run yet |
 | F13 | Realtime ingestion progress (WebSocket `/ws`) | ✅ | spec §3; per-file frames |
 | F14 | Live search monitoring → MLflow | ✅ | experiment rag-search-monitoring |
+| F15 | `/health` connectivity (DB + LLM) | ✅ | spec §5; `RagSystem.ping`, `build_llm_ping` |
+| F16 | Gemini frontend agent infra (mirror of Claude) | ✅ | `GEMINI.md` + `.gemini/`; Gemini=frontend, Claude=backend |
+| F17 | PDF ingestion text-cleanup | ✅ | spec §6; `clean_pdf_text` in `cleaning.py`, applied in `load_pdfs` |
+| F18 | Streaming answers (SSE) | ✅ | `POST /rag/answer/stream`; frontend guide in `frontend_spec.md` |
+| F19 | RAG retrieval tool for agent | 🟡 | `app/agents/` StructuredTool over RagSystem (JMLSG policy / FATF action) |
+| F20 | RAGAS eval (proper lib) → MLflow | 🟡 | replaces scratch triad; `rag-ragas` experiment; Ollama+HF judge |
 
 Related: `backend_spec.md` (frontend↔backend API contract), in-session task list (TaskList).
