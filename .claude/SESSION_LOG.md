@@ -10,6 +10,22 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-06-25 — Fix empty stream + collapsible thinking channel
+**Done:** Chat stream froze with citations but no text. Root cause: `qwen3.5:2b` is a Qwen3
+thinking model — reasoning streams on `chunk.additional_kwargs['reasoning_content']`, not
+`chunk.content`, and fills the whole `num_predict` budget so the answer never emits.
+(1) Fix: added `GenerationConfig.reasoning` (env `OLLAMA_REASONING`, default **off**) →
+`reasoning=False` on ChatOllama makes the answer stream straight to `content`. `num_predict`
+now env `OLLAMA_NUM_PREDICT` (default 512). (2) Thinking feature: `build_stream_completion`
+now yields tagged `StreamChunk(kind, text)` (`thinking`|`answer`); `StreamedAnswer.tokens`
+→ `.chunks`; route emits separate `thinking` + `token` SSE frames. Exported `StreamChunk`.
+Updated `test_answer_stream` (asserts both channels); 12 pass. Frontend contract updated in
+`frontend_spec.md` §1 (thinking event + collapsible `<details>` panel). FEATURES F21/F22.
+**State:** Backend supports thinking channel, gated off. Reasoning ON is impractical on the
+current CPU model (verified: 220s, 3830+ chars thinking, zero answer — runaway thinker).
+**Next:** Decide reasoning-capable model before enabling `OLLAMA_REASONING` (e.g. a model
+whose reasoning converges, or GPU). Frontend (Gemini) wires the collapsible panel per spec.
+
 ## 2026-06-18 — Streaming answers (SSE)
 **Done:** Added `POST /rag/answer/stream` — SSE token streaming for perceived latency.
 Generator: optional `stream_fn` injected; `AnswerGenerator.stream()` → `StreamedAnswer`

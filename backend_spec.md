@@ -317,5 +317,14 @@ def clean_pdf_text(text: str) -> str:
 ```
 Apply this utility to `page.page_content` inside `load_pdfs` prior to initializing `Document` models.
 
+---
 
+## 7. Streaming Answer + Collapsible "Thinking" (SSE)
 
+**Status**: ✅ Backend ready. The frontend-facing contract (SSE event frames incl. the
+`thinking` channel, fetch/ReadableStream parser, collapsible-panel UX) lives in
+`frontend_spec.md` §1 — single source of truth. Backend: `POST /rag/answer/stream` emits
+`thinking`/`token`/`done`/`error` frames (`app/api/routes/rag.py`,
+`app/generation/generator.py`). Reasoning is gated by `OLLAMA_REASONING` (default off):
+the local `qwen3.5:2b` over-thinks on CPU and starves the answer, so thinking ships off
+until served by a model whose reasoning converges (raise `OLLAMA_NUM_PREDICT` then).

@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 import app.api.routes.rag as rag_route
 from app.deps import get_generator, get_llm_ping, get_rag
-from app.generation.generator import Answer, Citation, StreamedAnswer
+from app.generation.generator import Answer, Citation, StreamChunk, StreamedAnswer
 from app.ingestion.rag.models import Document, DocumentType, SearchResult, SourceInfo
 from app.main import app
 
@@ -27,7 +27,15 @@ class FakeGenerator:
         return StreamedAnswer(
             citations=[Citation("a1", "a.pdf", 2, 0.9)],
             used_context=True,
-            tokens=iter(["Answer ", "to ", f"{query} [a1]"]),
+            chunks=iter(
+                [
+                    StreamChunk("thinking", "Let me "),
+                    StreamChunk("thinking", "reason."),
+                    StreamChunk("answer", "Answer "),
+                    StreamChunk("answer", "to "),
+                    StreamChunk("answer", f"{query} [a1]"),
+                ]
+            ),
         )
 
 
@@ -132,17 +140,22 @@ def test_answer_stream(client):
     assert res.status_code == 200
     assert res.headers["content-type"].startswith("text/event-stream")
     body = res.text
+    assert "event: thinking" in body
     assert "event: token" in body
     assert "event: done" in body
-    # The streamed tokens concatenate to the full answer.
-    tokens = [
-        json.loads(line[len("data: ") :])["text"]
-        for block in body.split("\n\n")
-        if "event: token" in block
-        for line in block.splitlines()
-        if line.startswith("data: ")
-    ]
-    assert "".join(tokens) == "Answer to CTR? [a1]"
+
+    def texts(event: str) -> list[str]:
+        return [
+            json.loads(line[len("data: ") :])["text"]
+            for block in body.split("\n\n")
+            if f"event: {event}" in block
+            for line in block.splitlines()
+            if line.startswith("data: ")
+        ]
+
+    # Thinking arrives on its own channel; answer tokens concatenate to the full answer.
+    assert "".join(texts("thinking")) == "Let me reason."
+    assert "".join(texts("token")) == "Answer to CTR? [a1]"
     done = [b for b in body.split("\n\n") if "event: done" in b][0]
     payload = json.loads(done.splitlines()[-1][len("data: ") :])
     assert payload["used_context"] is True

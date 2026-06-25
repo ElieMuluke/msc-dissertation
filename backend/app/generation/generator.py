@@ -16,7 +16,22 @@ from app.ingestion.rag import DocumentType, RagSystem, SearchResult
 
 SearchFn = Callable[[str, int, Optional[DocumentType]], Sequence[SearchResult]]
 CompleteFn = Callable[[str], str]
-StreamFn = Callable[[str], Iterator[str]]
+
+
+@dataclass(frozen=True)
+class StreamChunk:
+    """One streamed piece of model output.
+
+    ``kind`` is ``"thinking"`` for the model's reasoning trace or ``"answer"`` for the
+    final answer. They arrive interleaved (reasoning first), so the caller can route each
+    to its own channel — e.g. a collapsible "thinking" panel vs the answer body.
+    """
+
+    kind: str  # "thinking" | "answer"
+    text: str
+
+
+StreamFn = Callable[[str], Iterator[StreamChunk]]
 
 
 @dataclass(frozen=True)
@@ -37,11 +52,14 @@ class Answer:
 
 @dataclass
 class StreamedAnswer:
-    """A streamed answer: citations are known up front, the text arrives as tokens."""
+    """A streamed answer: citations are known up front, the chunks arrive as tokens.
+
+    ``chunks`` yields :class:`StreamChunk` items tagged ``thinking`` or ``answer``.
+    """
 
     citations: list[Citation]
     used_context: bool
-    tokens: Iterator[str]
+    chunks: Iterator[StreamChunk]
 
 
 def _citation(result: SearchResult) -> Citation:
@@ -66,7 +84,9 @@ class AnswerGenerator:
         self._complete = complete_fn
         self._stream = stream_fn
 
-    def generate(self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None) -> Answer:
+    def generate(
+        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
+    ) -> Answer:
         results = list(self._search(query, k, doc_type))
         answer = self._complete(build_prompt(query, results)).strip()
         return Answer(
@@ -76,15 +96,19 @@ class AnswerGenerator:
             contexts=[r.text for r in results],
         )
 
-    def stream(self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None) -> StreamedAnswer:
+    def stream(
+        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
+    ) -> StreamedAnswer:
         """Retrieve context, then stream the answer tokens. Citations are known up front."""
         if self._stream is None:
-            raise RuntimeError("This AnswerGenerator was built without streaming support")
+            raise RuntimeError(
+                "This AnswerGenerator was built without streaming support"
+            )
         results = list(self._search(query, k, doc_type))
         return StreamedAnswer(
             citations=[_citation(r) for r in results],
             used_context=bool(results),
-            tokens=self._stream(build_prompt(query, results)),
+            chunks=self._stream(build_prompt(query, results)),
         )
 
 
@@ -99,6 +123,7 @@ def _build_chat_ollama(config: GenerationConfig):
         num_predict=config.num_predict,
         num_ctx=config.num_ctx,
         keep_alive=config.keep_alive,
+        reasoning=config.reasoning,
     )
 
 
@@ -109,14 +134,22 @@ def build_completion(config: Optional[GenerationConfig] = None) -> CompleteFn:
 
 
 def build_stream_completion(config: Optional[GenerationConfig] = None) -> StreamFn:
-    """Build a streaming completion function yielding answer token chunks."""
+    """Build a streaming completion function yielding tagged thinking/answer chunks.
+
+    Reasoning tokens arrive on ``chunk.additional_kwargs['reasoning_content']`` (only when
+    ``reasoning`` is enabled) and the answer on ``chunk.content``; each is emitted as a
+    :class:`StreamChunk` tagged ``thinking`` or ``answer`` respectively.
+    """
     llm = _build_chat_ollama(config or GenerationConfig())
 
-    def stream(prompt: str) -> Iterator[str]:
+    def stream(prompt: str) -> Iterator[StreamChunk]:
         for chunk in llm.stream(prompt):
+            reasoning = (chunk.additional_kwargs or {}).get("reasoning_content")
+            if reasoning:
+                yield StreamChunk("thinking", reasoning)
             text = chunk.content
             if text:
-                yield text
+                yield StreamChunk("answer", text)
 
     return stream
 
@@ -137,7 +170,9 @@ def build_llm_ping(config: Optional[GenerationConfig] = None) -> Callable[[], bo
     return ping
 
 
-def build_answer_generator(rag: RagSystem, config: Optional[GenerationConfig] = None) -> AnswerGenerator:
+def build_answer_generator(
+    rag: RagSystem, config: Optional[GenerationConfig] = None
+) -> AnswerGenerator:
     """Wire a RagSystem and an Ollama chat model into an :class:`AnswerGenerator`."""
     complete = build_completion(config)
     stream = build_stream_completion(config)

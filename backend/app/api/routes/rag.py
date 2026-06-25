@@ -160,17 +160,19 @@ def answer_stream(
 ) -> StreamingResponse:
     """Stream a grounded answer token-by-token as Server-Sent Events.
 
-    Emits ``token`` frames ``{"text": "..."}`` as the answer is generated, then a final
-    ``done`` frame ``{"citations": [...], "used_context": bool}``. Any failure produces an
-    ``error`` frame ``{"message": "..."}``. The body runs in a threadpool, so the blocking
-    LLM stream never blocks the event loop.
+    Emits ``thinking`` frames ``{"text": "..."}`` for the model's reasoning trace and
+    ``token`` frames ``{"text": "..."}`` for the answer (interleaved, reasoning first),
+    then a final ``done`` frame ``{"citations": [...], "used_context": bool}``. Any failure
+    produces an ``error`` frame ``{"message": "..."}``. The body runs in a threadpool, so
+    the blocking LLM stream never blocks the event loop.
     """
 
     def event_stream() -> Iterator[str]:
         try:
             streamed = generator.stream(request.query, request.k, request.doc_type)
-            for token in streamed.tokens:
-                yield _sse("token", {"text": token})
+            for chunk in streamed.chunks:
+                event = "thinking" if chunk.kind == "thinking" else "token"
+                yield _sse(event, {"text": chunk.text})
         except Exception as exc:  # noqa: BLE001 - surface to the client as an error frame
             yield _sse("error", {"message": f"Generation failed (is Ollama running?): {exc}"})
             return
