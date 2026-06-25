@@ -5,6 +5,23 @@ Updated at the end of every session (GEMINI.md rule 0).
 
 ---
 
+## 2026-06-25 — Implemented Collapsible Thinking Process Panel for SSE Answer Streaming
+
+**Done:**
+- Updated `StreamHandlers` in `src/api.ts` to include optional `onThinking` callback handler.
+- Updated `streamAnswer` in `src/api.ts` to parse `thinking` SSE events and invoke `onThinking`.
+- Added `thinking` and `thinkingCollapsed` properties to the client `Message` interface in `src/components/ChatDocs.tsx`.
+- Updated `handleSend` to feed `onThinking` to `streamAnswer` and append incoming chunks to the message's `thinking` state.
+- Configured `onToken` to set `thinkingCollapsed = true` to automatically collapse the thinking block as soon as the first actual text token is generated.
+- Rendered collapsible details panel styled with Tailwind (`bg-neutral-100 dark:bg-neutral-850`, rounded borders, monospace layout, smooth toggling) and synced details interaction with component state using `onToggle`.
+- Documented feature implementation in `docs/frontend/streaming_answers.md`.
+
+**State:**
+- Clean implementation of frontend streaming with auto-collapsible thinking process panel.
+
+**Next:**
+- Support additional model selection controls in the UI if needed.
+
 ## 2026-06-18 — Integrated SSE Answer Streaming in ChatDocs
 
 **Done:**

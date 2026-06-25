@@ -18,3 +18,8 @@ Because generating grounded compliance answers via local LLMs (Ollama) is CPU-in
 - Integrated `streamAnswer` in compliance chat workspace.
 - Implemented `AbortController` tracking in React refs to cancel active streams if the user clears the chat, submits a new prompt, or unmounts the component.
 - Implemented dual-state loading skeleton: displays the bouncing skeleton while waiting for the first token, then transitions instantly to rendering the streaming text block.
+- **Collapsible Thinking Process**:
+  - Displays a details-based thinking process panel if the assistant is reasoning (using a `thinking` event in the SSE stream).
+  - Designed using Tailwind (`bg-neutral-100 dark:bg-neutral-850`, rounded borders, monospace layout, `whitespace-pre-wrap`, and smooth toggling).
+  - Automatically collapses the thinking process as soon as the first actual text token is received.
+  - Allows manual toggling by the user and maintains open/closed state synchrony.

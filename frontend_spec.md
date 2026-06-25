@@ -10,7 +10,7 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ## 1. Streaming Answers (SSE) — `POST /rag/answer/stream`
 
-**Status**: ✅ Done on frontend. Backend ✅ live.
+**Status**: Token streaming ✅ done on frontend. **✅ Collapsible "thinking" panel** is now done on the frontend (using `thinking` event + Collapsible thinking UX + `onThinking` handler). Backend ✅ live (thinking gated by `OLLAMA_REASONING`, default off — panel renders only when reasoning is on, so it remains empty/hidden until enabled).
 
 Stream a grounded compliance answer token-by-token so the user sees text appear
 immediately instead of waiting for the whole answer (the model is CPU-bound and slow to
@@ -30,22 +30,35 @@ shown to a user; keep `/rag/answer` only for non-interactive/programmatic caller
 ```
 
 ### Event frames
-Each SSE frame is `event: <type>\ndata: <json>\n\n`. Three types:
+Each SSE frame is `event: <type>\ndata: <json>\n\n`. Four types:
 
-| event   | data                                              | when |
-| ------- | ------------------------------------------------- | ---- |
-| `token` | `{ "text": "..." }`                               | repeatedly, as the answer generates |
-| `done`  | `{ "citations": [Citation], "used_context": bool }` | once, after the last token |
-| `error` | `{ "message": "..." }`                             | instead of `done` if generation fails |
+| event      | data                                              | when |
+| ---------- | ------------------------------------------------- | ---- |
+| `thinking` | `{ "text": "..." }`                               | repeatedly, **before** the answer — the model's reasoning trace. Zero or more (only when reasoning is enabled server-side). |
+| `token`    | `{ "text": "..." }`                               | repeatedly, as the answer generates |
+| `done`     | `{ "citations": [Citation], "used_context": bool }` | once, after the last token |
+| `error`    | `{ "message": "..." }`                             | instead of `done` if generation fails |
+
+Ordering guarantee: `thinking*` → `token*` → (`done` | `error`).
 
 `Citation` matches the non-streaming `AnswerResponse.citations` item:
 ```json
 { "id": "1", "source": "anti_money_laundering_act.pdf", "page": 12, "score": 0.895 }
 ```
 
-**Render contract**: concatenate every `token.text` in arrival order to form the full
-answer. When `done` arrives, render the citations (and a "no context" hint when
+**Render contract**: append every `thinking.text` to a **collapsible "reasoning" panel**
+(collapsed by default) and every `token.text` to the **answer body**, each in arrival
+order. When `done` arrives, render the citations (and a "no context" hint when
 `used_context` is `false`). On `error`, stop and show `message`.
+
+**Collapsible thinking UX:**
+* Render the "Show reasoning" toggle only if at least one `thinking` frame arrived —
+  absence of `thinking` frames means reasoning is off, so show no toggle. No request flag
+  needed.
+* Keep the panel collapsed by default; optionally auto-collapse it once the first `token`
+  arrives so the answer is the focus.
+* `thinking` text is plain reasoning prose (may contain newlines); render as
+  preformatted/whitespace-preserving.
 
 ### Why not `EventSource`
 The browser `EventSource` API only does **GET** and can't send a JSON body. This endpoint
@@ -62,6 +75,7 @@ export interface Citation {
 }
 
 export interface StreamHandlers {
+  onThinking?: (text: string) => void; // optional: reasoning trace (collapsible panel)
   onToken: (text: string) => void;
   onDone: (citations: Citation[], usedContext: boolean) => void;
   onError: (message: string) => void;
@@ -106,7 +120,8 @@ export async function streamAnswer(
       }
       if (!data) continue;
       const payload = JSON.parse(data);
-      if (event === "token") handlers.onToken(payload.text);
+      if (event === "thinking") handlers.onThinking?.(payload.text);
+      else if (event === "token") handlers.onToken(payload.text);
       else if (event === "done") handlers.onDone(payload.citations, payload.used_context);
       else if (event === "error") handlers.onError(payload.message);
     }
@@ -116,23 +131,38 @@ export async function streamAnswer(
 
 ### React usage sketch
 ```tsx
+const [thinking, setThinking] = useState("");
 const [answer, setAnswer] = useState("");
 const [citations, setCitations] = useState<Citation[]>([]);
 
 await streamAnswer(
   { query, k: 4 },
   {
+    onThinking: (t) => setThinking((prev) => prev + t),
     onToken: (t) => setAnswer((prev) => prev + t),
     onDone: (cits) => setCitations(cits),
     onError: (msg) => setAnswer(`⚠️ ${msg}`),
   },
 );
+
+// Render the collapsible panel only when reasoning actually streamed:
+{thinking && (
+  <details>
+    <summary>Show reasoning</summary>
+    <pre style={{ whiteSpace: "pre-wrap" }}>{thinking}</pre>
+  </details>
+)}
 ```
 
 ### Notes
 * Pass an `AbortController.signal` so navigating away / starting a new query cancels the
   in-flight stream.
-* Reset `answer`/`citations` before starting a new stream.
+* Reset `thinking`/`answer`/`citations` before starting a new stream.
+* The `thinking` channel only carries data when reasoning is enabled on the backend
+  (`OLLAMA_REASONING=1`); it ships **off by default** because the current local
+  `qwen3.5:2b` over-thinks on CPU and starves the answer. Build the panel now against this
+  contract — it simply stays empty (no toggle) until reasoning is switched on behind a
+  model whose reasoning converges. No frontend change needed when it flips on.
 * Dev server: Vite proxy must not buffer the stream. The backend already sends
   `Cache-Control: no-cache` and `X-Accel-Buffering: no`; if proxying, disable response
   buffering for `/rag/answer/stream`.

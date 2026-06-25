@@ -7,6 +7,8 @@ interface Message {
   text: string;
   timestamp: Date;
   citations?: Citation[];
+  thinking?: string;
+  thinkingCollapsed?: boolean;
 }
 
 const STARTER_QUERIES = [
@@ -394,13 +396,27 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
       await streamAnswer(
         { query: queryText, doc_type: docType || undefined },
         {
+          onThinking: (chunk) => {
+            setLoading(false); // Hide the bounce skeleton when thinking starts
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, thinking: (msg.thinking || "") + chunk }
+                  : msg
+              )
+            );
+          },
           onToken: (token) => {
             setLoading(false); // Hide the bounce skeleton as soon as the first token arrives
             accumulatedText += token;
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessageId
-                  ? { ...msg, text: accumulatedText }
+                  ? {
+                      ...msg,
+                      text: accumulatedText,
+                      thinkingCollapsed: msg.text === "" ? true : msg.thinkingCollapsed
+                    }
                   : msg
               )
             );
@@ -567,6 +583,29 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
                             : "bg-neutral-50/90 text-neutral-800 dark:bg-neutral-900/80 dark:text-neutral-200 border border-neutral-200/50 dark:border-neutral-800/80"
                         }`}
                       >
+                        {/* Thinking Panel */}
+                        {!isUser && msg.thinking && (
+                          <details
+                            className="bg-neutral-100 dark:bg-neutral-850 rounded-xl p-3 border border-neutral-200/60 dark:border-neutral-800 text-xs font-mono whitespace-pre-wrap transition-all duration-300 mb-3"
+                            open={!msg.thinkingCollapsed}
+                            onToggle={(e) => {
+                              const isOpen = (e.currentTarget as HTMLDetailsElement).open;
+                              setMessages((prev) =>
+                                prev.map((m) =>
+                                  m.id === msg.id ? { ...m, thinkingCollapsed: !isOpen } : m
+                                )
+                              );
+                            }}
+                          >
+                            <summary className="cursor-pointer select-none font-sans font-semibold text-neutral-500 dark:text-neutral-450 focus:outline-none">
+                              Thinking Process
+                            </summary>
+                            <div className="mt-2 pt-2 border-t border-neutral-200/40 dark:border-neutral-750 text-neutral-600 dark:text-neutral-350">
+                              {msg.thinking}
+                            </div>
+                          </details>
+                        )}
+
                         {/* Message Text */}
                         <FormattedMessageText
                           text={msg.text}

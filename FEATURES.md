@@ -27,5 +27,7 @@ Status: 🔵 requested · 🟡 in progress · ✅ done · ⛔ blocked
 | F18 | Streaming answers (SSE) | ✅ | `POST /rag/answer/stream`; frontend guide in `frontend_spec.md` |
 | F19 | RAG retrieval tool for agent | 🟡 | `app/agents/` StructuredTool over RagSystem (JMLSG policy / FATF action) |
 | F20 | RAGAS eval (proper lib) → MLflow | 🟡 | replaces scratch triad; `rag-ragas` experiment; Ollama+HF judge |
+| F21 | Stream fix: empty answer (Qwen3 thinking) | ✅ | reasoning routed off `content`; `OLLAMA_REASONING` gate, default off |
+| F22 | Collapsible "thinking" channel in SSE | ✅ | `thinking` SSE event; spec §7. Gated by `OLLAMA_REASONING` (model over-thinks on CPU) |
 
 Related: `backend_spec.md` (frontend↔backend API contract), in-session task list (TaskList).

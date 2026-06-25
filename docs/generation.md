@@ -44,10 +44,20 @@ Returns **503** if Ollama is unreachable.
 ### Streaming (SSE)
 
 `POST /rag/answer/stream` returns the same answer token-by-token as Server-Sent Events —
-use it for interactive UIs so text appears immediately. Frames: `token` `{"text": ...}`
-repeatedly, then `done` `{"citations": [...], "used_context": bool}`, or `error`
-`{"message": ...}` on failure. Request body matches `/rag/answer`. Frontend consumption
-guide (fetch + ReadableStream, since `EventSource` can't POST) is in `frontend_spec.md`.
+use it for interactive UIs so text appears immediately. Frames: optional `thinking`
+`{"text": ...}` (the model's reasoning trace, for a collapsible panel), `token`
+`{"text": ...}` repeatedly, then `done` `{"citations": [...], "used_context": bool}`, or
+`error` `{"message": ...}` on failure. Request body matches `/rag/answer`. Frontend
+consumption guide (fetch + ReadableStream, since `EventSource` can't POST) is in
+`frontend_spec.md`.
+
+**Reasoning / "thinking".** Qwen3 models emit a reasoning trace on a separate field
+(`additional_kwargs['reasoning_content']`), not `content`. The generator splits this into
+`thinking` vs `answer` `StreamChunk`s so the API can stream them on distinct SSE channels.
+Gated by `OLLAMA_REASONING` (default **off**): with `qwen3.5:2b` on CPU the reasoning is
+runaway — it fills any `num_predict` budget and the answer never emits — so reasoning is
+disabled to keep answers reliable. Enable only behind a model whose reasoning converges,
+and raise `OLLAMA_NUM_PREDICT` to cover reasoning + answer.
 
 ```bash
 curl -N -X POST http://localhost:8000/rag/answer/stream \
@@ -71,11 +81,13 @@ print(answer.answer, answer.citations)
 - `prompt.py` — `build_prompt(query, results)`: pure; instructs the model to answer ONLY
   from context, cite by `[id]`, and admit when context is insufficient.
 - `generator.py` — `AnswerGenerator` depends on a `search_fn`, a `complete_fn`
-  (`str -> str`), and an optional `stream_fn` (`str -> Iterator[str]`), so it is decoupled
-  from both the vector store and the LLM and is unit-tested with fakes. `generate` returns
-  an `Answer`; `stream` returns a `StreamedAnswer` (citations known up front, text as a
-  token iterator). `Answer` carries `citations` + `used_context`.
-- `config.py` — `GenerationConfig` (model, base_url, temperature); env-overridable.
+  (`str -> str`), and an optional `stream_fn` (`str -> Iterator[StreamChunk]`), so it is
+  decoupled from both the vector store and the LLM and is unit-tested with fakes. `generate`
+  returns an `Answer`; `stream` returns a `StreamedAnswer` (citations known up front, body
+  as a `StreamChunk` iterator on `.chunks`). `StreamChunk(kind, text)` tags each piece
+  `thinking` or `answer`. `Answer` carries `citations` + `used_context`.
+- `config.py` — `GenerationConfig` (model, base_url, temperature, num_predict, reasoning);
+  env-overridable (`OLLAMA_MODEL`, `OLLAMA_NUM_PREDICT`, `OLLAMA_REASONING`).
 - `build_answer_generator(rag, config)` wires a `RagSystem` + LangChain `ChatOllama`.
 
 The API offloads the blocking LLM call with `asyncio.to_thread` so the event loop (and the
@@ -83,6 +95,8 @@ WebSocket progress gateway) stays responsive.
 
 ## Limitations / Next
 
-- Synchronous single-shot answer (no streaming tokens yet).
+- Collapsible "thinking" is wired end-to-end but disabled by default: the local
+  `qwen3.5:2b` over-thinks on CPU (reasoning never converges within budget). Needs a
+  reasoning-capable model (or GPU) before `OLLAMA_REASONING` can be turned on.
 - Evaluation of generation quality (RAG Triad: groundedness, answer relevance, context
   relevance) is the next step — see `docs/evaluation.md` and task #3.

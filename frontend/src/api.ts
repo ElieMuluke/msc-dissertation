@@ -240,6 +240,8 @@ export async function checkSystemHealth(): Promise<HealthStatus> {
 export interface StreamHandlers {
   /** Fired repeatedly as new tokens are generated. */
   onToken: (text: string) => void;
+  /** Fired repeatedly as thinking process text is generated. */
+  onThinking?: (text: string) => void;
   /** Fired once at the end of a successful generation with citations and context flag. */
   onDone: (citations: Citation[], usedContext: boolean) => void;
   /** Fired if request, network, or server generation fails. */
@@ -318,6 +320,8 @@ export async function streamAnswer(
         if (event === "token") {
           hasReceivedTokens = true;
           handlers.onToken(payload.text);
+        } else if (event === "thinking") {
+          handlers.onThinking?.(payload.text);
         } else if (event === "done") {
           // Map citations to search hits for resolved text
           const citations: Citation[] = (payload.citations || []).map((c: any) => {
