@@ -27,6 +27,7 @@ cd backend
 uv venv .venv                 # create virtual environment
 source .venv/bin/activate     # activate it
 uv pip install -r requirements.txt
+cp .env.example .env          # config (models, Ollama URL); edit as needed
 uvicorn app.main:app --reload          # http://localhost:8000  (docs at /docs)
 
 # Frontend (new terminal)
@@ -66,8 +67,8 @@ a faster bounded run.
 
 RAGAS uses local Ollama models. Defaults: generator `llama3.2:3b`, judge `qwen2.5:3b`
 (different families → no self-evaluation bias). Pull them first (`ollama pull llama3.2:3b
-qwen2.5:3b`) and override via `OLLAMA_MODEL` / `RAGAS_JUDGE_MODEL` if desired. Per-query
-results land in `backend/eval_results/` (timestamped per run).
+qwen2.5:3b`) and override via `backend/.env` (`OLLAMA_MODEL` / `RAGAS_JUDGE_MODEL`) — no
+code edits needed. Per-query results land in `backend/eval_results/` (timestamped per run).
 
 ## Features
 
