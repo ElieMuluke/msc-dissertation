@@ -10,6 +10,28 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-01 — RAGAS eval audit hardening (Gaps #2–#8)
+**Done:** Audited RAGAS eval, then fixed the gaps. (#2) `datasets/golden_set_v1.jsonl` — 57
+hand-verified triples grounded in the REAL corpus (chroma_db `aml_corpus`: FATF/JMLSG PDFs),
+44 clear / 7 ambiguous / 6 honest no_answer; runner populates `retrieved_contexts` live.
+(#3/#4) `TopicAdherenceScore` P/R/F1 wired (`topic_adherence_metrics`, one instance per mode),
+`REFERENCE_TOPICS` (20 AML topics), `datasets/out_of_scope_v1.jsonl` (13 off-topic incl.
+prompt-injection). (#5) judge config independent-by-recommendation + `_warn_if_self_eval`
+family check; judge model+temp logged. (#6/#7/#8) `run_ragas` uses public `to_pandas()`,
+per-query CSV+JSON to `eval_results/`, NaN counted/warned/excluded (`RagasResult.nan_counts`).
+`ragas_run.py` rewritten to use the real retriever (no throwaway store) + golden set + topic
+set. Updated `docs/evaluation.md`, `__init__.py` exports, FEATURES F23. Unit tests 9/9.
+**State:** Code done + verified. Key runtime finding: CPU-only Ollama is the bottleneck —
+gen ~80s/query; `llama3.2:3b` judge unusable (NaN via JSON parse-failure, 37min/sample);
+`qwen2.5:3b` judge works (valid scores, ~64s/metric) but same family as the qwen generator
+→ self-eval (user accepted, disclose in dissertation). Full 57+64 run = many hours. A bounded
+`--limit 6` run (experiment `rag-ragas-bounded`, generator+judge qwen2.5:3b) was launched to
+produce a real sample summary table.
+**Next:** Collect bounded-run summary table + flag suspicious values; then run the FULL set on
+a GPU/faster host (or overnight): `OLLAMA_MODEL=<qwen-gen> RAGAS_JUDGE_MODEL=<independent, e.g.
+gemma2:9b> python -m app.evaluation.ragas_run --k 4`. Consider deleting superseded toy sets
+`datasets/ragas_questions.jsonl` + `ragas_corpus.json` (now unreferenced).
+
 ## 2026-06-25 — Fix empty stream + collapsible thinking channel
 **Done:** Chat stream froze with citations but no text. Root cause: `qwen3.5:2b` is a Qwen3
 thinking model — reasoning streams on `chunk.additional_kwargs['reasoning_content']`, not
