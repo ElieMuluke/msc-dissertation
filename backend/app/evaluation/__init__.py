@@ -9,7 +9,16 @@ generation quality is scored via the `ragas <https://docs.ragas.io>`_ library
 from __future__ import annotations
 
 from .dataset import QueryExample, load_queries
-from .ragas_eval import RagasRecord, RagasResult, run_ragas, to_evaluation_dataset
+from .ragas_eval import (
+    REFERENCE_TOPICS,
+    RagasRecord,
+    RagasResult,
+    default_metrics,
+    run_ragas,
+    to_evaluation_dataset,
+    to_topic_adherence_sample,
+    topic_adherence_metrics,
+)
 from .runner import evaluate
 
 __all__ = [
@@ -18,6 +27,10 @@ __all__ = [
     "evaluate",
     "RagasRecord",
     "RagasResult",
+    "REFERENCE_TOPICS",
+    "default_metrics",
     "to_evaluation_dataset",
+    "to_topic_adherence_sample",
+    "topic_adherence_metrics",
     "run_ragas",
 ]
