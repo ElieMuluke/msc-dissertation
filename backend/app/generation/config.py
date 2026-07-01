@@ -11,7 +11,7 @@ class GenerationConfig:
     """Settings for the generation LLM.
 
     Defaults target a local Ollama server. Override the model with the ``OLLAMA_MODEL``
-    env var or by passing a config explicitly. ``qwen3.5:2b`` is the default: small enough
+    env var or by passing a config explicitly. ``llama3.2:3b`` is the default: small enough
     to stay fast on CPU yet supports native tool calling for the planned agent layer.
 
     Attributes:
@@ -22,14 +22,15 @@ class GenerationConfig:
         reasoning: Whether to let the model emit a ``<think>`` reasoning trace. When on,
             Qwen3 routes reasoning into ``additional_kwargs['reasoning_content']`` (not
             ``content``), which the API streams on a separate ``thinking`` channel for a
-            collapsible UI panel. Default OFF and env-gated (``OLLAMA_REASONING``): the
-            local ``qwen3.5:2b`` over-thinks — reasoning fills any ``num_predict`` budget
-            and the answer text never gets emitted — so enabling it only makes sense behind
-            a model whose reasoning converges. ``num_predict`` must cover reasoning *and*
+            collapsible UI panel. Default OFF and env-gated (``OLLAMA_REASONING``): small
+            local Qwen3 models over-think — reasoning fills any ``num_predict`` budget and
+            the answer text never gets emitted — so enabling it only makes sense behind a
+            model whose reasoning converges (and is moot for the default ``llama3.2:3b``,
+            which emits no ``<think>`` trace). ``num_predict`` must cover reasoning *and*
             leave room for the answer when this is on.
     """
 
-    model: str = os.getenv("OLLAMA_MODEL", "qwen3.5:2b")
+    model: str = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
     base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     temperature: float = 0.1
     num_predict: int = int(os.getenv("OLLAMA_NUM_PREDICT", "512"))

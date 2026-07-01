@@ -10,12 +10,12 @@ generate with citations.
 
 ```bash
 ollama serve             # if not already running
-ollama pull qwen3.5:2b   # default model — small, fast on CPU, supports tool calling
+ollama pull llama3.2:3b  # default model — small, fast on CPU, supports tool calling
 ```
 
 Override via env: `OLLAMA_MODEL`, `OLLAMA_BASE_URL`.
 
-`qwen3.5:2b` is the default because it stays responsive on CPU-only hosts and supports
+`llama3.2:3b` is the default because it stays responsive on CPU-only hosts and supports
 native tool calling (for the planned agent layer); `gemma`-family models do not. Latency
 is bounded by `GenerationConfig`: `num_predict` (max output tokens), `num_ctx` (context
 window), and `keep_alive` (keeps the model resident so it is not reloaded per request).
@@ -54,10 +54,11 @@ consumption guide (fetch + ReadableStream, since `EventSource` can't POST) is in
 **Reasoning / "thinking".** Qwen3 models emit a reasoning trace on a separate field
 (`additional_kwargs['reasoning_content']`), not `content`. The generator splits this into
 `thinking` vs `answer` `StreamChunk`s so the API can stream them on distinct SSE channels.
-Gated by `OLLAMA_REASONING` (default **off**): with `qwen3.5:2b` on CPU the reasoning is
-runaway — it fills any `num_predict` budget and the answer never emits — so reasoning is
-disabled to keep answers reliable. Enable only behind a model whose reasoning converges,
-and raise `OLLAMA_NUM_PREDICT` to cover reasoning + answer.
+Gated by `OLLAMA_REASONING` (default **off**): the default `llama3.2:3b` emits no
+`<think>` trace, and small Qwen3 models on CPU run away — reasoning fills any `num_predict`
+budget and the answer never emits — so reasoning is disabled to keep answers reliable.
+Enable only behind a model whose reasoning converges, and raise `OLLAMA_NUM_PREDICT` to
+cover reasoning + answer.
 
 ```bash
 curl -N -X POST http://localhost:8000/rag/answer/stream \
@@ -95,8 +96,9 @@ WebSocket progress gateway) stays responsive.
 
 ## Limitations / Next
 
-- Collapsible "thinking" is wired end-to-end but disabled by default: the local
-  `qwen3.5:2b` over-thinks on CPU (reasoning never converges within budget). Needs a
-  reasoning-capable model (or GPU) before `OLLAMA_REASONING` can be turned on.
+- Collapsible "thinking" is wired end-to-end but disabled by default: the default
+  `llama3.2:3b` emits no reasoning trace, and small Qwen3 models over-think on CPU
+  (reasoning never converges within budget). Needs a reasoning-capable model (or GPU)
+  before `OLLAMA_REASONING` can be turned on.
 - Evaluation of generation quality (RAG Triad: groundedness, answer relevance, context
   relevance) is the next step — see `docs/evaluation.md` and task #3.

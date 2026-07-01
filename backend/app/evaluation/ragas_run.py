@@ -33,6 +33,7 @@ import argparse
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -122,17 +123,19 @@ def _build_ragas_embeddings(embedding_model: str):
     return LangchainEmbeddingsWrapper(hf)
 
 
-def _persist(result: RagasResult, name: str, results_dir: Path) -> None:
-    """Write per-query results to ``<results_dir>/<name>.{csv,json}`` for inspection."""
+def _persist(result: RagasResult, name: str, results_dir: Path) -> list[Path]:
+    """Write per-query results to ``<results_dir>/<name>.{csv,json}``; return the paths."""
     import pandas as pd
 
     results_dir.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame(result.sample_scores)
-    df.to_csv(results_dir / f"{name}.csv", index=False)
-    (results_dir / f"{name}.json").write_text(
+    csv_path = results_dir / f"{name}.csv"
+    json_path = results_dir / f"{name}.json"
+    pd.DataFrame(result.sample_scores).to_csv(csv_path, index=False)
+    json_path.write_text(
         json.dumps(result.sample_scores, ensure_ascii=False, indent=2, default=str),
         encoding="utf-8",
     )
+    return [csv_path, json_path]
 
 
 def _print_summary(title: str, result: RagasResult) -> None:
@@ -199,14 +202,17 @@ def main(argv=None) -> int:
     _warn_if_self_eval(judge_model, gen_config.model)
     embeddings = _build_ragas_embeddings(rag_config.embedding_model)
 
+    # Unique per-run tag (k + UTC timestamp) so runs don't overwrite each other.
+    run_tag = f"k{args.k}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+
     core4 = _run_core4(generator, args.k, golden, llm, embeddings)
-    _persist(core4, "core4_per_query", args.results_dir)
+    run_files = _persist(core4, f"core4_per_query_{run_tag}", args.results_dir)
 
     topic = None
     if not args.skip_topic:
         in_scope = [r for r in golden if r.get("category") != "no_answer"]
         topic = _run_topic_adherence(generator, args.k, in_scope, out_of_scope, llm)
-        _persist(topic, "topic_adherence_per_query", args.results_dir)
+        run_files += _persist(topic, f"topic_adherence_per_query_{run_tag}", args.results_dir)
 
     mlflow.set_tracking_uri(f"sqlite:///{_BACKEND / 'mlflow.db'}")
     mlflow.set_experiment(args.experiment)
@@ -232,7 +238,8 @@ def main(argv=None) -> int:
             mlflow.log_metrics(topic.mean_scores)
             mlflow.log_metrics({f"{k}_nan": v for k, v in topic.nan_counts.items()})
             mlflow.log_dict({"samples": topic.sample_scores}, "topic_adherence_sample_scores.json")
-        mlflow.log_artifacts(str(args.results_dir), artifact_path="eval_results")
+        for path in run_files:  # only this run's files, not the whole accumulating dir
+            mlflow.log_artifact(str(path), artifact_path="eval_results")
 
     print(f"\nJudge model: {judge_model} (temp {_JUDGE_TEMPERATURE}) | Generator: {gen_config.model}")
     _print_summary(f"Core-4 generation metrics over {len(golden)} golden questions (k={args.k})", core4)
