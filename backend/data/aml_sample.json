@@ -1,0 +1,38 @@
+[
+  {
+    "id": "policy-ctr-10k",
+    "text": "Currency Transaction Report (CTR): financial institutions must file a CTR for any cash transaction exceeding 10,000 USD in a single business day, aggregating multiple transactions by the same customer.",
+    "doc_type": "policy",
+    "metadata": {"source": "aml_sample", "topic": "reporting"}
+  },
+  {
+    "id": "policy-kyc-cdd",
+    "text": "Know Your Customer (KYC) and Customer Due Diligence (CDD): verify and record customer identity before onboarding, and assess the money-laundering risk of the business relationship.",
+    "doc_type": "policy",
+    "metadata": {"source": "aml_sample", "topic": "kyc"}
+  },
+  {
+    "id": "policy-sar",
+    "text": "Suspicious Activity Report (SAR): file a SAR when a transaction has no apparent lawful or economic purpose, or is inconsistent with the customer's known legitimate activity.",
+    "doc_type": "policy",
+    "metadata": {"source": "aml_sample", "topic": "reporting"}
+  },
+  {
+    "id": "policy-pep",
+    "text": "Politically Exposed Persons (PEP): apply enhanced due diligence to PEPs, including senior management approval, source-of-wealth checks, and ongoing enhanced monitoring.",
+    "doc_type": "policy",
+    "metadata": {"source": "aml_sample", "topic": "kyc"}
+  },
+  {
+    "id": "action-structuring",
+    "text": "Structuring: a customer splits large cash deposits into smaller amounts across days or branches to evade the currency transaction reporting threshold.",
+    "doc_type": "action",
+    "metadata": {"source": "aml_sample", "topic": "typology"}
+  },
+  {
+    "id": "action-shell-wire",
+    "text": "Shell company wire: an outbound wire transfer sent to a shell company registered in a high-risk jurisdiction with no clear business rationale.",
+    "doc_type": "action",
+    "metadata": {"source": "aml_sample", "topic": "typology"}
+  }
+]
