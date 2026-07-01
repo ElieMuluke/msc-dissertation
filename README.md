@@ -11,15 +11,42 @@ frontend/   React + Vite + TS UI               (see frontend/README.md)
 docs/       Feature docs                        (see docs/rag.md)
 ```
 
+## Prerequisites
+
+Install [uv](https://docs.astral.sh/uv/) (Python package/venv manager):
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
 ## Quickstart
 
 ```bash
 # Backend
-cd backend && uv pip install -r requirements.txt
+cd backend
+uv venv .venv                 # create virtual environment
+source .venv/bin/activate     # activate it
+uv pip install -r requirements.txt
 uvicorn app.main:app --reload          # http://localhost:8000  (docs at /docs)
 
 # Frontend (new terminal)
 cd frontend && npm install && npm run dev   # http://localhost:5173
+```
+
+## Evaluation
+
+Run from `backend/` (venv activated). Both log to a local SQLite MLflow store (`backend/mlflow.db`).
+
+```bash
+# Retrieval eval (sample corpus, throwaway store)
+python -m app.evaluation.run --k 5
+
+# RAGAS generation eval over the golden set (requires Ollama running)
+python -m app.evaluation.ragas_run --k 4
+python -m app.evaluation.ragas_run --k 4 --limit 6   # quick bounded run
+
+# View results
+mlflow ui --backend-store-uri sqlite:///mlflow.db    # http://localhost:5000
 ```
 
 ## Features
