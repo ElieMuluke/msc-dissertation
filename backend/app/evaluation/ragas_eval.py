@@ -217,6 +217,7 @@ def run_ragas(
         NaN counts, all derived from the public ``to_pandas()`` API.
     """
     from ragas import evaluate
+    from ragas.metrics.base import ModeMetric
     from ragas.run_config import RunConfig
 
     chosen_metrics = metrics or default_metrics()
@@ -227,5 +228,17 @@ def run_ragas(
         embeddings=embeddings,
         run_config=run_config or RunConfig(max_workers=1, timeout=600),
     )
+    df = result.to_pandas()
+    # Any metric exposing both `.name` and `.mode` (e.g. TopicAdherenceScore, which we
+    # instantiate once per mode) structurally matches ragas's `ModeMetric` protocol, so
+    # `evaluate()` writes its column as "<name>(mode=<mode>)" instead of the plain name we
+    # assigned. Rename back so downstream lookups (and persisted results) use the plain name.
+    rename = {
+        f"{m.name}(mode={m.mode})": m.name
+        for m in chosen_metrics
+        if isinstance(m, ModeMetric) and f"{m.name}(mode={m.mode})" in df.columns
+    }
+    if rename:
+        df = df.rename(columns=rename)
     metric_names = [m.name for m in chosen_metrics]
-    return _summarize(result.to_pandas(), metric_names)
+    return _summarize(df, metric_names)

@@ -93,6 +93,11 @@ reproducible.
   MLflow artifacts), so individual failure cases can be inspected — not just aggregate means.
 - NaN scores (malformed input / judge parse failures) are counted per metric, excluded from
   the mean, warned about in logs, and logged to MLflow as `*_nan` — never silently averaged.
+- `TopicAdherenceScore` instances expose both `.name` and `.mode`, so they structurally match
+  ragas's internal `ModeMetric` protocol; `ragas.evaluate()` then writes their result column as
+  `"<name>(mode=<mode>)"` instead of the plain name we assigned. `run_ragas` renames those
+  columns back before summarizing, so `topic_adherence_{precision,recall,f1}` are read (and
+  persisted) under their plain names.
 
 ```bash
 # from backend/ — needs Ollama running (generation + judge)
