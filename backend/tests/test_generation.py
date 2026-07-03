@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.generation.config import GenerationConfig
 from app.generation.generator import AnswerGenerator
 from app.generation.prompt import build_prompt
 from app.ingestion.rag.models import DocumentType, SearchResult
@@ -50,3 +51,11 @@ def test_generate_without_results_flags_no_context():
     answer = gen.generate("threshold?")
     assert answer.used_context is False
     assert answer.citations == []
+
+
+def test_default_num_predict_leaves_room_for_reasoning_and_an_answer():
+    """Regression: a 512-token cap let reasoning models (e.g. deepseek-r1:14b) spend the
+    whole budget on their <think> trace, producing empty/truncated answers in the 2026-07
+    eval run. The default must be large enough to cover a reasoning trace plus a full
+    answer, matching the num_predict already used for the RAGAS judge LLM."""
+    assert GenerationConfig().num_predict >= 2048

@@ -88,13 +88,44 @@ def _load_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+class _InMemoryJudgeCache:
+    """Per-run judge-response cache, shared across all metrics scoring one dataset.
+
+    ``topic_adherence_metrics()`` instantiates one ``TopicAdherenceScore`` per mode
+    (precision/recall/f1); each is a fully independent metric object that re-runs topic
+    extraction, refusal-checking and classification against the judge LLM for the *same*
+    query. Without a shared cache, the three modes can disagree with each other (observed:
+    ~16% of queries in a 2026-07 run had a reported F1 inconsistent with the harmonic mean
+    of that same row's own precision/recall — proof the three modes were scored from
+    different judge calls rather than one shared confusion matrix). RAGAS's
+    ``LangchainLLMWrapper`` accepts a cache backend and wraps its ``generate``/``agenerate``
+    calls with it (see ``ragas.cache.cacher``); passing one shared instance here makes
+    identical judge prompts (same question/topic/reference_topics) resolve once per
+    ``evaluate()`` run and get reused by every mode, keeping precision/recall/f1 consistent.
+    """
+
+    def __init__(self) -> None:
+        self._store: dict[str, object] = {}
+
+    def get(self, key: str) -> object:
+        return self._store.get(key)
+
+    def set(self, key: str, value: object) -> None:
+        self._store[key] = value
+
+    def has_key(self, key: str) -> bool:
+        return key in self._store
+
+
 def _build_ragas_llm(config: GenerationConfig):
     """Wrap a local Ollama chat model as the RAGAS LLM judge (independent of the generator).
 
     The judge is a *different model* from answer generation to avoid self-evaluation bias:
     ``RAGAS_JUDGE_MODEL`` (default ``llama3.2:3b``, a different family than the ``qwen*``
     generator). Deterministic temperature and a high token cap keep the structured JSON that
-    RAGAS metrics require well-formed and untruncated.
+    RAGAS metrics require well-formed and untruncated. A shared in-memory cache is attached
+    so repeated identical judge prompts within one run (see :class:`_InMemoryJudgeCache`)
+    are answered once and reused rather than re-invoked with a possibly different result.
 
     Returns:
         A tuple ``(wrapped_llm, judge_model_name)`` so the caller can log which judge ran.
@@ -111,7 +142,7 @@ def _build_ragas_llm(config: GenerationConfig):
         num_ctx=config.num_ctx,
         keep_alive=config.keep_alive,
     )
-    return LangchainLLMWrapper(chat), judge_model
+    return LangchainLLMWrapper(chat, cache=_InMemoryJudgeCache()), judge_model
 
 
 def _build_ragas_embeddings(embedding_model: str):

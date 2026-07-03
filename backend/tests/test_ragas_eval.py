@@ -12,6 +12,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from app.evaluation.ragas_eval import RagasRecord, default_metrics, run_ragas, to_evaluation_dataset
+from app.generation.config import GenerationConfig
 
 
 def test_to_evaluation_dataset_maps_fields():
@@ -84,3 +85,21 @@ def test_run_ragas_renames_mode_metric_columns_back_to_plain_name():
     assert result.mean_scores["topic_adherence_precision"] == 0.5
     assert result.nan_counts["topic_adherence_precision"] == 0
     assert result.sample_scores[0]["topic_adherence_precision"] == 1.0
+
+
+def test_build_ragas_llm_shares_one_cache_across_topic_adherence_modes():
+    """Regression: topic_adherence_metrics() creates one TopicAdherenceScore per mode
+    (precision/recall/f1), each independently re-invoking the judge LLM for the same
+    query. Without a shared cache the three modes can disagree with each other (observed
+    in a 2026-07 run: ~16% of queries had a reported F1 inconsistent with the harmonic
+    mean of that row's own precision/recall). The judge LLM must be built with a cache so
+    identical prompts resolve once and get reused by every mode."""
+    from app.evaluation.ragas_run import _build_ragas_llm
+
+    config = GenerationConfig()
+    llm, _ = _build_ragas_llm(config)
+
+    assert llm.cache is not None
+    llm.cache.set("k", "v")
+    assert llm.cache.has_key("k")
+    assert llm.cache.get("k") == "v"

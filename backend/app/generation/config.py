@@ -15,7 +15,14 @@ class GenerationConfig:
     to stay fast on CPU yet supports native tool calling for the planned agent layer.
 
     Attributes:
-        num_predict: Cap on generated tokens — bounds worst-case latency.
+        num_predict: Cap on generated tokens — bounds worst-case latency. Reasoning models
+            (e.g. ``deepseek-r1``, Qwen3 with ``reasoning`` on) spend an unbounded prefix of
+            this budget on their ``<think>`` trace; a too-small cap lets that trace consume
+            the whole budget and leaves zero or a truncated answer, so the default must
+            cover a typical reasoning trace *and* a full answer (see 2026-07 eval run: a
+            512-token cap produced empty/mid-word-truncated answers from ``deepseek-r1:14b``
+            on several golden-set questions). Matches the ``num_predict=2048`` already used
+            for the RAGAS judge LLM in ``ragas_run.py``.
         num_ctx: Context window; large enough for a few retrieved chunks plus the prompt.
         keep_alive: How long Ollama keeps the model resident, so it is not reloaded
             (and re-read from disk) on every request.
@@ -33,7 +40,7 @@ class GenerationConfig:
     model: str = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
     base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     temperature: float = 0.1
-    num_predict: int = int(os.getenv("OLLAMA_NUM_PREDICT", "512"))
+    num_predict: int = int(os.getenv("OLLAMA_NUM_PREDICT", "2048"))
     num_ctx: int = 4096
     keep_alive: str = "30m"
     reasoning: bool = os.getenv("OLLAMA_REASONING", "").lower() in {"1", "true", "yes"}
