@@ -2,7 +2,15 @@
 
     python -m app.evaluation.ragas_run --k 4
     python -m app.evaluation.ragas_run --k 4 --limit 6   # quick bounded run
+    python -m app.evaluation.ragas_run --k 4 --collection aml_sections_b --bm25-weight 0.3
     mlflow ui --backend-store-uri sqlite:///mlflow.db    # experiment: rag-ragas
+
+The retrieval side under test is chosen entirely by flags: ``--collection`` picks the
+chunking variant (``aml_corpus`` = page-window baseline; ``aml_sections_a`` = section
+chunks; ``aml_sections_b`` = section chunks with parent-context prefix) and
+``--bm25-weight`` turns on hybrid BM25+vector fusion. The active config — including a
+store fingerprint (chunk count + detected chunking style) — is printed at startup and
+logged to MLflow, so a run can never silently evaluate the wrong index.
 
 Requires Ollama running. Answers are generated against the *real* ingested corpus (the
 persisted Chroma store built from the JMLSG/FATF/sanctions PDFs), so the evaluation
@@ -117,15 +125,99 @@ class _InMemoryJudgeCache:
         return key in self._store
 
 
+# Binary judge-verdict keys across the RAGAS metric schemas: context_recall's
+# ``attributed`` and faithfulness's ``verdict`` are pydantic ``int`` fields, so a judge
+# emitting a fractional "partially true" value (0.5) fails validation even in valid JSON.
+_BINARY_VERDICT_KEYS = ("attributed", "verdict")
+
+
+def _coerce_binary_verdicts(node: object) -> None:
+    """Recursively round fractional binary verdicts to ints, in place.
+
+    Conservative policy (disclosed in docs/evaluation.md): 0.5 rounds *down* — an unsure
+    judge gives no credit, biasing scores down rather than up.
+    """
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in _BINARY_VERDICT_KEYS and isinstance(value, float):
+                node[key] = 1 if value > 0.5 else 0
+            else:
+                _coerce_binary_verdicts(value)
+    elif isinstance(node, list):
+        for item in node:
+            _coerce_binary_verdicts(item)
+
+
+def _repair_judge_json(text: str) -> str:
+    """Repair a judge completion so RAGAS's first-pass pydantic parse succeeds.
+
+    Two failure classes observed with small local judges (2026-07-06/07 runs), both of
+    which otherwise NaN the sample — and worse, trigger RAGAS's ``FixOutputFormat``
+    retry, which is itself broken with a JSON-constrained judge (it expects
+    ``{"text": ...}`` back and instead receives the corrected object, or a
+    double-escaped string):
+
+    - Invalid/double-encoded JSON (literal ``\\n`` outside strings, the whole object
+      wrapped in a JSON string) — repaired via ``json_repair``.
+    - Valid JSON with fractional binary verdicts (``"attributed": 0.5``) — coerced by
+      :func:`_coerce_binary_verdicts`.
+
+    Text that cannot be repaired into an object/array is returned unchanged so RAGAS's
+    normal failure path (and the NaN accounting) still applies.
+    """
+    import json_repair
+
+    def _parse(raw: str) -> object:
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            pass
+        # Literal \n / \t sequences *between* tokens are the most common breakage; turn
+        # them into real whitespace (strict=False keeps any now-raw newline legal inside
+        # strings), then fall back to full repair.
+        unescaped = raw.replace("\\n", "\n").replace("\\t", "\t")
+        try:
+            return json.loads(unescaped, strict=False)
+        except json.JSONDecodeError:
+            return json_repair.loads(unescaped)
+
+    parsed = _parse(text)
+    if isinstance(parsed, str) and parsed.strip().startswith(("{", "[")):
+        # double-encoded: a JSON string whose content is the actual JSON object
+        parsed = _parse(parsed)
+    if not isinstance(parsed, (dict, list)):
+        return text
+    _coerce_binary_verdicts(parsed)
+    return json.dumps(parsed, ensure_ascii=False)
+
+
+def _repair_generations(result):
+    """Apply :func:`_repair_judge_json` to every generation in a ChatResult.
+
+    Both ``generation.text`` and ``message.content`` are updated: RAGAS reads ``.text``
+    off the LLMResult, and ``.text`` is derived from the message only at construction.
+    """
+    for generation in result.generations:
+        repaired = _repair_judge_json(generation.text)
+        if repaired != generation.text:
+            generation.text = repaired
+            generation.message.content = repaired
+    return result
+
+
 def _build_ragas_llm(config: GenerationConfig):
     """Wrap a local Ollama chat model as the RAGAS LLM judge (independent of the generator).
 
-    The judge is a *different model* from answer generation to avoid self-evaluation bias:
-    ``RAGAS_JUDGE_MODEL`` (default ``llama3.2:3b``, a different family than the ``qwen*``
-    generator). Deterministic temperature and a high token cap keep the structured JSON that
-    RAGAS metrics require well-formed and untruncated. A shared in-memory cache is attached
-    so repeated identical judge prompts within one run (see :class:`_InMemoryJudgeCache`)
-    are answered once and reused rather than re-invoked with a possibly different result.
+    The judge is set via ``RAGAS_JUDGE_MODEL`` (default :data:`_DEFAULT_JUDGE_MODEL`) and
+    should be a *different family* from answer generation to avoid self-evaluation bias.
+    ``format="json"`` turns on Ollama's grammar-constrained JSON decoding: every RAGAS
+    judge prompt expects structured JSON, and small judges otherwise emit invalid escapes
+    (observed: ``OutputParserException`` → NaN scores). Each completion is additionally
+    passed through :func:`_repair_judge_json` before RAGAS parses it. Deterministic
+    temperature and a high token cap keep that JSON untruncated. A shared in-memory cache
+    is attached so repeated identical judge prompts within one run (see
+    :class:`_InMemoryJudgeCache`) are answered once and reused rather than re-invoked
+    with a possibly different result.
 
     Returns:
         A tuple ``(wrapped_llm, judge_model_name)`` so the caller can log which judge ran.
@@ -133,11 +225,21 @@ def _build_ragas_llm(config: GenerationConfig):
     from langchain_ollama import ChatOllama
     from ragas.llms import LangchainLLMWrapper
 
+    class _JudgeChatOllama(ChatOllama):
+        """ChatOllama whose completions are repaired before RAGAS's pydantic parse."""
+
+        def _generate(self, *args, **kwargs):
+            return _repair_generations(super()._generate(*args, **kwargs))
+
+        async def _agenerate(self, *args, **kwargs):
+            return _repair_generations(await super()._agenerate(*args, **kwargs))
+
     judge_model = os.getenv("RAGAS_JUDGE_MODEL", _DEFAULT_JUDGE_MODEL)
-    chat = ChatOllama(
+    chat = _JudgeChatOllama(
         model=judge_model,
         base_url=config.base_url,
         temperature=_JUDGE_TEMPERATURE,
+        format="json",
         num_predict=2048,
         num_ctx=config.num_ctx,
         keep_alive=config.keep_alive,
@@ -182,6 +284,19 @@ def _print_summary(title: str, result: RagasResult) -> None:
                 print(f"  {name}: {count}")
 
 
+def _describe_store(rag) -> tuple[int, str]:
+    """Fingerprint the store the eval will retrieve from: chunk count + chunking style.
+
+    Style is inferred from a probe retrieval (what the eval will actually see):
+    section-aware chunks carry a ``section`` metadata key; page-window chunks don't.
+    """
+    n_chunks = sum(source.pages for source in rag.list_sources())
+    probe = rag.search("customer due diligence", k=1)
+    if not probe:
+        return n_chunks, "unknown"
+    return n_chunks, "section" if "section" in probe[0].metadata else "page-window"
+
+
 def _run_core4(generator, k, golden_rows, llm, embeddings) -> RagasResult:
     records = []
     for row in golden_rows:
@@ -212,6 +327,7 @@ def main(argv=None) -> int:
     parser.add_argument("--out-of-scope", type=Path, default=_DATASETS / "out_of_scope_v1.jsonl")
     parser.add_argument("--persist-dir", default="./chroma_db", help="Chroma store with the real corpus")
     parser.add_argument("--collection", default="aml_corpus")
+    parser.add_argument("--bm25-weight", type=float, default=0.0, help="BM25 weight for hybrid search (0 = pure vector)")
     parser.add_argument("--experiment", default="rag-ragas")
     parser.add_argument("--results-dir", type=Path, default=_BACKEND / "eval_results")
     parser.add_argument("--limit", type=int, default=None, help="Cap questions per set (bounded runs)")
@@ -224,10 +340,24 @@ def main(argv=None) -> int:
         golden = golden[: args.limit]
         out_of_scope = out_of_scope[: args.limit]
 
-    rag_config = RagConfig(persist_dir=args.persist_dir, collection_name=args.collection)
+    rag_config = RagConfig(
+        persist_dir=args.persist_dir, collection_name=args.collection, bm25_weight=args.bm25_weight
+    )
     gen_config = GenerationConfig()
     rag = build_rag(rag_config)  # real, already-ingested corpus — no ingestion here
     generator = build_answer_generator(rag, gen_config)
+
+    n_chunks, chunk_style = _describe_store(rag)
+    if n_chunks == 0:
+        parser.error(
+            f"collection {args.collection!r} in {args.persist_dir} is empty — "
+            "ingest the corpus first (or pass --collection/--persist-dir)."
+        )
+    print(
+        f"Active config: collection={args.collection!r} @ {args.persist_dir} | "
+        f"{n_chunks} chunks ({chunk_style} chunking) | bm25_weight={args.bm25_weight} | "
+        f"k={args.k} | generator={gen_config.model}"
+    )
 
     llm, judge_model = _build_ragas_llm(gen_config)
     _warn_if_self_eval(judge_model, gen_config.model)
@@ -260,6 +390,10 @@ def main(argv=None) -> int:
                 "embedding_model": rag_config.embedding_model,
                 "ragas_version": ragas.__version__,
                 "golden_set": args.golden.name,
+                "collection": args.collection,
+                "bm25_weight": args.bm25_weight,
+                "n_chunks": n_chunks,
+                "chunk_style": chunk_style,
             }
         )
         mlflow.log_metrics(core4.mean_scores)

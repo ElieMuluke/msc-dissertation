@@ -93,10 +93,31 @@ def to_evaluation_dataset(records: Sequence[RagasRecord]) -> "EvaluationDataset"
     return EvaluationDataset(samples=samples)
 
 
+# Appended to context_recall's classification-prompt instruction. A 2026-07-07 diagnosis
+# of every fractional (0.5) judge verdict found two failure styles this addresses at the
+# source: exact-phrase literalism (support present verbatim, judge hedged over wording)
+# and hedging with "partially attributed" 0.5 values that violate ragas's binary int
+# schema. Kept as a suffix (not a rewrite) so ragas's stock instruction and few-shot
+# examples stay intact.
+_BINARY_JUDGE_SUFFIX = (
+    " Attribute a sentence to the context when its meaning is clearly supported by the "
+    "context, even if the wording differs. You must answer with strictly binary values: "
+    "1 (Yes) or 0 (No). Never output fractional values such as 0.5; if unsure, answer 0."
+)
+
+
 def default_metrics() -> list["Metric"]:
-    """The default RAGAS quartet: faithfulness, answer relevancy, context precision/recall."""
+    """The default RAGAS quartet: faithfulness, answer relevancy, context precision/recall.
+
+    context_recall's judge prompt is hardened with :data:`_BINARY_JUDGE_SUFFIX` (the only
+    metric observed to draw fractional verdicts from small local judges). The append is
+    idempotent because ragas metrics are module-level singletons.
+    """
     from ragas.metrics import answer_relevancy, context_precision, context_recall, faithfulness
 
+    prompt = context_recall.context_recall_prompt
+    if _BINARY_JUDGE_SUFFIX not in prompt.instruction:
+        prompt.instruction += _BINARY_JUDGE_SUFFIX
     return [faithfulness, answer_relevancy, context_precision, context_recall]
 
 
@@ -129,12 +150,91 @@ def topic_adherence_metrics(
     RAGAS's TopicAdherenceScore returns a single figure chosen by its ``mode`` (precision,
     recall or f1). To emit all three per query we instantiate one metric per mode and give
     each a distinct name so they land in separate output columns.
+
+    The metrics are shape-safe. RAGAS's stock implementation asks the judge to classify
+    all N extracted topics against the reference topics in a single call; small local
+    judges often return the wrong count (e.g. one verdict per *reference* topic, or off
+    by one), which crashes the elementwise confusion-matrix math (observed: 7/64 samples
+    NaN in a 2026-07-07 run). Here each extracted topic is classified in its **own**
+    judge call — same prompts, same scoring math as ragas 0.2.15 — so a count mismatch
+    is structurally impossible. Samples where the judge still misbehaves (no topics
+    extracted, empty classification) are scored NaN with a warning naming the question —
+    counted and excluded from the mean by :func:`run_ragas` (see
+    :attr:`RagasResult.nan_counts`) — instead of aborting the job.
     """
     from ragas.metrics import TopicAdherenceScore
+    from ragas.metrics._topic_adherence import (
+        TopicClassificationInput,
+        TopicExtractionInput,
+        TopicRefusedInput,
+    )
+
+    def _question_of(sample) -> str:
+        return next(
+            (m.content for m in sample.user_input if getattr(m, "type", None) == "human"),
+            "<unknown question>",
+        )
+
+    def _skip(sample, reason: str) -> float:
+        logger.warning(
+            "Topic-adherence sample skipped for %r (%s); scored NaN and excluded from the mean.",
+            _question_of(sample),
+            reason,
+        )
+        return float("nan")
+
+    class _SafeTopicAdherenceScore(TopicAdherenceScore):
+        async def _multi_turn_ascore(self, sample, callbacks) -> float:
+            try:
+                return await self._per_topic_ascore(sample, callbacks)
+            except (ValueError, TypeError) as exc:  # safety net: never crash the job
+                return _skip(sample, f"judge returned malformed output: {exc}")
+
+        async def _per_topic_ascore(self, sample, callbacks) -> float:
+            assert self.llm is not None, "LLM must be set"
+            user_input = sample.pretty_repr()
+
+            extraction = await self.topic_extraction_prompt.generate(
+                data=TopicExtractionInput(user_input=user_input), llm=self.llm, callbacks=callbacks
+            )
+            topics = extraction.topics
+            if not topics:
+                return _skip(sample, "judge extracted no topics")
+
+            answered: list[bool] = []
+            on_topic: list[bool] = []
+            for topic in topics:
+                refusal = await self.topic_refused_prompt.generate(
+                    data=TopicRefusedInput(user_input=user_input, topic=topic),
+                    llm=self.llm,
+                    callbacks=callbacks,
+                )
+                answered.append(not refusal.refused_to_answer)
+                classification = await self.topic_classification_prompt.generate(
+                    data=TopicClassificationInput(
+                        reference_topics=list(sample.reference_topics), topics=[topic]
+                    ),
+                    llm=self.llm,
+                    callbacks=callbacks,
+                )
+                if not classification.classifications:
+                    return _skip(sample, f"judge returned no classification for topic {topic!r}")
+                on_topic.append(bool(classification.classifications[0]))
+
+            true_positives = sum(a and c for a, c in zip(answered, on_topic))
+            false_positives = sum(a and not c for a, c in zip(answered, on_topic))
+            false_negatives = sum(not a and c for a, c in zip(answered, on_topic))
+            precision = true_positives / (true_positives + false_positives + 1e-10)
+            recall = true_positives / (true_positives + false_negatives + 1e-10)
+            if self.mode == "precision":
+                return precision
+            if self.mode == "recall":
+                return recall
+            return 2 * (precision * recall) / (precision + recall + 1e-10)
 
     metrics: list["Metric"] = []
     for mode in modes:
-        metric = TopicAdherenceScore(mode=mode)  # type: ignore[arg-type]
+        metric = _SafeTopicAdherenceScore(mode=mode)  # type: ignore[arg-type]
         metric.name = f"topic_adherence_{mode}"
         metrics.append(metric)
     return metrics

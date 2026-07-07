@@ -10,6 +10,28 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-07 (later) — 0.5-verdict diagnosis + judge prompt hardening (Rec 2)
+**Done:** Read-only diagnosis of why mistral-nemo emits fractional 0.5 verdicts: extracted
+all 12 observed cases (6 crash-logged completions from the 07-06 runs + raw replay of all
+57 rows of today's clean sections_b+bm25 run, un-repaired judge, temp 0). Classified:
+**7 retrieval gaps** (support exists in corpus but not top-4 — 1 chunk-boundary cut of
+FATF Rec 1 p10#0/#1, 6 ranking misses incl. vocabulary indirection: corpus says
+"Recommendation 10" for CDD, "report to the NCA" for SAR, "sanctions"=penalties collision),
+**2 judge literalism** (support verbatim in chunk, judge hedged on wording), **1 paraphrase
+gap** (golden "SAR" vs corpus "report to NCA"), 0 pure decomposition artifacts (2
+aggravations). Fractional queries drop 6/57 → 1/57 as retrieval improves → 0.5 ≈ honest
+weak-support signal; 0.5→0 coercion validated. **Implemented Rec 2 only** (user choice):
+`_BINARY_JUDGE_SUFFIX` appended idempotently to context_recall's classification
+instruction in `default_metrics()` — attribute on meaning, strictly 0/1. Live A/B on the 7
+failing cases: 12 → 1 fractional; literalism/paraphrase hedges became correct 1s, retrieval
+gaps became clean 0s. Suite 74 pass; docs updated. MLflow shows user already ran full
+comparisons remotely (all deepseek-r1:14b gen): baseline 07-06 15:34, sections_a 17:17,
+sections_b+bm25 17:53, sections_b+bm25 clean rerun 07-07 13:17 (0 NaN).
+**State:** Recs 1 (reranker/query expansion), 3 (reword s46 golden ground truth), and
+repair-layer coercion logging NOT implemented (deferred by user). Changes uncommitted.
+**Next:** Build the before/after comparison table from the 4 MLflow runs; decide on Rec 1/3;
+consider rerunning sections_b+bm25 with hardened prompt for final dissertation numbers.
+
 ## 2026-07-07 — Judge output repair + per-topic adherence classification
 **Done:** Follow-up to 07-06: a fresh full run still lost 4/57 context_recall + 7/64
 topic-adherence samples to NaN. Root causes (confirmed in ragas 0.2.15 source): (a) judge

@@ -88,6 +88,13 @@ reproducible. The judge runs with Ollama's `format="json"` (grammar-constrained 
 every RAGAS judge prompt expects structured JSON, and small local judges otherwise emit
 invalid escape sequences that fail parsing and NaN the sample.
 
+context_recall's judge instruction is hardened (`_BINARY_JUDGE_SUFFIX` in
+`ragas_eval.default_metrics`): attribute on **meaning** (not exact wording) and answer
+strictly 0/1, never 0.5. A 2026-07-07 diagnosis of all fractional verdicts found they came
+from exact-phrase literalism and "partially attributed" hedging; on the previously-failing
+cases the hardened prompt cut fractional emissions 12 → 1 and corrected the
+literalism-driven hedges to correct binary verdicts.
+
 Judge completions are additionally passed through a repair layer (`_repair_judge_json`)
 before RAGAS parses them: invalid/double-encoded JSON is fixed via `json-repair`, and
 fractional binary verdicts (e.g. `"attributed": 0.5`, which RAGAS's `int` schema rejects)
