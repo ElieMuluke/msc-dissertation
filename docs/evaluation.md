@@ -82,9 +82,20 @@ are not hardcoded in the dataset.
 ### Judge model (independence + reproducibility)
 
 The RAGAS judge is a **different model family** than the answer generator to avoid
-self-evaluation bias: `RAGAS_JUDGE_MODEL` (default `llama3.2:3b`) vs the `qwen*` generator
+self-evaluation bias: `RAGAS_JUDGE_MODEL` (default `qwen2.5:3b`) vs the generator
 (`OLLAMA_MODEL`). The judge model and temperature are logged to MLflow so results are
-reproducible.
+reproducible. The judge runs with Ollama's `format="json"` (grammar-constrained decoding):
+every RAGAS judge prompt expects structured JSON, and small local judges otherwise emit
+invalid escape sequences that fail parsing and NaN the sample.
+
+Judge completions are additionally passed through a repair layer (`_repair_judge_json`)
+before RAGAS parses them: invalid/double-encoded JSON is fixed via `json-repair`, and
+fractional binary verdicts (e.g. `"attributed": 0.5`, which RAGAS's `int` schema rejects)
+are coerced with a **conservative rounding policy — 0.5 rounds down to 0**: an unsure
+judge gives no credit, so faithfulness/context_recall are biased down, never up. This also
+keeps RAGAS's own `FixOutputFormat` retry from engaging (it is incompatible with a
+JSON-constrained judge and mangles output further). Unrepairable text passes through
+unchanged into the normal NaN accounting.
 
 ### Output integrity
 
@@ -93,6 +104,18 @@ reproducible.
   MLflow artifacts), so individual failure cases can be inspected — not just aggregate means.
 - NaN scores (malformed input / judge parse failures) are counted per metric, excluded from
   the mean, warned about in logs, and logged to MLflow as `*_nan` — never silently averaged.
+- The topic-adherence metrics are shape-safe: RAGAS's stock implementation classifies all
+  N extracted topics against the reference topics in one judge call, and small judges
+  return the wrong count (one verdict per *reference* topic, or off by one), crashing the
+  confusion-matrix math. Our metrics classify **one topic per judge call** (same prompts,
+  same scoring math), so a count mismatch is structurally impossible; the remaining
+  unjudgeable cases (no topics extracted — e.g. a greeting — or an empty classification)
+  are scored NaN with a warning naming the question, and flow into the NaN accounting
+  above.
+- The runner prints the **active retrieval config** at startup — collection, persist dir,
+  chunk count, detected chunking style (`section` vs `page-window`), `bm25_weight`, `k`,
+  generator — and logs `n_chunks`/`chunk_style` to MLflow, so a run can never silently
+  evaluate the wrong index. An empty collection aborts immediately.
 - `TopicAdherenceScore` instances expose both `.name` and `.mode`, so they structurally match
   ragas's internal `ModeMetric` protocol; `ragas.evaluate()` then writes their result column as
   `"<name>(mode=<mode>)"` instead of the plain name we assigned. `run_ragas` renames those
@@ -103,7 +126,15 @@ reproducible.
 # from backend/ — needs Ollama running (generation + judge)
 python -m app.evaluation.ragas_run --k 4
 python -m app.evaluation.ragas_run --k 4 --limit 6    # quick bounded run
+# evaluate a specific retrieval variant (chunking collection + hybrid weight):
+python -m app.evaluation.ragas_run --k 4 --collection aml_sections_b --bm25-weight 0.3
 ```
+
+The retrieval side under test is chosen entirely by flags — `--collection` picks the
+chunking variant (`aml_corpus` = page-window baseline, `aml_sections_a` = section chunks,
+`aml_sections_b` = section chunks + parent-context prefix) and `--bm25-weight` enables
+hybrid BM25+vector fusion. **Defaults are the baseline** (`aml_corpus`, weight `0.0`):
+running with no flags evaluates the unchanged pipeline, not the new chunking/hybrid work.
 
 Logs to MLflow experiment **rag-ragas** (params: k, n_golden, n_out_of_scope,
 generator_model, judge_model, judge_temperature, embedding_model, ragas_version). Design:
