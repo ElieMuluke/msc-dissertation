@@ -13,8 +13,10 @@ langchain-text-splitters
 langchain-community==0.3.30
 langchain-ollama
 sentence-transformers
+rank_bm25
 pypdf
 mlflow
 ragas==0.2.15
+json-repair
 python-dotenv
 pytest
