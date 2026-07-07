@@ -16,6 +16,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from .config import RagConfig
+from .hybrid import Bm25Index, fuse
 from .models import Document, DocumentType, SearchResult, SourceInfo
 
 _DOC_TYPE_KEY = "doc_type"
@@ -24,11 +25,23 @@ _INGESTED_AT_KEY = "ingested_at"
 
 
 class RagSystem:
-    """Ingest AML policies and financial actions, then search them semantically."""
+    """Ingest AML policies and financial actions, then search them semantically.
 
-    def __init__(self, vectorstore: Chroma, splitter: Optional[RecursiveCharacterTextSplitter] = None) -> None:
+    With ``bm25_weight > 0`` search runs hybrid: BM25 lexical scores are fused with
+    vector relevance scores (see :mod:`.hybrid`). The BM25 index is built lazily from
+    the store's current contents and invalidated by any write (ingest/delete/clear).
+    """
+
+    def __init__(
+        self,
+        vectorstore: Chroma,
+        splitter: Optional[RecursiveCharacterTextSplitter] = None,
+        bm25_weight: float = 0.0,
+    ) -> None:
         self._store = vectorstore
         self._splitter = splitter
+        self._bm25_weight = bm25_weight
+        self._bm25_index: Optional[Bm25Index] = None
 
     def ingest(self, documents: Iterable[Document]) -> int:
         """Embed and persist documents (upsert by id). Returns the number stored.
@@ -48,13 +61,35 @@ class RagSystem:
         if not lc_docs:
             return 0
         self._store.add_documents(lc_docs, ids=ids)
+        self._bm25_index = None  # store changed; lexical index is stale
         return len(lc_docs)
 
     def search(self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None) -> list[SearchResult]:
         """Return the top-``k`` matches, optionally restricted to one document type."""
         where = {_DOC_TYPE_KEY: doc_type.value} if doc_type is not None else None
+        if self._bm25_weight > 0:
+            return self._hybrid_search(query, k, where)
         hits = self._store.similarity_search_with_relevance_scores(query, k=k, filter=where)
         return [_to_result(doc, score) for doc, score in hits]
+
+    def _hybrid_search(self, query: str, k: int, where: Optional[dict]) -> list[SearchResult]:
+        """Fuse BM25 and vector scores over a wide candidate pool; return top-``k``."""
+        pool = max(30, 5 * k)
+        vector_hits = self._store.similarity_search_with_relevance_scores(query, k=pool, filter=where)
+        vector_scores = {doc.id: float(score) for doc, score in vector_hits}
+        by_id = {doc.id: doc for doc, _ in vector_hits}
+        if self._bm25_index is None:
+            data = self._store.get(include=["documents", "metadatas"])
+            self._bm25_index = Bm25Index(
+                data.get("ids") or [], data.get("documents") or [], data.get("metadatas") or []
+            )
+        bm25_scores = self._bm25_index.scores(query, where=where, top_n=pool)
+        top = fuse(vector_scores, bm25_scores, self._bm25_weight, k)
+        missing = [cid for cid, _ in top if cid not in by_id]
+        if missing:
+            fetched = self._store.get_by_ids(missing)
+            by_id.update({doc.id: doc for doc in fetched})
+        return [_to_result(by_id[cid], score) for cid, score in top if cid in by_id]
 
     def as_retriever(self, **kwargs):
         """Expose a LangChain retriever for downstream LLM chains / agents."""
@@ -63,6 +98,7 @@ class RagSystem:
     def clear(self) -> None:
         """Delete all documents by resetting the underlying collection."""
         self._store.reset_collection()
+        self._bm25_index = None
 
     def ping(self) -> bool:
         """Return ``True`` if the vector store is reachable."""
@@ -108,6 +144,7 @@ class RagSystem:
         ids = self._store.get(where={_SOURCE_KEY: filename}).get("ids") or []
         if ids:
             self._store.delete(ids=ids)
+            self._bm25_index = None
         return len(ids)
 
 
@@ -141,4 +178,4 @@ def build_rag(config: Optional[RagConfig] = None) -> RagSystem:
         if config.chunk_size > 0
         else None
     )
-    return RagSystem(store, splitter)
+    return RagSystem(store, splitter, bm25_weight=config.bm25_weight)

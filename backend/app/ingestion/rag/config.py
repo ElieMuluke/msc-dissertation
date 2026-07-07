@@ -21,6 +21,9 @@ class RagConfig:
         chunk_size: If > 0, long documents are split into chunks of this many
             characters before embedding (set for real PDF/long policies). 0 = no split.
         chunk_overlap: Character overlap between consecutive chunks.
+        bm25_weight: Weight of the BM25 (lexical) side in hybrid search. 0 (default)
+            = pure vector search; 1 = pure BM25. Fused as
+            ``bm25_weight * bm25 + (1 - bm25_weight) * vector`` over normalized scores.
     """
 
     persist_dir: str = "./chroma_db"
@@ -29,3 +32,4 @@ class RagConfig:
     distance: str = "cosine"
     chunk_size: int = 900
     chunk_overlap: int = 150
+    bm25_weight: float = 0.0

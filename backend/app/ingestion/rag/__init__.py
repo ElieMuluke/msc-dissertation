@@ -16,6 +16,7 @@ from .config import RagConfig
 from .loaders import load_pdfs
 from .models import Document, DocumentType, SearchResult, SourceInfo
 from .rag import RagSystem, build_rag
+from .section_chunking import load_pdf_sections
 
 __all__ = [
     "RagConfig",
@@ -26,4 +27,5 @@ __all__ = [
     "RagSystem",
     "build_rag",
     "load_pdfs",
+    "load_pdf_sections",
 ]
