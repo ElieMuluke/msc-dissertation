@@ -10,6 +10,51 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-07 — Judge output repair + per-topic adherence classification
+**Done:** Follow-up to 07-06: a fresh full run still lost 4/57 context_recall + 7/64
+topic-adherence samples to NaN. Root causes (confirmed in ragas 0.2.15 source): (a) judge
+emits `"attributed": 0.5` — valid JSON but ragas's pydantic field is `int`; the failure
+then triggers ragas's `FixOutputFormat` retry, which is broken with a JSON-constrained
+judge (expects `{"text":...}` back; produces the mangled "Invalid json output" strings).
+(b) Stock TopicAdherenceScore classifies all N extracted topics in ONE judge call; small
+judges return the wrong count → broadcast ValueError. Fixes: (1) `_repair_judge_json` +
+`_JudgeChatOllama` in ragas_run.py — repairs invalid/double-encoded JSON (`json-repair`
+dep added) and coerces fractional binary verdicts (user-approved policy: **0.5 → 0**,
+conservative, disclosed in docs) so first-pass parse succeeds and the broken fixer never
+engages. (2) `_SafeTopicAdherenceScore` now classifies one topic per judge call (same
+prompts/math as ragas) — count mismatch structurally impossible; no-topics (greeting) →
+NaN + warning. 6 new tests; suite 73 pass. Live smoke vs mistral-nemo judge OK.
+docs/evaluation.md updated. Env note: OLLAMA_MODEL now resolves to `deepseek-r1:14b`,
+RAGAS_JUDGE_MODEL=mistral-nemo:latest.
+**State:** Bounded verification run (`--limit 6`, aml_corpus) launched — check it produced
+zero OutputParserException/broadcast errors and 0 NaN counts. All changes uncommitted.
+**Next:** If bounded run clean → user runs the real comparisons (`--collection
+aml_sections_a`, `aml_sections_b`, `aml_sections_b --bm25-weight 0.3`) and builds the
+before/after table vs the aml_corpus baseline in MLflow experiment rag-ragas.
+
+## 2026-07-06 — Eval-run forensics + judge robustness
+**Done:** (1) **Root-caused why the 07-06 full run matched the baseline exactly**: the
+section-chunked corpora live in separate Chroma collections (`aml_sections_a` = plain,
+3121 chunks; `aml_sections_b` = parent-context prefix, 3220) while `ragas_run` defaults to
+`--collection aml_corpus` (old page-window chunks, 3015) and `--bm25-weight 0.0` — the run
+evaluated the unchanged pipeline; chunking/hybrid were never active. No reranker exists in
+the codebase. Runner now prints the active config + store fingerprint (chunk count,
+detected chunking style) at startup, logs `n_chunks`/`chunk_style` to MLflow, aborts on an
+empty collection. (2) Judge JSON parse failures (`OutputParserException` → NaN) fixed with
+`format="json"` (Ollama grammar-constrained decoding) on the judge ChatOllama; smoke-tested
+live through a real RAGAS prompt. (3) TopicAdherence shape crashes (`ValueError` broadcast
+(7,)vs(19,), `TypeError` bitwise_and) — judge classifying against the wrong list — now
+skip-and-log: safe subclass in `topic_adherence_metrics()` scores NaN + warns with the
+question. 2 new regression tests; suite 67 pass. docs/evaluation.md updated (also fixed
+stale `llama3.2:3b` default). Note: shell env sets `RAGAS_JUDGE_MODEL=mistral-nemo:latest`
+(independent family — good).
+**State:** Fixes in working tree (uncommitted, along with the earlier section-chunking +
+hybrid work). The genuine "after" eval has NOT run yet.
+**Next:** Run the real comparison: `python -m app.evaluation.ragas_run --k 4 --collection
+aml_sections_a` (chunking only), then `--collection aml_sections_b`, then add
+`--bm25-weight 0.3` — build the before/after table from those MLflow runs vs the existing
+baseline. Verify startup line says `section chunking` before letting a run continue.
+
 ## 2026-07-01 — RAGAS eval audit hardening (Gaps #2–#8)
 **Done:** Audited RAGAS eval, then fixed the gaps. (#2) `datasets/golden_set_v1.jsonl` — 57
 hand-verified triples grounded in the REAL corpus (chroma_db `aml_corpus`: FATF/JMLSG PDFs),
