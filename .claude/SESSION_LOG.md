@@ -46,9 +46,18 @@ scope-refusal (declines non-AML asks even if known; never invent citations — f
 "[id: none]" + Python-code failures). Suite 76 pass. FEATURES F24 ✅, F23 ✅.
 **State:** All committed on main. All topic-adherence numbers from the 5 earlier runs are
 invalid for the dissertation (measured with the broken classifier + mixed oos rows).
-**Next:** Re-measure: full run `--collection aml_sections_b --bm25-weight 0.3` (launched
-2026-07-09); expect in-scope topic adherence to rise from ~0.38 and refusal rate ~0.85→
-higher with the new generator instruction. Then rebuild the comparison table.
+**Re-measured (run 20260709T152215Z, sections_b + bm25 0.3, zero NaN anywhere):**
+topic adherence P 0.929 / R 1.000 / F1 0.956 (was 0.38/0.65/0.46 — the old numbers
+measured the broken classifier, not the agent). out_of_scope_refusal_rate 0.846 (11/13):
+FIFA now refused (scope fix worked), but "capital of Australia" regressed (deepseek-r1
+answers from "general knowledge" while admitting context lacks it — no fabricated citation
+though) and the Python-code ask still complies. Core-4: cp 0.664 / cr 0.762 (identical to
+prior sections_b runs — retrieval untouched ✓), ar 0.831, faithfulness 0.741 (below the
+0.797–0.828 band of prior runs; possibly the new scope preamble changing answer style, or
+run noise — flag, don't over-claim).
+**Next:** Dissertation numbers: adopt this run for topic adherence + refusal rate; core-4
+from the 07-09 2pm run + replicate. Optional: strengthen refusal ("never answer from
+general knowledge") for the 2 residual failures; Rec 1 (reranker) for the cr gap.
 
 ## 2026-07-07 (later) — 0.5-verdict diagnosis + judge prompt hardening (Rec 2)
 **Done:** Read-only diagnosis of why mistral-nemo emits fractional 0.5 verdicts: extracted
