@@ -166,6 +166,31 @@ def test_topic_adherence_classifies_each_topic_in_its_own_judge_call():
     assert abs(score - 0.5) < 1e-6
 
 
+def test_topic_adherence_metrics_use_corrected_classification_prompt():
+    """Recommendation 2 (2026-07-09 diagnosis): ragas's stock TopicClassificationPrompt
+    couples a vague instruction with a self-contradictory example (claims General
+    Relativity does NOT fall under Physics), which the mistral-nemo judge mirrored as
+    near-uniform False verdicts. Every metric must carry the corrected prompt: a
+    meaning-based "falls under ANY reference topic" rule and coherent single-topic
+    examples, with the stock 2-topic -> [True, False] example gone."""
+    from app.evaluation.ragas_eval import topic_adherence_metrics
+
+    metrics = topic_adherence_metrics()
+
+    assert len(metrics) == 3
+    for metric in metrics:
+        prompt = metric.topic_classification_prompt
+        assert "falls under any" in prompt.instruction.lower()
+        assert prompt.examples, "corrected prompt must keep few-shot examples"
+        for example_input, example_output in prompt.examples:
+            assert len(example_input.topics) == 1
+            assert len(example_output.classifications) == 1
+        assert not any(
+            len(example_input.topics) == 2 and example_output.classifications == [True, False]
+            for example_input, example_output in prompt.examples
+        )
+
+
 def test_topic_adherence_scores_nan_when_no_topics_extracted():
     """The greeting/out-of-scope case: no topics extracted means adherence is unjudgeable
     (previously a TypeError crash) — score NaN, don't guess."""

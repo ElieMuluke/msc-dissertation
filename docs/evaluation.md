@@ -118,6 +118,12 @@ unchanged into the normal NaN accounting.
   MLflow artifacts), so individual failure cases can be inspected — not just aggregate means.
 - NaN scores (malformed input / judge parse failures) are counted per metric, excluded from
   the mean, warned about in logs, and logged to MLflow as `*_nan` — never silently averaged.
+- The topic-adherence classification prompt is corrected: ragas's stock
+  `TopicClassificationPrompt` ships a self-contradictory few-shot example ("General Theory
+  of Relativity" classified as *not* falling under "Physics"), which our judge mirrored —
+  near-uniform off-topic verdicts on single topics, coin-flip accuracy in batches. The
+  metrics now carry a replacement instruction (classify by **meaning** against *any*
+  reference topic) with coherent single-topic examples.
 - The topic-adherence metrics are shape-safe: RAGAS's stock implementation classifies all
   N extracted topics against the reference topics in one judge call, and small judges
   return the wrong count (one verdict per *reference* topic, or off by one), crashing the

@@ -161,13 +161,48 @@ def topic_adherence_metrics(
     extracted, empty classification) are scored NaN with a warning naming the question —
     counted and excluded from the mean by :func:`run_ragas` (see
     :attr:`RagasResult.nan_counts`) — instead of aborting the job.
+
+    Each metric also gets a **corrected classification prompt**. RAGAS's stock
+    ``TopicClassificationPrompt`` pairs a vague one-line instruction with a single
+    self-contradictory few-shot example (reference_topics=["Physics", "Mathematics"],
+    topics claims "General Theory of Relativity" does NOT fall under Physics). Live
+    probes showed the mistral-nemo judge mirroring it: near-uniform False verdicts in
+    single-topic calls and ~coin-flip accuracy in batch calls. The replacement states a
+    coherent meaning-based rule and uses two coherent single-topic examples matching how
+    :meth:`_per_topic_ascore` calls it.
     """
     from ragas.metrics import TopicAdherenceScore
     from ragas.metrics._topic_adherence import (
         TopicClassificationInput,
+        TopicClassificationOutput,
+        TopicClassificationPrompt,
         TopicExtractionInput,
         TopicRefusedInput,
     )
+
+    corrected_classification_prompt = TopicClassificationPrompt()
+    corrected_classification_prompt.instruction = (
+        "Given one or more candidate topics and a list of reference topics, classify "
+        "each candidate topic as True if it falls under ANY of the reference topics, "
+        "judged by MEANING, not exact wording; classify it False only if no reference "
+        "topic covers it. Output exactly one boolean per candidate topic."
+    )
+    corrected_classification_prompt.examples = [
+        (
+            TopicClassificationInput(
+                reference_topics=["Physics", "Mathematics"],
+                topics=["General Theory of Relativity"],
+            ),
+            TopicClassificationOutput(classifications=[True]),
+        ),
+        (
+            TopicClassificationInput(
+                reference_topics=["Physics", "Mathematics"],
+                topics=["chocolate chip cookie recipes"],
+            ),
+            TopicClassificationOutput(classifications=[False]),
+        ),
+    ]
 
     def _question_of(sample) -> str:
         return next(
@@ -236,6 +271,7 @@ def topic_adherence_metrics(
     for mode in modes:
         metric = _SafeTopicAdherenceScore(mode=mode)  # type: ignore[arg-type]
         metric.name = f"topic_adherence_{mode}"
+        metric.topic_classification_prompt = corrected_classification_prompt
         metrics.append(metric)
     return metrics
 
