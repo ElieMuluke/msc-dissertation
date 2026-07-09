@@ -53,6 +53,11 @@ REFERENCE_TOPICS: list[str] = [
     "AML/CFT internal controls, governance and the compliance officer",
     "the FATF Recommendations and mutual evaluation methodology",
     "JMLSG guidance and the UK Money Laundering Regulations",
+    "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+    "FATF mutual evaluations, ICRG review and follow-up procedures",
+    "technical compliance and effectiveness assessment of AML/CFT regimes",
+    "source of funds and source of wealth checks",
+    "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos",
 ]
 
 
