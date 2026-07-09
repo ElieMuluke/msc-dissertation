@@ -250,6 +250,36 @@ def test_build_ragas_llm_enforces_json_decoding():
     assert llm.langchain_llm.format == "json"
 
 
+def test_run_refusal_rate_means_judge_verdicts_and_keeps_per_row_detail():
+    """Recommendation 1 (metric split): out-of-scope refusals are scored by their own
+    judge-based metric, not folded into topic adherence (whose precision formula scores a
+    correct refusal as 0.0). No Ollama: the generator and the ragas TopicRefusedPrompt
+    judge are both faked; verdicts alternate refused/answered -> mean 0.5."""
+    from types import SimpleNamespace
+
+    from app.evaluation.ragas_run import _run_refusal_rate
+
+    class _FakeGenerator:
+        def generate(self, question, k):
+            return SimpleNamespace(answer=f"answer to {question}")
+
+    verdicts = iter([True, False, True, False])
+
+    async def fake_generate(self, data=None, llm=None, **kwargs):
+        assert data.user_input.startswith("Human: ") and "\nAI: answer to " in data.user_input
+        assert data.topic in data.user_input
+        return SimpleNamespace(refused_to_answer=next(verdicts))
+
+    rows = [{"question": f"q{i}"} for i in range(4)]
+    with patch("ragas.metrics._topic_adherence.TopicRefusedPrompt.generate", fake_generate):
+        result = _run_refusal_rate(_FakeGenerator(), 4, rows, llm=object())
+
+    assert result.mean_scores["out_of_scope_refusal_rate"] == 0.5
+    assert result.nan_counts == {}
+    assert [s["refused"] for s in result.sample_scores] == [True, False, True, False]
+    assert result.sample_scores[0] == {"question": "q0", "answer": "answer to q0", "refused": True}
+
+
 def test_build_ragas_llm_shares_one_cache_across_topic_adherence_modes():
     """Regression: topic_adherence_metrics() creates one TopicAdherenceScore per mode
     (precision/recall/f1), each independently re-invoking the judge LLM for the same

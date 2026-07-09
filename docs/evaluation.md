@@ -59,12 +59,19 @@ Scored in `[0, 1]` over the golden set, using each row's ground-truth answer as 
 
 ### Topic adherence (agentic scope control)
 
-RAGAS `TopicAdherenceScore` measures whether the agent stays within the KYC/AML domain and
-**refuses/deflects off-topic asks**. Precision, recall and F1 are all emitted per query (one
-`TopicAdherenceScore` instance per mode, renamed `topic_adherence_{precision,recall,f1}`).
-Answers are classified against `REFERENCE_TOPICS` (the AML domain scope, in `ragas_eval.py`).
-The dataset mixes in-scope golden questions with deliberately out-of-scope queries
-(chit-chat, unrelated finance, prompt-injection-style asks).
+RAGAS `TopicAdherenceScore` measures whether the agent stays within the KYC/AML domain.
+Precision, recall and F1 are all emitted per query (one `TopicAdherenceScore` instance per
+mode, renamed `topic_adherence_{precision,recall,f1}`). Answers are classified against
+`REFERENCE_TOPICS` (the AML domain scope, in `ragas_eval.py`). The dataset is **in-scope
+golden questions only**.
+
+Out-of-scope behavior is reported as a separate metric, `out_of_scope_refusal_rate`: the
+fraction of deliberately off-topic queries (chit-chat, unrelated finance,
+prompt-injection-style asks) the agent refuses/deflects, judged with RAGAS's own
+`TopicRefusedPrompt` (the same refusal judge TopicAdherence uses internally). The split
+exists because RAGAS's precision formula scores a *correct refusal* as 0.0 (true positives
+= answered∧on-topic = 0, false positives = 0 → 0/(0+1e-10)), so mixing out-of-scope queries
+into the topic-adherence dataset pinned ~20% of the mean at 0 regardless of agent behavior.
 
 ### Golden dataset
 
@@ -74,7 +81,7 @@ The dataset mixes in-scope golden questions with deliberately out-of-scope queri
   to test context-recall failure honestly). 57 rows (≥50 for stable metrics per RAGAS
   guidance).
 - `datasets/out_of_scope_v1.jsonl` — off-topic queries with `expected_outcome:
-  refuse_or_deflect`, used only for topic adherence.
+  refuse_or_deflect`, used only for the out-of-scope refusal rate.
 
 The runner populates `retrieved_contexts` **live** from the real retriever each run — they
 are not hardcoded in the dataset.

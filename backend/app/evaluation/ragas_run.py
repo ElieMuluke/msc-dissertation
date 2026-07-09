@@ -21,10 +21,14 @@ Two evaluations are run and persisted:
 
 - Core-4 generation metrics (faithfulness, answer relevancy, context precision/recall)
   over the golden set, using the ground-truth answer as the RAGAS ``reference``.
-- TopicAdherence (precision/recall/F1) over in-scope golden questions plus deliberately
-  out-of-scope queries (``datasets/out_of_scope_v1.jsonl``), scored against the KYC/AML
-  ``REFERENCE_TOPICS`` — this measures whether the agent stays in scope and refuses
-  off-topic asks.
+- TopicAdherence (precision/recall/F1) over in-scope golden questions only, scored against
+  the KYC/AML ``REFERENCE_TOPICS``.
+- Out-of-scope refusal rate over deliberately off-topic queries
+  (``datasets/out_of_scope_v1.jsonl``), judged with RAGAS's ``TopicRefusedPrompt``. This is
+  reported *separately* from topic adherence because RAGAS's precision formula scores a
+  correct refusal as 0.0 (answered∧on-topic true positives = 0, false positives = 0 →
+  0/(0+1e-10)); mixing the two sets pinned ~20% of the topic-adherence mean at 0
+  regardless of agent behavior.
 
 Judge independence: to avoid self-evaluation bias the RAGAS LLM judge should be a
 *different model family* than the agent's answer generator. Set an independent judge via
@@ -306,18 +310,52 @@ def _run_core4(generator, k, golden_rows, llm, embeddings) -> RagasResult:
     return run_ragas(dataset, llm=llm, embeddings=embeddings, metrics=default_metrics())
 
 
-def _run_topic_adherence(generator, k, in_scope_rows, out_of_scope_rows, llm) -> RagasResult:
+def _run_topic_adherence(generator, k, in_scope_rows, llm) -> RagasResult:
+    """Score TopicAdherence P/R/F1 over in-scope rows only (out-of-scope refusals are
+    measured separately by :func:`_run_refusal_rate` — RAGAS's precision formula scores a
+    correct refusal as 0.0, so mixing the sets pins part of the mean at 0)."""
     from ragas import EvaluationDataset
 
     samples = []
     for row in in_scope_rows:
         answer = generator.generate(row["question"], k=k)
         samples.append(to_topic_adherence_sample(row["question"], answer.answer))
-    for row in out_of_scope_rows:
-        answer = generator.generate(row["question"], k=k)
-        samples.append(to_topic_adherence_sample(row["question"], answer.answer))
     dataset = EvaluationDataset(samples=samples)
     return run_ragas(dataset, llm=llm, metrics=topic_adherence_metrics())
+
+
+def _run_refusal_rate(generator, k, out_of_scope_rows, llm) -> RagasResult:
+    """Fraction of out-of-scope queries the agent refuses/deflects (higher is better).
+
+    Each query is answered by the generator, then judged with RAGAS's own
+    ``TopicRefusedPrompt`` (the same refusal judge TopicAdherence uses internally). Rows
+    are driven sequentially — a local CPU Ollama serves one request at a time.
+    """
+    import asyncio
+
+    from ragas.metrics._topic_adherence import TopicRefusedInput, TopicRefusedPrompt
+
+    prompt = TopicRefusedPrompt()
+    rows = [(row["question"], generator.generate(row["question"], k=k).answer) for row in out_of_scope_rows]
+
+    async def _judge_all() -> list[bool]:
+        verdicts = []
+        for question, answer in rows:
+            data = TopicRefusedInput(user_input=f"Human: {question}\nAI: {answer}", topic=question)
+            verdicts.append((await prompt.generate(data=data, llm=llm)).refused_to_answer)
+        return verdicts
+
+    refused = asyncio.run(_judge_all())
+    samples = [
+        {"question": question, "answer": answer, "refused": verdict}
+        for (question, answer), verdict in zip(rows, refused)
+    ]
+    mean = sum(refused) / len(refused) if refused else float("nan")
+    return RagasResult(
+        mean_scores={"out_of_scope_refusal_rate": mean},
+        sample_scores=samples,
+        nan_counts={},
+    )
 
 
 def main(argv=None) -> int:
@@ -370,10 +408,14 @@ def main(argv=None) -> int:
     run_files = _persist(core4, f"core4_per_query_{run_tag}", args.results_dir)
 
     topic = None
+    refusal = None
+    in_scope = []
     if not args.skip_topic:
         in_scope = [r for r in golden if r.get("category") != "no_answer"]
-        topic = _run_topic_adherence(generator, args.k, in_scope, out_of_scope, llm)
+        topic = _run_topic_adherence(generator, args.k, in_scope, llm)
         run_files += _persist(topic, f"topic_adherence_per_query_{run_tag}", args.results_dir)
+        refusal = _run_refusal_rate(generator, args.k, out_of_scope, llm)
+        run_files += _persist(refusal, f"out_of_scope_refusal_per_query_{run_tag}", args.results_dir)
 
     mlflow.set_tracking_uri(f"sqlite:///{_BACKEND / 'mlflow.db'}")
     mlflow.set_experiment(args.experiment)
@@ -403,13 +445,18 @@ def main(argv=None) -> int:
             mlflow.log_metrics(topic.mean_scores)
             mlflow.log_metrics({f"{k}_nan": v for k, v in topic.nan_counts.items()})
             mlflow.log_dict({"samples": topic.sample_scores}, "topic_adherence_sample_scores.json")
+        if refusal is not None:
+            mlflow.log_metrics(refusal.mean_scores)
+            mlflow.log_dict({"samples": refusal.sample_scores}, "out_of_scope_refusal_samples.json")
         for path in run_files:  # only this run's files, not the whole accumulating dir
             mlflow.log_artifact(str(path), artifact_path="eval_results")
 
     print(f"\nJudge model: {judge_model} (temp {_JUDGE_TEMPERATURE}) | Generator: {gen_config.model}")
     _print_summary(f"Core-4 generation metrics over {len(golden)} golden questions (k={args.k})", core4)
     if topic is not None:
-        _print_summary(f"Topic adherence over {len(golden)} in-scope + {len(out_of_scope)} out-of-scope", topic)
+        _print_summary(f"Topic adherence over {len(in_scope)} in-scope questions", topic)
+    if refusal is not None:
+        _print_summary(f"Out-of-scope refusal rate over {len(out_of_scope)} queries", refusal)
     print(f"\nPer-query results written to {args.results_dir}")
     return 0
 
