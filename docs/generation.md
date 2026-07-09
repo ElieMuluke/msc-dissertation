@@ -80,7 +80,10 @@ print(answer.answer, answer.citations)
 ## Design
 
 - `prompt.py` — `build_prompt(query, results)`: pure; instructs the model to answer ONLY
-  from context, cite by `[id]`, and admit when context is insufficient.
+  from context, cite by `[id]`, and admit when context is insufficient. It also restricts
+  scope to AML/CFT, KYC and regulatory compliance and tells the model to briefly decline
+  anything else (general knowledge, coding, sports, …) — out-of-scope queries must be
+  refused, as measured by the eval's out_of_scope refusal rate.
 - `generator.py` — `AnswerGenerator` depends on a `search_fn`, a `complete_fn`
   (`str -> str`), and an optional `stream_fn` (`str -> Iterator[StreamChunk]`), so it is
   decoupled from both the vector store and the LLM and is unit-tested with fakes. `generate`
