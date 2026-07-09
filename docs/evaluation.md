@@ -116,6 +116,12 @@ unchanged into the normal NaN accounting.
 - Results come from RAGAS's public `to_pandas()` API (no private attributes).
 - Per-query scores are persisted to `backend/eval_results/*.csv` and `*.json` (and logged as
   MLflow artifacts), so individual failure cases can be inspected — not just aggregate means.
+- Each run also emits a detailed markdown diagnostic report,
+  `eval_results/report_<run_tag>.md` (built by `build_report` in `ragas_run.py`, also
+  printed and logged as an MLflow artifact): per-metric score **distributions**
+  (min/p25/median/p75/max over valid samples), **per-category means** (clear / ambiguous /
+  no_answer golden-set categories), the **worst-5 queries per metric**, and the list of
+  **non-refused** out-of-scope queries.
 - NaN scores (malformed input / judge parse failures) are counted per metric, excluded from
   the mean, warned about in logs, and logged to MLflow as `*_nan` — never silently averaged.
 - The topic-adherence classification prompt is corrected: ragas's stock

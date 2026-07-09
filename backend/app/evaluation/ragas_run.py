@@ -44,7 +44,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
+import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -288,6 +290,129 @@ def _print_summary(title: str, result: RagasResult) -> None:
                 print(f"  {name}: {count}")
 
 
+def _row_question(row: dict) -> str:
+    """Extract the question from any per-sample row shape RAGAS/our runners produce.
+
+    Handles the three shapes seen in ``RagasResult.sample_scores``: a plain string
+    ``user_input`` (core-4 rows), a message list ``user_input`` (topic-adherence rows —
+    the human turn's content is the question), and a ``question`` key (refusal rows).
+    """
+    user_input = row.get("user_input")
+    if isinstance(user_input, str):
+        return user_input
+    if isinstance(user_input, list):
+        for message in user_input:
+            mtype = getattr(message, "type", None) or (message.get("type") if isinstance(message, dict) else None)
+            if mtype == "human":
+                content = getattr(message, "content", None) or (
+                    message.get("content") if isinstance(message, dict) else None
+                )
+                return content or "?"
+        return "?"
+    return str(row.get("question", "?"))
+
+
+def _valid_scores(rows: list[dict], metric: str) -> list[tuple[float, dict]]:
+    """(value, row) pairs for rows where ``metric`` is a valid (non-NaN) number."""
+    scored = []
+    for row in rows:
+        value = row.get(metric)
+        if isinstance(value, (int, float)) and not math.isnan(value):
+            scored.append((float(value), row))
+    return scored
+
+
+def build_report(
+    header: str,
+    sections: list[tuple[str, RagasResult, list[str]]],
+    categories: dict[str, str] | None = None,
+) -> str:
+    """Build a detailed markdown diagnostic report from one or more RAGAS results.
+
+    Pure function (no I/O): callers print it and/or write it to disk. Each section is a
+    ``(title, result, metric_names)`` triple and emits, per metric found in the rows:
+    means (with NaN counts), a min/p25/median/p75/max/n distribution table over valid
+    samples, per-category means (when ``categories`` maps questions to golden-set
+    categories such as clear/ambiguous/no_answer), and the worst-5 queries sorted
+    ascending by score. Refusal-shaped rows (a boolean ``refused`` column) additionally
+    get a "Non-refused queries" list. Anything a section's rows don't carry is skipped.
+    """
+    lines = ["# RAGAS evaluation report", "", header]
+    for title, result, metric_names in sections:
+        rows = result.sample_scores
+        lines += ["", f"## {title}", "", "**Means**", ""]
+        for metric in metric_names:
+            if metric not in result.mean_scores:
+                continue
+            nan_count = result.nan_counts.get(metric, 0)
+            suffix = f"  (NaN: {nan_count}/{len(rows)})" if nan_count else ""
+            lines.append(f"- {metric}: {result.mean_scores[metric]:.3f}{suffix}")
+
+        distribution_rows = []
+        for metric in metric_names:
+            values = sorted(value for value, _ in _valid_scores(rows, metric))
+            if not values:
+                continue
+            if len(values) >= 2:
+                p25, median, p75 = statistics.quantiles(values, n=4)
+            else:
+                p25 = median = p75 = values[0]
+            distribution_rows.append(
+                f"| {metric} | {values[0]:.3f} | {p25:.3f} | {median:.3f} | {p75:.3f} "
+                f"| {values[-1]:.3f} | {len(values)} |"
+            )
+        if distribution_rows:
+            lines += [
+                "",
+                "**Distributions** (valid samples only)",
+                "",
+                "| metric | min | p25 | median | p75 | max | n |",
+                "|---|---|---|---|---|---|---|",
+                *distribution_rows,
+            ]
+
+        if categories:
+            matched = [(categories[q], row) for row in rows if (q := _row_question(row)) in categories]
+            if matched:
+                category_names = sorted({category for category, _ in matched})
+                table_rows = []
+                for metric in metric_names:
+                    cells = []
+                    for category in category_names:
+                        values = [
+                            value
+                            for cat, row in matched
+                            if cat == category
+                            for value, _ in _valid_scores([row], metric)
+                        ]
+                        cells.append(f"{statistics.fmean(values):.3f} (n={len(values)})" if values else "—")
+                    if any(cell != "—" for cell in cells):
+                        table_rows.append(f"| {metric} | " + " | ".join(cells) + " |")
+                if table_rows:
+                    lines += [
+                        "",
+                        "**Per-category means**",
+                        "",
+                        "| metric | " + " | ".join(category_names) + " |",
+                        "|---|" + "---|" * len(category_names),
+                        *table_rows,
+                    ]
+
+        for metric in metric_names:
+            scored = sorted(_valid_scores(rows, metric), key=lambda pair: pair[0])
+            if not scored:
+                continue
+            lines += ["", f"**Worst 5 — {metric}**", ""]
+            for value, row in scored[:5]:
+                lines.append(f"- {value:.3f} | {_row_question(row)[:90]}")
+
+        if any("refused" in row for row in rows):
+            non_refused = [row for row in rows if not row.get("refused")]
+            lines += ["", "**Non-refused queries**", ""]
+            lines += [f"- {_row_question(row)[:90]}" for row in non_refused] or ["- none"]
+    return "\n".join(lines) + "\n"
+
+
 def _describe_store(rag) -> tuple[int, str]:
     """Fingerprint the store the eval will retrieve from: chunk count + chunking style.
 
@@ -417,6 +542,37 @@ def main(argv=None) -> int:
         refusal = _run_refusal_rate(generator, args.k, out_of_scope, llm)
         run_files += _persist(refusal, f"out_of_scope_refusal_per_query_{run_tag}", args.results_dir)
 
+    categories = {row["question"]: row.get("category", "?") for row in golden}
+    header = (
+        f"collection={args.collection!r} @ {args.persist_dir} | {n_chunks} chunks "
+        f"({chunk_style} chunking) | bm25_weight={args.bm25_weight} | k={args.k} | "
+        f"generator={gen_config.model} | judge={judge_model} (temp {_JUDGE_TEMPERATURE}) | "
+        f"run_tag={run_tag}"
+    )
+    sections = [
+        (
+            f"Core-4 generation metrics over {len(golden)} golden questions (k={args.k})",
+            core4,
+            ["faithfulness", "answer_relevancy", "context_precision", "context_recall"],
+        )
+    ]
+    if topic is not None:
+        sections.append(
+            (
+                f"Topic adherence over {len(in_scope)} in-scope questions",
+                topic,
+                ["topic_adherence_precision", "topic_adherence_recall", "topic_adherence_f1"],
+            )
+        )
+    if refusal is not None:
+        sections.append(
+            (f"Out-of-scope refusal rate over {len(out_of_scope)} queries", refusal, ["out_of_scope_refusal_rate"])
+        )
+    report = build_report(header, sections, categories)
+    report_path = args.results_dir / f"report_{run_tag}.md"
+    report_path.write_text(report, encoding="utf-8")
+    run_files.append(report_path)
+
     mlflow.set_tracking_uri(f"sqlite:///{_BACKEND / 'mlflow.db'}")
     mlflow.set_experiment(args.experiment)
     with mlflow.start_run():
@@ -457,7 +613,9 @@ def main(argv=None) -> int:
         _print_summary(f"Topic adherence over {len(in_scope)} in-scope questions", topic)
     if refusal is not None:
         _print_summary(f"Out-of-scope refusal rate over {len(out_of_scope)} queries", refusal)
-    print(f"\nPer-query results written to {args.results_dir}")
+    print()
+    print(report)
+    print(f"Per-query results written to {args.results_dir} (detail report: {report_path.name})")
     return 0
 
 

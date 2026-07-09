@@ -11,7 +11,14 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from app.evaluation.ragas_eval import RagasRecord, default_metrics, run_ragas, to_evaluation_dataset
+from app.evaluation.ragas_eval import (
+    RagasRecord,
+    RagasResult,
+    default_metrics,
+    run_ragas,
+    to_evaluation_dataset,
+)
+from app.evaluation.ragas_run import build_report
 from app.generation.config import GenerationConfig
 
 
@@ -303,6 +310,72 @@ def test_run_refusal_rate_means_judge_verdicts_and_keeps_per_row_detail():
     assert result.nan_counts == {}
     assert [s["refused"] for s in result.sample_scores] == [True, False, True, False]
     assert result.sample_scores[0] == {"question": "q0", "answer": "answer to q0", "refused": True}
+
+
+def test_build_report_means_distribution_categories_and_worst_queries():
+    """The dissertation-grade detail report: means annotated with NaN counts, a
+    distribution table over valid samples only, per-category means keyed by the golden
+    set's categories, and a worst-5 list sorted ascending with NaN rows excluded."""
+    rows = [
+        {"user_input": "q0", "m": 1.0},
+        {"user_input": "q1", "m": 0.2},
+        {"user_input": "q2", "m": float("nan")},
+        {"user_input": "q3", "m": 0.6},
+        {"user_input": "q4", "m": 0.8},
+    ]
+    result = RagasResult(mean_scores={"m": 0.65}, sample_scores=rows, nan_counts={"m": 1})
+    categories = {"q0": "clear", "q1": "clear", "q2": "ambiguous", "q3": "ambiguous", "q4": "ambiguous"}
+
+    report = build_report("config-line", [("Core-4", result, ["m"])], categories)
+
+    assert "config-line" in report and "## Core-4" in report
+    assert "- m: 0.650  (NaN: 1/5)" in report
+    # Distribution over the 4 valid values [0.2, 0.6, 0.8, 1.0] (exclusive quartiles).
+    assert "| m | 0.200 | 0.300 | 0.700 | 0.950 | 1.000 | 4 |" in report
+    # Per-category means: ambiguous = mean(0.6, 0.8), clear = mean(1.0, 0.2); NaN excluded.
+    assert "| metric | ambiguous | clear |" in report
+    assert "| m | 0.700 (n=2) | 0.600 (n=2) |" in report
+    # Worst queries ascending, NaN row (q2) excluded.
+    worst = report.split("**Worst 5 — m**")[1]
+    assert worst.index("0.200 | q1") < worst.index("0.600 | q3") < worst.index("0.800 | q4") < worst.index("1.000 | q0")
+    assert "q2" not in worst
+
+
+def test_build_report_refusal_section_lists_non_refused_queries():
+    rows = [
+        {"question": "give me crypto investment tips", "answer": "Out of scope.", "refused": True},
+        {"question": "what is the best pizza topping", "answer": "Margherita.", "refused": False},
+    ]
+    result = RagasResult(
+        mean_scores={"out_of_scope_refusal_rate": 0.5}, sample_scores=rows, nan_counts={}
+    )
+
+    report = build_report("hdr", [("Refusal", result, ["out_of_scope_refusal_rate"])])
+
+    assert "- out_of_scope_refusal_rate: 0.500" in report
+    assert "**Non-refused queries**" in report
+    non_refused = report.split("**Non-refused queries**")[1]
+    assert "- what is the best pizza topping" in non_refused
+    assert "crypto investment tips" not in non_refused
+
+
+def test_build_report_extracts_question_from_message_list_rows():
+    """Topic-adherence rows carry the question as a message list, not a string; the
+    report must still resolve it for worst-queries and per-category matching."""
+    rows = [
+        {
+            "user_input": [{"type": "human", "content": "What is EDD?"}, {"type": "ai", "content": "..."}],
+            "topic_adherence_f1": 0.4,
+        }
+    ]
+    result = RagasResult(
+        mean_scores={"topic_adherence_f1": 0.4}, sample_scores=rows, nan_counts={"topic_adherence_f1": 0}
+    )
+
+    report = build_report("hdr", [("Topic", result, ["topic_adherence_f1"])], {"What is EDD?": "clear"})
+
+    assert "- 0.400 | What is EDD?" in report
+    assert "| topic_adherence_f1 | 0.400 (n=1) |" in report  # per-category table matched
 
 
 def test_build_ragas_llm_shares_one_cache_across_topic_adherence_modes():
