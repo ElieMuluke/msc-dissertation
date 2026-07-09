@@ -10,6 +10,27 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-09 — Final hardened-prompt eval run + before/after comparison table
+**Done:** Full 57-row run with the hardened judge prompt completed (MLflow `e2a1a269…`,
+sections_b + bm25 0.3, deepseek-r1:14b gen / mistral-nemo judge): **zero parse/shape
+failures** — 0 context_recall NaN (was 2–4), 1 topic-adherence NaN (the greeting, no
+topics extractable — legitimate), 1 faithfulness NaN (single judge failure on the
+"targeted financial sanctions" row; counted+excluded per policy). Built the comparison
+table from MLflow `rag-ragas` (full-set runs only; the 07-07 12:41 `aml_corpus` run was
+`--limit 6` — n_golden=6, NOT comparable, excluded). Baseline (aml_corpus 07-06) → final
+(07-09): context_precision 0.580→0.664 (+0.084), context_recall 0.691→0.762 (+0.071),
+faithfulness 0.808→0.797 (flat), answer_relevancy 0.843→0.767 (−0.076, honest negative).
+Replicate 07-07 17:32 (same config, 0 NaN): f 0.828 / ar 0.786 / cp 0.664 / cr 0.766 —
+cp/cr reproduce tightly; f/ar noise ±0.03. Topic adherence F1 varies 0.46–0.58 across
+identical configs → too noisy for strong claims. sections_a alone (no prefix, no hybrid)
+was WORSE than baseline (cp 0.551, cr 0.624) — parent-context prefix + hybrid carry the
+gain. Historical eval_results/*.{csv,json} were deleted in the working tree by the user
+(git `D`, recoverable via `git checkout -- backend/eval_results`); new run's files present.
+**State:** All code changes still uncommitted. Recs 1 (reranker/query expansion), 3
+(reword s46 golden), 5 (coercion log line) still deferred.
+**Next:** User decision: adopt 07-09 run (+ 07-07 17:32 replicate) as dissertation-final
+numbers; optionally pursue Rec 1 to chase the remaining ~0.24 context_recall gap; commit.
+
 ## 2026-07-07 (later) — 0.5-verdict diagnosis + judge prompt hardening (Rec 2)
 **Done:** Read-only diagnosis of why mistral-nemo emits fractional 0.5 verdicts: extracted
 all 12 observed cases (6 crash-logged completions from the 07-06 runs + raw replay of all
