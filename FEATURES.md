@@ -27,7 +27,8 @@ Status: 🔵 requested · 🟡 in progress · ✅ done · ⛔ blocked
 | F18 | Streaming answers (SSE) | ✅ | `POST /rag/answer/stream`; frontend guide in `frontend_spec.md` |
 | F19 | RAG retrieval tool for agent | 🟡 | `app/agents/` StructuredTool over RagSystem (JMLSG policy / FATF action) |
 | F20 | RAGAS eval (proper lib) → MLflow | 🟡 | replaces scratch triad; `rag-ragas` experiment; Ollama+HF judge |
-| F23 | RAGAS audit hardening (golden set, topic adherence, judge, integrity) | 🟡 | `golden_set_v1.jsonl` (57 real-corpus triples), `TopicAdherenceScore` P/R/F1 + `out_of_scope_v1.jsonl`, independent-judge config + self-eval warning, `to_pandas()` + per-query CSV/JSON + NaN handling. Code done + unit-verified; full-scale numeric run pending (CPU-bound) |
+| F23 | RAGAS audit hardening (golden set, topic adherence, judge, integrity) | ✅ | `golden_set_v1.jsonl` (57 real-corpus triples), `TopicAdherenceScore` P/R/F1 + `out_of_scope_v1.jsonl`, independent-judge config + self-eval warning, `to_pandas()` + per-query CSV/JSON + NaN handling. Code done + unit-verified; full-scale numeric run pending (CPU-bound) |
+| F24 | Eval-metric overhaul: judge robustness + topic-adherence validity | ✅ | judge JSON repair + 0.5→0 coercion (`json-repair`), per-topic classification, corrected `TopicClassificationPrompt`, in-scope-only topic adherence + separate `out_of_scope_refusal_rate`, `REFERENCE_TOPICS` 20→25, generator scope-refusal instruction. Commits a0a57ec/b0cf6fa/3fa8519/ec1910a |
 | F21 | Stream fix: empty answer (Qwen3 thinking) | ✅ | reasoning routed off `content`; `OLLAMA_REASONING` gate, default off |
 | F22 | Collapsible "thinking" channel in SSE | ✅ | `thinking` SSE event; spec §7. Gated by `OLLAMA_REASONING` (model over-thinks on CPU) |
 

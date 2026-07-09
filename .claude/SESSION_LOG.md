@@ -31,6 +31,25 @@ gain. Historical eval_results/*.{csv,json} were deleted in the working tree by t
 **Next:** User decision: adopt 07-09 run (+ 07-07 17:32 replicate) as dissertation-final
 numbers; optionally pursue Rec 1 to chase the remaining ~0.24 context_recall gap; commit.
 
+## 2026-07-09 — Topic-adherence overhaul (Recs 1-4), one commit each via subagents
+**Done:** Implemented all 4 recommendations from the topic_adherence_precision diagnosis
+(stuck ~0.40: RAGAS formula zeroes correct refusals; stock TopicClassificationPrompt is
+self-contradictory). Each rec = one feature-implementer agent + one commit:
+(1) b0cf6fa — topic adherence P/R/F1 now in-scope only; new `out_of_scope_refusal_rate`
+(judge via ragas TopicRefusedPrompt), persisted + MLflow like other metrics.
+(2) 3fa8519 — corrected TopicClassificationPrompt (classify by MEANING vs ANY reference
+topic; coherent single-topic few-shots; stock "GR is not Physics" example gone).
+(3) ec1910a — REFERENCE_TOPICS 20→25: NPOs (R.8), ICRG/follow-up, technical compliance
+vs effectiveness, source of funds/wealth, DNFBPs+casinos. US/EU questions verified as
+no_answer rows (never reach topic adherence). (4) a0a57ec — generator SYSTEM_INSTRUCTION
+scope-refusal (declines non-AML asks even if known; never invent citations — fixes FIFA
+"[id: none]" + Python-code failures). Suite 76 pass. FEATURES F24 ✅, F23 ✅.
+**State:** All committed on main. All topic-adherence numbers from the 5 earlier runs are
+invalid for the dissertation (measured with the broken classifier + mixed oos rows).
+**Next:** Re-measure: full run `--collection aml_sections_b --bm25-weight 0.3` (launched
+2026-07-09); expect in-scope topic adherence to rise from ~0.38 and refusal rate ~0.85→
+higher with the new generator instruction. Then rebuild the comparison table.
+
 ## 2026-07-07 (later) — 0.5-verdict diagnosis + judge prompt hardening (Rec 2)
 **Done:** Read-only diagnosis of why mistral-nemo emits fractional 0.5 verdicts: extracted
 all 12 observed cases (6 crash-logged completions from the 07-06 runs + raw replay of all
