@@ -19,13 +19,23 @@ Format per entry:
 start/finish/block. Keep in sync with the task list and backend_spec.md. See CLAUDE.md
 rule 4c.
 
-## 2026-06-17 — backend_spec.md is the frontend↔backend contract
-**Remark:** Features required from the backend by the frontend are stored in
-`backend_spec.md`. Track them there.
-**Apply:** Treat `backend_spec.md` (repo root) as source of truth for frontend-required
-backend features. Record new ones there, implement from it, mark done. See CLAUDE.md
-rule 4b. When implementing, keep SOLID — domain methods on RagSystem, don't leak the
-Chroma collection through the API.
+## 2026-07-03 — backend_spec.md vs frontend_spec.md direction (don't cross the streams)
+**Remark:** Confirmed I never implemented tabular-ingestion UI on the frontend (correct —
+must never touch `frontend/`, that's Gemini/Antigravity's job). Told to add the frontend
+feature request to `frontend_spec.md` for Antigravity to pick up, and clean the equivalent
+writeup out of `backend_spec.md` where I'd wrongly put it. "Remember this distinction for
+every operation."
+**Apply:** Two files, opposite directions — don't cross them.
+- `backend_spec.md` = frontend's asks OF the backend + Claude's implementation status.
+  Only content that originated as a frontend requirement belongs here.
+- `frontend_spec.md` = backend's writeups of capabilities it exposes, for the frontend
+  (Gemini/Antigravity) to build UI against. Any "here's an endpoint, build this UI for it"
+  content belongs here, never in `backend_spec.md`.
+Never write/edit files under `frontend/` — frontend implementation is Gemini/Antigravity's
+job, always, with no exceptions. When a backend feature needs frontend UI, record the
+request in `frontend_spec.md` and stop there. See CLAUDE.md rule 4b. When implementing
+backend_spec.md items, keep SOLID — domain methods on RagSystem, don't leak the Chroma
+collection through the API.
 
 ## 2026-06-17 — Minimal code
 **Remark:** Don't write too much code. Straight to the point — good code, but not too much.
