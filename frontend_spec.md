@@ -6,6 +6,68 @@ backend; here the backend documents how the frontend should consume a backend ca
 
 Status: 🔵 to implement · 🟡 in progress · ✅ done
 
+> **⚠️ Breaking change (2026-07-03): `doc_type` removed from `/rag/*`.** The policy/action
+> document-type distinction has been removed from the RAG system entirely — it is now
+> generic document ingestion + search only. The backend no longer accepts `doc_type` on
+> any `/rag/*` request body (including `/rag/answer` and `/rag/answer/stream` below — it is
+> simply not a field any more) and no `/rag/*` response includes a `doc_type` key. Sending
+> `doc_type` is silently ignored; reading `doc_type` off a response will now get
+> `undefined`. Update any frontend code (e.g. `streamAnswer`'s `body` type below) that
+> still references it. See `backend_spec.md` for the mirrored note.
+
+---
+
+## 2. Tabular Data Ingestion UI (accounts / transactions / patterns)
+
+**Status**: ✅ Implemented. Backend ready — `POST /tabular/ingest` and `GET
+/tabular/counts` via `TabularSystem` (`app/ingestion/tabular/`,
+`app/api/routes/tabular.py`). See `docs/tabular.md` for the ingested file shapes, ORM
+schema, and streaming/batched-insert design.
+
+Build a "select which data type, then upload" UI for the IBM/Kaggle "HI-Large" AML
+dataset: a type selector (`accounts` | `transactions` | `patterns`) followed by a file
+upload, plus a small volumes display (row counts per table).
+
+### Ingest
+
+* **Endpoint**: `POST /tabular/ingest`
+* **Request Type**: `multipart/form-data`
+* **Form fields**:
+  * `data_type` (string, required): one of `accounts` | `transactions` | `patterns`.
+  * `files` (one or more file uploads, required): `.csv` for `accounts`/`transactions`;
+    `.csv` or `.txt` for `patterns`. A file with an unexpected extension for the chosen
+    `data_type` returns `400`.
+* **Response Type**: `application/json`
+
+### `TabularIngestResponse` JSON Schema:
+```json
+{
+  "ingested": 1000,
+  "data_type": "accounts"
+}
+```
+
+`ingested` is the number of rows newly inserted across all uploaded files in the call.
+Re-uploading the same `accounts` file is idempotent (unique on bank/account number) and
+reports `0` newly-inserted rows on repeat; `transactions`/`patterns` are always inserted
+(no dedup — legitimate duplicate transactions can occur).
+
+### Counts
+
+* **Endpoint**: `GET /tabular/counts`
+* **Response Type**: `application/json`
+
+### `TabularCounts` JSON Schema:
+```json
+{
+  "accounts": 1000,
+  "transactions": 50000
+}
+```
+
+Suggested UI: show these counts near the upload control so the user sees ingested
+volumes update after each upload.
+
 ---
 
 ## 1. Streaming Answers (SSE) — `POST /rag/answer/stream`
@@ -24,8 +86,7 @@ shown to a user; keep `/rag/answer` only for non-interactive/programmatic caller
 ```json
 {
   "query": "What are the suspicious transaction thresholds?",
-  "k": 4,
-  "doc_type": "policy"   // optional: "policy" | "action" | null
+  "k": 4
 }
 ```
 
@@ -82,7 +143,7 @@ export interface StreamHandlers {
 }
 
 export async function streamAnswer(
-  body: { query: string; k?: number; doc_type?: string | null },
+  body: { query: string; k?: number },
   handlers: StreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
