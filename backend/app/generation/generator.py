@@ -12,9 +12,9 @@ from typing import Optional
 
 from app.generation.config import GenerationConfig
 from app.generation.prompt import build_prompt
-from app.ingestion.rag import DocumentType, RagSystem, SearchResult
+from app.ingestion.rag import RagSystem, SearchResult
 
-SearchFn = Callable[[str, int, Optional[DocumentType]], Sequence[SearchResult]]
+SearchFn = Callable[[str, int], Sequence[SearchResult]]
 CompleteFn = Callable[[str], str]
 
 
@@ -84,10 +84,8 @@ class AnswerGenerator:
         self._complete = complete_fn
         self._stream = stream_fn
 
-    def generate(
-        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
-    ) -> Answer:
-        results = list(self._search(query, k, doc_type))
+    def generate(self, query: str, k: int = 5) -> Answer:
+        results = list(self._search(query, k))
         answer = self._complete(build_prompt(query, results)).strip()
         return Answer(
             answer=answer,
@@ -96,15 +94,13 @@ class AnswerGenerator:
             contexts=[r.text for r in results],
         )
 
-    def stream(
-        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
-    ) -> StreamedAnswer:
+    def stream(self, query: str, k: int = 5) -> StreamedAnswer:
         """Retrieve context, then stream the answer tokens. Citations are known up front."""
         if self._stream is None:
             raise RuntimeError(
                 "This AnswerGenerator was built without streaming support"
             )
-        results = list(self._search(query, k, doc_type))
+        results = list(self._search(query, k))
         return StreamedAnswer(
             citations=[_citation(r) for r in results],
             used_context=bool(results),
@@ -177,7 +173,7 @@ def build_answer_generator(
     complete = build_completion(config)
     stream = build_stream_completion(config)
 
-    def search(query: str, k: int, doc_type: Optional[DocumentType]):
-        return rag.search(query, k=k, doc_type=doc_type)
+    def search(query: str, k: int):
+        return rag.search(query, k=k)
 
     return AnswerGenerator(search, complete, stream)

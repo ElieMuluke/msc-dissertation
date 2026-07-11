@@ -1,8 +1,8 @@
-"""AML RAG system — ingest financial policies and actions, then search them.
+"""AML RAG system — ingest documents, then search them.
 
-    >>> from app.ingestion.rag import build_rag, Document, DocumentType
+    >>> from app.ingestion.rag import build_rag, Document
     >>> rag = build_rag()
-    >>> rag.ingest([Document("p1", "Report cash over 10,000.", DocumentType.POLICY)])
+    >>> rag.ingest([Document("p1", "Report cash over 10,000.")])
     1
     >>> rag.search("cash reporting threshold", k=3)
 
@@ -14,14 +14,13 @@ from __future__ import annotations
 
 from .config import RagConfig
 from .loaders import load_pdfs
-from .models import Document, DocumentType, SearchResult, SourceInfo
+from .models import Document, SearchResult, SourceInfo
 from .rag import RagSystem, build_rag
 from .section_chunking import load_pdf_sections
 
 __all__ = [
     "RagConfig",
     "Document",
-    "DocumentType",
     "SearchResult",
     "SourceInfo",
     "RagSystem",

@@ -34,7 +34,7 @@ class Bm25Index:
         """Top-``top_n`` BM25 scores as ``{chunk_id: score}``, optionally filtered.
 
         ``where`` is a flat metadata equality filter (same shape RagSystem passes to
-        Chroma, e.g. ``{"doc_type": "policy"}``).
+        Chroma, e.g. ``{"jurisdiction": "UK"}``).
         """
         if self._bm25 is None:
             return {}

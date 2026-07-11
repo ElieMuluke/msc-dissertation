@@ -9,9 +9,8 @@ import tempfile
 import time
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 
 from app.api.schemas import (
@@ -26,7 +25,7 @@ from app.api.schemas import (
 from app.deps import get_generator, get_rag
 from app.evaluation.monitoring import log_search
 from app.generation import AnswerGenerator
-from app.ingestion.rag import DocumentType, RagSystem, load_pdfs
+from app.ingestion.rag import RagSystem, load_pdfs
 from app.realtime import manager, progress_frame
 
 router = APIRouter(prefix="/rag", tags=["rag"])
@@ -35,7 +34,6 @@ router = APIRouter(prefix="/rag", tags=["rag"])
 @router.post("/documents/pdf", response_model=IngestResponse)
 async def ingest_pdfs(
     files: list[UploadFile] = File(...),
-    doc_type: DocumentType = Form(DocumentType.POLICY),
     rag: RagSystem = Depends(get_rag),
 ) -> IngestResponse:
     """Ingest one or more uploaded PDFs (one document per page).
@@ -57,7 +55,7 @@ async def ingest_pdfs(
                 await manager.broadcast(progress_frame(name, 40, "parsing"))
                 # Offload blocking PDF parsing + embedding to a thread so the event loop
                 # stays free and progress frames stream in realtime.
-                documents = await asyncio.to_thread(load_pdfs, str(dest), doc_type)
+                documents = await asyncio.to_thread(load_pdfs, str(dest))
                 await manager.broadcast(progress_frame(name, 70, "vectorizing"))
                 ingested += await asyncio.to_thread(rag.ingest, documents)
                 await manager.broadcast(progress_frame(name, 100, "completed"))
@@ -77,7 +75,6 @@ def list_documents(rag: RagSystem = Depends(get_rag)) -> list[IngestedDocument]:
     return [
         IngestedDocument(
             filename=source.filename,
-            doc_type=source.doc_type,
             pages=source.pages,
             ingested_at=source.ingested_at,
         )
@@ -106,17 +103,14 @@ def search(
     background_tasks: BackgroundTasks,
     q: str = Query(..., min_length=1, description="Search query"),
     k: int = Query(5, ge=1, le=50),
-    doc_type: Optional[DocumentType] = None,
     rag: RagSystem = Depends(get_rag),
 ) -> list[SearchHit]:
-    """Semantic search over the corpus, optionally filtered by document type."""
+    """Semantic search over the corpus."""
     start = time.perf_counter()
-    results = rag.search(q, k=k, doc_type=doc_type)
+    results = rag.search(q, k=k)
     latency_ms = (time.perf_counter() - start) * 1000.0
     # Monitor the search in the background so logging never adds response latency.
-    background_tasks.add_task(
-        log_search, q, k, doc_type.value if doc_type else None, results, latency_ms
-    )
+    background_tasks.add_task(log_search, q, k, results, latency_ms)
     return [SearchHit(**vars(r)) for r in results]
 
 
@@ -128,9 +122,7 @@ async def answer(
     """Retrieve context and generate a grounded answer with citations (local LLM)."""
     try:
         # Offload the blocking LLM call so the event loop stays free.
-        result = await asyncio.to_thread(
-            generator.generate, request.query, request.k, request.doc_type
-        )
+        result = await asyncio.to_thread(generator.generate, request.query, request.k)
     except Exception as exc:  # noqa: BLE001 - surface LLM/connection issues clearly
         raise HTTPException(status_code=503, detail=f"Generation failed (is Ollama running?): {exc}")
     return AnswerResponse(
@@ -169,7 +161,7 @@ def answer_stream(
 
     def event_stream() -> Iterator[str]:
         try:
-            streamed = generator.stream(request.query, request.k, request.doc_type)
+            streamed = generator.stream(request.query, request.k)
             for chunk in streamed.chunks:
                 event = "thinking" if chunk.kind == "thinking" else "token"
                 yield _sse(event, {"text": chunk.text})

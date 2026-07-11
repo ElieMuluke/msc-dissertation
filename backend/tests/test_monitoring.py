@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from app.evaluation.monitoring import search_metrics
-from app.ingestion.rag.models import DocumentType, SearchResult
+from app.ingestion.rag.models import SearchResult
 
 
 def _result(score):
-    return SearchResult("id", "text", DocumentType.POLICY, {}, score)
+    return SearchResult("id", "text", {}, score)
 
 
 def test_search_metrics_with_results():

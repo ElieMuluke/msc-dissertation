@@ -10,12 +10,12 @@ from fastapi.testclient import TestClient
 import app.api.routes.rag as rag_route
 from app.deps import get_generator, get_llm_ping, get_rag
 from app.generation.generator import Answer, Citation, StreamChunk, StreamedAnswer
-from app.ingestion.rag.models import Document, DocumentType, SearchResult, SourceInfo
+from app.ingestion.rag.models import Document, SearchResult, SourceInfo
 from app.main import app
 
 
 class FakeGenerator:
-    def generate(self, query, k=5, doc_type=None):
+    def generate(self, query, k=5):
         return Answer(
             answer=f"Answer to: {query} [a1]",
             citations=[Citation("a1", "a.pdf", 2, 0.9)],
@@ -23,7 +23,7 @@ class FakeGenerator:
             contexts=["ctx"],
         )
 
-    def stream(self, query, k=5, doc_type=None):
+    def stream(self, query, k=5):
         return StreamedAnswer(
             citations=[Citation("a1", "a.pdf", 2, 0.9)],
             used_context=True,
@@ -49,14 +49,14 @@ class FakeRag:
         self.ingested += docs
         return len(docs)
 
-    def search(self, query, k=5, doc_type=None):
-        return [SearchResult("a1", "hit text", DocumentType.POLICY, {}, 0.9)]
+    def search(self, query, k=5):
+        return [SearchResult("a1", "hit text", {}, 0.9)]
 
     def clear(self):
         self.cleared = True
 
     def list_sources(self):
-        return [SourceInfo("a.pdf", DocumentType.POLICY, 3, "2026-06-17T00:00:00+00:00")]
+        return [SourceInfo("a.pdf", 3, "2026-06-17T00:00:00+00:00")]
 
     def delete_by_source(self, filename):
         return 0 if filename == "missing.pdf" else 2
@@ -72,7 +72,7 @@ def client(monkeypatch):
     app.dependency_overrides[get_generator] = lambda: FakeGenerator()
     app.dependency_overrides[get_llm_ping] = lambda: (lambda: True)
     # Each fake PDF yields one page so ingested count == number of files.
-    monkeypatch.setattr(rag_route, "load_pdfs", lambda path, dt: [Document(path, "t", dt)])
+    monkeypatch.setattr(rag_route, "load_pdfs", lambda path: [Document(path, "t")])
     # Don't write MLflow during tests.
     monkeypatch.setattr(rag_route, "log_search", lambda *a, **k: None)
     yield TestClient(app)
@@ -84,14 +84,14 @@ def test_multi_pdf_upload(client):
         ("files", ("a.pdf", b"%PDF-1.4", "application/pdf")),
         ("files", ("b.pdf", b"%PDF-1.4", "application/pdf")),
     ]
-    res = client.post("/rag/documents/pdf", files=files, data={"doc_type": "policy"})
+    res = client.post("/rag/documents/pdf", files=files)
     assert res.status_code == 200
     assert res.json() == {"ingested": 2}
 
 
 def test_rejects_non_pdf(client):
     files = [("files", ("notes.txt", b"hello", "text/plain"))]
-    res = client.post("/rag/documents/pdf", files=files, data={"doc_type": "policy"})
+    res = client.post("/rag/documents/pdf", files=files)
     assert res.status_code == 400
 
 
@@ -111,7 +111,7 @@ def test_list_documents(client):
     res = client.get("/rag/documents")
     assert res.status_code == 200
     assert res.json() == [
-        {"filename": "a.pdf", "doc_type": "policy", "pages": 3, "ingested_at": "2026-06-17T00:00:00+00:00"}
+        {"filename": "a.pdf", "pages": 3, "ingested_at": "2026-06-17T00:00:00+00:00"}
     ]
 
 
@@ -180,7 +180,6 @@ def test_ws_ingestion_progress(client):
         res = client.post(
             "/rag/documents/pdf",
             files=[("files", ("a.pdf", b"%PDF-1.4", "application/pdf"))],
-            data={"doc_type": "policy"},
         )
         assert res.status_code == 200
         frames = [ws.receive_json() for _ in range(4)]
