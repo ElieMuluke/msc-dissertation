@@ -19,7 +19,8 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ## 4. Paste/Type CSV Text Tabular Ingestion — `POST /tabular/ingest/text`
 
-**Status**: 🔵 to implement (backend ready).
+**Status**: ✅ Implemented. `UploadTabular.tsx` has a "Paste" method with a textarea,
+`422` error-list rendering, and `ingestTabularText` in `api.ts`.
 
 Add a way for a user to paste or type CSV/TXT rows directly into a text field and ingest
 them, without needing to save the text to a file first. The whole payload is validated as
@@ -69,7 +70,8 @@ should not change.
 
 ## 3. Local-path Tabular Ingestion (large files) — `POST /tabular/ingest/local`
 
-**Status**: 🔵 to implement (backend ready).
+**Status**: ✅ Implemented. `UploadTabular.tsx` has a "Path" method with a server-path
+text input and `ingestTabularLocal` in `api.ts`.
 
 `POST /tabular/ingest` (multipart upload) is fine for small/medium files, but very large
 source files (the real `HI-Large_Trans.csv` is ~17GB) are slow and, on hosts where `/tmp`
