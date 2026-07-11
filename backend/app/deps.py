@@ -7,12 +7,19 @@ from functools import lru_cache
 
 from app.generation import AnswerGenerator, build_answer_generator, build_llm_ping
 from app.ingestion.rag import RagSystem, build_rag
+from app.ingestion.tabular import TabularSystem, build_tabular_system
 
 
 @lru_cache
 def get_rag() -> RagSystem:
     """Single shared RagSystem (model + store built once per process)."""
     return build_rag()
+
+
+@lru_cache
+def get_tabular() -> TabularSystem:
+    """Single shared TabularSystem (engine + schema built once per process)."""
+    return build_tabular_system()
 
 
 @lru_cache

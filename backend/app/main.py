@@ -12,7 +12,7 @@ from collections.abc import Callable
 from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import rag
+from app.api.routes import rag, tabular
 from app.api.schemas import HealthResponse
 from app.deps import get_llm_ping, get_rag
 from app.ingestion.rag import RagSystem
@@ -29,6 +29,7 @@ app.add_middleware(
 )
 
 app.include_router(rag.router)
+app.include_router(tabular.router)
 
 
 @app.get("/health", tags=["health"], response_model=HealthResponse)

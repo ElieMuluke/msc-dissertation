@@ -52,3 +52,13 @@ class AnswerResponse(BaseModel):
     answer: str
     citations: list[CitationOut]
     used_context: bool
+
+
+class TabularIngestResponse(BaseModel):
+    ingested: int
+    data_type: str
+
+
+class TabularCounts(BaseModel):
+    accounts: int
+    transactions: int

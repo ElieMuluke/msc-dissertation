@@ -10,7 +10,7 @@ from typing import Literal
 
 from fastapi import WebSocket
 
-Status = Literal["uploading", "parsing", "vectorizing", "completed", "error"]
+Status = Literal["uploading", "parsing", "vectorizing", "inserting", "completed", "error"]
 
 
 class ConnectionManager:
