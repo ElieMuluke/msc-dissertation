@@ -54,6 +54,38 @@ def test_search_filters_by_doc_type(rag):
     assert all(r.doc_type is DocumentType.ACTION for r in results)
 
 
+def test_scope_confidence_returns_raw_relevance(rag):
+    rag.ingest(_docs())
+    conf = rag.scope_confidence("AML reporting policy")
+    assert isinstance(conf, float)
+    assert 0.0 <= conf <= 1.0
+    assert conf == pytest.approx(rag.search("AML reporting policy", k=1)[0].score)
+
+
+def test_scope_confidence_empty_store():
+    store = Chroma(
+        collection_name="test_empty",
+        embedding_function=DeterministicFakeEmbedding(size=32),
+        collection_metadata={"hnsw:space": "cosine"},
+    )
+    assert RagSystem(store).scope_confidence("anything") == 0.0
+
+
+def test_scope_confidence_bypasses_bm25_fusion():
+    store = Chroma(
+        collection_name="test_hybrid",
+        embedding_function=DeterministicFakeEmbedding(size=32),
+        collection_metadata={"hnsw:space": "cosine"},
+    )
+    hybrid = RagSystem(store, bm25_weight=0.5)
+    hybrid.ingest(_docs())
+    raw = RagSystem(store).search("reporting policy", k=1)[0].score
+    # scope_confidence reads the raw vector relevance, not the min-max-normalized
+    # fused score (whose top is a near-constant regardless of absolute confidence).
+    assert hybrid.scope_confidence("reporting policy") == pytest.approx(raw)
+    assert hybrid.search("reporting policy", k=1)[0].score != pytest.approx(raw)
+
+
 def test_list_and_delete_sources(rag):
     rag.ingest([
         Document("a-0", "t1", DocumentType.POLICY, {"source": "a.pdf"}),

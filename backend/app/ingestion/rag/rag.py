@@ -91,6 +91,12 @@ class RagSystem:
             by_id.update({doc.id: doc for doc in fetched})
         return [_to_result(by_id[cid], score) for cid, score in top if cid in by_id]
 
+    def scope_confidence(self, query: str) -> float:
+        """Raw top-1 vector relevance for the query (bypasses BM25 fusion, whose min-max
+        normalization erases absolute confidence). 0.0 when the store is empty."""
+        hits = self._store.similarity_search_with_relevance_scores(query, k=1)
+        return float(hits[0][1]) if hits else 0.0
+
     def as_retriever(self, **kwargs):
         """Expose a LangChain retriever for downstream LLM chains / agents."""
         return self._store.as_retriever(**kwargs)

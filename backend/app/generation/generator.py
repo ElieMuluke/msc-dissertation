@@ -17,6 +17,12 @@ from app.ingestion.rag import DocumentType, RagSystem, SearchResult
 SearchFn = Callable[[str, int, Optional[DocumentType]], Sequence[SearchResult]]
 CompleteFn = Callable[[str], str]
 
+OUT_OF_SCOPE_REFUSAL = (
+    "I can only help with AML/CFT, KYC and regulatory compliance questions answerable "
+    "from the ingested regulatory documents. This question falls outside that scope, so "
+    "I won't answer it."
+)
+
 
 @dataclass(frozen=True)
 class StreamChunk:
@@ -79,14 +85,28 @@ class AnswerGenerator:
         search_fn: SearchFn,
         complete_fn: CompleteFn,
         stream_fn: Optional[StreamFn] = None,
+        confidence_fn: Optional[Callable[[str], float]] = None,
+        scope_threshold: float = 0.0,
     ) -> None:
         self._search = search_fn
         self._complete = complete_fn
         self._stream = stream_fn
+        self._confidence_fn = confidence_fn
+        self._scope_threshold = scope_threshold
+
+    def _gated(self, query: str) -> bool:
+        """True when the out-of-scope gate should refuse the query without generating."""
+        return (
+            self._confidence_fn is not None
+            and self._scope_threshold > 0
+            and self._confidence_fn(query) < self._scope_threshold
+        )
 
     def generate(
         self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
     ) -> Answer:
+        if self._gated(query):
+            return Answer(answer=OUT_OF_SCOPE_REFUSAL, citations=[], used_context=False, contexts=[])
         results = list(self._search(query, k, doc_type))
         answer = self._complete(build_prompt(query, results)).strip()
         return Answer(
@@ -103,6 +123,12 @@ class AnswerGenerator:
         if self._stream is None:
             raise RuntimeError(
                 "This AnswerGenerator was built without streaming support"
+            )
+        if self._gated(query):
+            return StreamedAnswer(
+                citations=[],
+                used_context=False,
+                chunks=iter([StreamChunk("answer", OUT_OF_SCOPE_REFUSAL)]),
             )
         results = list(self._search(query, k, doc_type))
         return StreamedAnswer(
@@ -174,10 +200,17 @@ def build_answer_generator(
     rag: RagSystem, config: Optional[GenerationConfig] = None
 ) -> AnswerGenerator:
     """Wire a RagSystem and an Ollama chat model into an :class:`AnswerGenerator`."""
+    config = config or GenerationConfig()
     complete = build_completion(config)
     stream = build_stream_completion(config)
 
     def search(query: str, k: int, doc_type: Optional[DocumentType]):
         return rag.search(query, k=k, doc_type=doc_type)
 
-    return AnswerGenerator(search, complete, stream)
+    return AnswerGenerator(
+        search,
+        complete,
+        stream,
+        confidence_fn=rag.scope_confidence,
+        scope_threshold=config.scope_gate_threshold,
+    )

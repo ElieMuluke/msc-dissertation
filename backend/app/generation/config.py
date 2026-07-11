@@ -35,6 +35,11 @@ class GenerationConfig:
             model whose reasoning converges (and is moot for the default ``llama3.2:3b``,
             which emits no ``<think>`` trace). ``num_predict`` must cover reasoning *and*
             leave room for the answer when this is on.
+        scope_gate_threshold: Refuse-without-generating when the query's top-1 raw vector
+            relevance is below this value; 0 (or negative) disables the gate. Env-tunable
+            via ``SCOPE_GATE_THRESHOLD``. Calibrated 2026-07 for all-MiniLM-L6-v2 cosine
+            relevance on collection ``aml_sections_b`` (out-of-scope max 0.4585, next
+            golden 0.4758); re-calibrate if the embedder or corpus changes.
     """
 
     model: str = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
@@ -44,3 +49,4 @@ class GenerationConfig:
     num_ctx: int = 4096
     keep_alive: str = "30m"
     reasoning: bool = os.getenv("OLLAMA_REASONING", "").lower() in {"1", "true", "yes"}
+    scope_gate_threshold: float = float(os.getenv("SCOPE_GATE_THRESHOLD", "0.46"))

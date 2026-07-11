@@ -72,6 +72,7 @@ Exported from `backend/app/ingestion/rag/__init__.py`:
 | `load_pdfs(path, doc_type=POLICY, metadata=None) -> list[Document]` | Load a PDF file or directory into per-page documents. |
 | `RagSystem.ingest(documents) -> int` | Embed and persist documents (upsert by id). |
 | `RagSystem.search(query, k=5, doc_type=None) -> list[SearchResult]` | Top-k matches. |
+| `RagSystem.scope_confidence(query) -> float` | Raw top-1 vector relevance (bypasses BM25 fusion, whose per-query min-max normalization erases absolute confidence); `0.0` on an empty store. Feeds the generation layer's out-of-scope gate. |
 | `RagSystem.as_retriever(**kwargs)` | LangChain retriever for downstream LLM chains/agents. |
 | `Document` | Ingestable unit: `id, text, doc_type, metadata`. |
 | `DocumentType` | `POLICY` / `ACTION`. |

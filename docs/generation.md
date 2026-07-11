@@ -66,6 +66,18 @@ curl -N -X POST http://localhost:8000/rag/answer/stream \
   -d '{"query": "What is the cash transaction reporting threshold?", "k": 4}'
 ```
 
+### Out-of-scope gate
+
+Before any retrieval-augmented generation, the generator checks the query's **raw top-1
+vector relevance** (`RagSystem.scope_confidence`). Below the threshold it returns a fixed
+one-sentence refusal immediately — no LLM call, no citations. Configure with
+`SCOPE_GATE_THRESHOLD` (default `0.46`; `0` disables). The default was calibrated 2026-07
+for `all-MiniLM-L6-v2` cosine relevance on collection `aml_sections_b`: out-of-scope max
+0.4585 vs next golden 0.4758 (13/13 out-of-scope refused, 1/57 golden gated — a
+no_answer-category question). Re-calibrate if the embedder or corpus changes. Fused hybrid
+scores **cannot** be used for this: they are min-max normalized per query, so the top score
+is a near-constant regardless of absolute confidence.
+
 ### Python
 
 ```python

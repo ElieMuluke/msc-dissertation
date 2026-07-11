@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.generation.config import GenerationConfig
-from app.generation.generator import AnswerGenerator
+from app.generation.generator import OUT_OF_SCOPE_REFUSAL, AnswerGenerator
 from app.generation.prompt import build_prompt
 from app.ingestion.rag.models import DocumentType, SearchResult
 
@@ -51,6 +51,62 @@ def test_generate_without_results_flags_no_context():
     answer = gen.generate("threshold?")
     assert answer.used_context is False
     assert answer.citations == []
+
+
+def _must_not_call(*args, **kwargs):
+    raise AssertionError("must not be called on the gated path")
+
+
+def test_scope_gate_refuses_below_threshold_without_llm_or_search():
+    gen = AnswerGenerator(
+        _must_not_call, _must_not_call, confidence_fn=lambda q: 0.3, scope_threshold=0.46
+    )
+    answer = gen.generate("who won the world cup?")
+    assert answer.answer == OUT_OF_SCOPE_REFUSAL
+    assert answer.used_context is False
+    assert answer.citations == []
+    assert answer.contexts == []
+
+
+def test_scope_gate_passes_above_threshold():
+    gen = AnswerGenerator(
+        lambda q, k, dt: [_result("p1", "Report cash over 10,000.")],
+        lambda prompt: "File a CTR per [p1].",
+        confidence_fn=lambda q: 0.7,
+        scope_threshold=0.46,
+    )
+    answer = gen.generate("CTR threshold?")
+    assert answer.answer == "File a CTR per [p1]."
+    assert answer.used_context is True
+
+
+def test_scope_gate_disabled_by_zero_threshold():
+    gen = AnswerGenerator(
+        lambda q, k, dt: [], lambda prompt: "answer", confidence_fn=lambda q: 0.0, scope_threshold=0.0
+    )
+    assert gen.generate("anything").answer == "answer"
+
+
+def test_scope_gate_off_without_confidence_fn():
+    gen = AnswerGenerator(lambda q, k, dt: [], lambda prompt: "answer", scope_threshold=0.46)
+    assert gen.generate("anything").answer == "answer"
+
+
+def test_stream_scope_gate_yields_single_refusal_chunk():
+    gen = AnswerGenerator(
+        _must_not_call,
+        _must_not_call,
+        stream_fn=_must_not_call,
+        confidence_fn=lambda q: 0.3,
+        scope_threshold=0.46,
+    )
+    streamed = gen.stream("who won the world cup?")
+    assert streamed.citations == []
+    assert streamed.used_context is False
+    chunks = list(streamed.chunks)
+    assert len(chunks) == 1
+    assert chunks[0].kind == "answer"
+    assert chunks[0].text == OUT_OF_SCOPE_REFUSAL
 
 
 def test_default_num_predict_leaves_room_for_reasoning_and_an_answer():

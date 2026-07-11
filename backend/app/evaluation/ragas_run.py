@@ -519,7 +519,7 @@ def main(argv=None) -> int:
     print(
         f"Active config: collection={args.collection!r} @ {args.persist_dir} | "
         f"{n_chunks} chunks ({chunk_style} chunking) | bm25_weight={args.bm25_weight} | "
-        f"k={args.k} | generator={gen_config.model}"
+        f"k={args.k} | generator={gen_config.model} | scope_gate={gen_config.scope_gate_threshold}"
     )
 
     llm, judge_model = _build_ragas_llm(gen_config)
@@ -592,6 +592,7 @@ def main(argv=None) -> int:
                 "bm25_weight": args.bm25_weight,
                 "n_chunks": n_chunks,
                 "chunk_style": chunk_style,
+                "scope_gate_threshold": gen_config.scope_gate_threshold,
             }
         )
         mlflow.log_metrics(core4.mean_scores)
