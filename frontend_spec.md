@@ -17,6 +17,56 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ---
 
+## 4. Paste/Type CSV Text Tabular Ingestion — `POST /tabular/ingest/text`
+
+**Status**: 🔵 to implement (backend ready).
+
+Add a way for a user to paste or type CSV/TXT rows directly into a text field and ingest
+them, without needing to save the text to a file first. The whole payload is validated as
+well-formed *before* any database write — a malformed paste returns a list of every
+problem found and inserts nothing, so the DB can never end up with a partial/corrupt
+insert from bad pasted data. See `docs/tabular.md` (new "`POST /tabular/ingest/text`"
+subsection) for the full backend-side guarantee.
+
+### Request
+* **Method / URL**: `POST /tabular/ingest/text`
+* **Body**: `application/json`
+```json
+{ "data_type": "accounts", "csv_text": "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\nBank A,001,111,E1,Alice\n" }
+```
+* `data_type`: one of `accounts` | `transactions` | `patterns` (same selector as the
+  existing upload UI — reuse it).
+* `csv_text`: the raw text as typed/pasted, including the header row for `accounts`/
+  `transactions` (`patterns` text has no header, same block format as
+  `HI-Large_Patterns.txt` — see `docs/tabular.md`).
+
+### Response (success)
+Same shape as the other ingest endpoints:
+```json
+{ "ingested": 1, "data_type": "accounts" }
+```
+
+### Response (validation failure) — `422`
+```json
+{ "detail": ["Missing required column(s) for accounts: Bank ID", "..."] }
+```
+`detail` is a **list of strings**, not a single message — render *all* of them (e.g. a
+bullet list), not just the first. On `422`, nothing was inserted; the counts display
+should not change.
+
+### Suggested UX
+* A textarea (paste/type CSV or TXT rows) + the same `data_type` selector already used
+  for file upload, + a submit button.
+* On `422`: show the full error list inline (e.g. above or below the textarea) and leave
+  the textarea's contents untouched, so the user can fix the text and resubmit without
+  retyping.
+* On success (`200`): clear the textarea and refresh the counts display, same as the
+  existing upload flow.
+* No `/ws` progress frames for this endpoint — it responds synchronously (pasted text is
+  expected to be small), so no progress bar/polling is needed here.
+
+---
+
 ## 3. Local-path Tabular Ingestion (large files) — `POST /tabular/ingest/local`
 
 **Status**: 🔵 to implement (backend ready).

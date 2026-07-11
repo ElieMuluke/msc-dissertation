@@ -10,7 +10,8 @@ service layer owns batching + commits (pure core / thin shell).
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterator
+import io
+from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -24,6 +25,38 @@ _TIMESTAMP_FORMAT = "%Y/%m/%d %H:%M"
 # Row count per pandas chunk for iter_accounts/iter_transactions. Not configurable (YAGNI);
 # large enough to keep read_csv overhead low, small enough to bound peak memory.
 _CHUNK_SIZE = 50_000
+
+# Header columns iter_accounts/iter_transactions require, used by parse_csv_text to
+# validate pasted CSV text up front (before any DB write). Keep in sync with the
+# row-dict keys those two generators read.
+_EXPECTED_HEADERS: dict[TabularDataType, tuple[str, ...]] = {
+    TabularDataType.ACCOUNTS: ("Bank Name", "Bank ID", "Account Number", "Entity ID", "Entity Name"),
+    TabularDataType.TRANSACTIONS: (
+        "Timestamp",
+        "From Bank",
+        "Account",
+        "To Bank",
+        "Account.1",
+        "Amount Received",
+        "Receiving Currency",
+        "Amount Paid",
+        "Payment Currency",
+        "Payment Format",
+        "Is Laundering",
+    ),
+}
+
+
+class CsvValidationError(Exception):
+    """Raised when pasted CSV text fails validation before any DB write is attempted.
+
+    Carries every problem found (not just the first) as ``errors``, so a caller (e.g. the
+    API layer) can surface all of them at once instead of round-tripping error-by-error.
+    """
+
+    def __init__(self, errors: list[str]) -> None:
+        self.errors = errors
+        super().__init__("; ".join(errors))
 
 
 def iter_accounts(path: str) -> Iterator[dict]:
@@ -109,6 +142,32 @@ def iter_transactions(path: str) -> Iterator[dict]:
             }
 
 
+def _iter_pattern_lines(lines: Iterable[str]) -> Iterator[dict]:
+    """Yield one row dict per transaction line among ``lines`` (the parsing core of :func:`iter_patterns`).
+
+    Split out from :func:`iter_patterns` so :func:`parse_csv_text` can run the exact same
+    block-tracking/parsing logic over ``text.splitlines()`` (pasted text) with zero
+    duplicated logic. See :func:`iter_patterns` for the block-marker semantics.
+    """
+    pattern_type: Optional[str] = None
+    pattern_group_id: Optional[int] = None
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.upper().startswith("BEGIN"):
+            pattern_group_id = (pattern_group_id or 0) + 1
+            pattern_type = line.rsplit(" - ", 1)[-1].strip()
+            continue
+        if line.upper().startswith("END"):
+            continue
+        fields = next(csv.reader([line]))
+        row = _parse_transaction_fields(fields)
+        row["pattern_type"] = pattern_type
+        row["pattern_group_id"] = pattern_group_id
+        yield row
+
+
 def iter_patterns(path: str) -> Iterator[dict]:
     """Yield one row dict per transaction line inside ``HI-Large_Patterns.txt``.
 
@@ -119,24 +178,50 @@ def iter_patterns(path: str) -> Iterator[dict]:
     transaction row, parsed with the same positional logic as :func:`iter_transactions`
     and tagged with the current ``pattern_type``/``pattern_group_id``.
     """
-    pattern_type: Optional[str] = None
-    pattern_group_id: Optional[int] = None
     with Path(path).open(encoding="utf-8") as f:
-        for raw_line in f:
-            line = raw_line.strip()
-            if not line:
-                continue
-            if line.upper().startswith("BEGIN"):
-                pattern_group_id = (pattern_group_id or 0) + 1
-                pattern_type = line.rsplit(" - ", 1)[-1].strip()
-                continue
-            if line.upper().startswith("END"):
-                continue
-            fields = next(csv.reader([line]))
-            row = _parse_transaction_fields(fields)
-            row["pattern_type"] = pattern_type
-            row["pattern_group_id"] = pattern_group_id
-            yield row
+        yield from _iter_pattern_lines(f)
+
+
+def parse_csv_text(data_type: TabularDataType, text: str) -> list[dict]:
+    """Validate + fully parse pasted CSV/TXT ``text`` for ``data_type``, all-or-nothing.
+
+    Unlike the streaming ``iter_*`` generators (meant for on-disk, possibly huge files),
+    this materializes the full row list up front so a caller (``TabularSystem.ingest_text``)
+    can guarantee no partial DB writes: if anything is malformed, :class:`CsvValidationError`
+    is raised before a single row is returned, and nothing has been inserted.
+
+    For ``ACCOUNTS``/``TRANSACTIONS``, the header is checked first (missing expected
+    columns fail fast with a clear message); rows are then parsed with the same
+    ``iter_accounts``/``iter_transactions`` logic via an in-memory ``StringIO``. For
+    ``PATTERNS``, rows are parsed with :func:`_iter_pattern_lines` over ``text.splitlines()``.
+    Any parse failure (bad float, bad timestamp, bad int, ...) is caught and re-raised as
+    a :class:`CsvValidationError` instead of propagating a raw exception.
+    """
+    if not text.strip():
+        raise CsvValidationError(["CSV text is empty."])
+
+    if data_type is TabularDataType.PATTERNS:
+        try:
+            rows = list(_iter_pattern_lines(text.splitlines()))
+        except Exception as exc:
+            raise CsvValidationError([str(exc)]) from exc
+    else:
+        expected = _EXPECTED_HEADERS[data_type]
+        header = pd.read_csv(io.StringIO(text), nrows=0).columns.tolist()
+        missing = [column for column in expected if column not in header]
+        if missing:
+            raise CsvValidationError(
+                [f"Missing required column(s) for {data_type.value}: {', '.join(missing)}"]
+            )
+        loader = iter_accounts if data_type is TabularDataType.ACCOUNTS else iter_transactions
+        try:
+            rows = list(loader(io.StringIO(text)))
+        except Exception as exc:
+            raise CsvValidationError([str(exc)]) from exc
+
+    if not rows:
+        raise CsvValidationError(["No data rows found."])
+    return rows
 
 
 def count_rows(path: str, data_type: TabularDataType) -> int:

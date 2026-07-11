@@ -15,7 +15,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import sessionmaker
 
 from .config import TabularConfig
-from .loaders import iter_accounts, iter_patterns, iter_transactions
+from .loaders import iter_accounts, iter_patterns, iter_transactions, parse_csv_text
 from .models import Account, TabularDataType, Transaction
 from .store import build_engine, build_sessionmaker, init_db
 
@@ -95,6 +95,22 @@ class TabularSystem:
             TabularDataType.PATTERNS: self.ingest_patterns,
         }
         return dispatch[data_type](path, source_file=source_file, on_batch=on_batch)
+
+    def ingest_text(self, data_type: TabularDataType, text: str, source_file: Optional[str] = None) -> int:
+        """Validate + bulk-insert pasted CSV/TXT ``text`` for ``data_type``, all-or-nothing.
+
+        Unlike ``ingest_accounts``/``ingest_transactions``/``ingest_patterns`` (streamed,
+        for on-disk files), ``text`` is fully parsed and validated by
+        :func:`~.loaders.parse_csv_text` *before* any DB write is attempted: if it raises
+        :class:`~.loaders.CsvValidationError`, nothing has been touched yet, so the error
+        simply propagates. No ``on_batch`` progress callback — pasted text is small enough
+        that this is a single, synchronous-feeling insert, unlike the streaming file paths.
+        """
+        rows = parse_csv_text(data_type, text)
+        tagged_rows = [{**row, "source_file": source_file} for row in rows]
+        if data_type is TabularDataType.ACCOUNTS:
+            return self._insert_ignore_duplicates(Account, tagged_rows, ["bank_id", "account_number"])
+        return self._insert(Transaction, tagged_rows)
 
     def counts(self) -> dict[str, int]:
         """Cheap ``SELECT COUNT(*)`` per table, e.g. for a frontend ingested-volumes display."""

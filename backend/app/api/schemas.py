@@ -66,6 +66,11 @@ class TabularLocalIngestRequest(BaseModel):
     path: str
 
 
+class TabularTextIngestRequest(BaseModel):
+    data_type: TabularDataType
+    csv_text: str
+
+
 class TabularCounts(BaseModel):
     accounts: int
     transactions: int

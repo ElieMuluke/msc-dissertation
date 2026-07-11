@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.ingestion.tabular.loaders import count_rows, iter_accounts, iter_patterns, iter_transactions
+import pytest
+
+from app.ingestion.tabular.loaders import (
+    CsvValidationError,
+    count_rows,
+    iter_accounts,
+    iter_patterns,
+    iter_transactions,
+    parse_csv_text,
+)
 from app.ingestion.tabular.models import TabularDataType
 
 ACCOUNTS_CSV = (
@@ -107,3 +116,50 @@ def test_count_rows_matches_iter_row_counts(tmp_path):
     # test_iter_patterns_tags_block_rows_and_leaves_others_null: len(rows) == 2).
     assert count_rows(str(patterns_path), TabularDataType.PATTERNS) == 2
 
+
+def test_parse_csv_text_accounts_returns_rows():
+    rows = parse_csv_text(TabularDataType.ACCOUNTS, ACCOUNTS_CSV)
+
+    assert len(rows) == 2
+    assert rows[0]["bank_name"] == "Portugal Bank #500"
+    assert rows[1]["bank_id"] == "00099"
+
+
+def test_parse_csv_text_transactions_returns_rows():
+    rows = parse_csv_text(TabularDataType.TRANSACTIONS, TRANSACTIONS_CSV)
+
+    assert len(rows) == 2
+    assert rows[0]["timestamp"] == datetime(2022, 8, 1, 0, 17)
+    assert rows[1]["is_laundering"] == 1
+
+
+def test_parse_csv_text_patterns_returns_rows():
+    rows = parse_csv_text(TabularDataType.PATTERNS, PATTERNS_TXT)
+
+    assert len(rows) == 2
+    assert rows[1]["pattern_type"] == "CYCLE"
+
+
+def test_parse_csv_text_missing_column_raises_with_column_name():
+    bad_csv = "Bank Name,Bank ID,Account Number,Entity ID\nA,1,2,3\n"
+
+    with pytest.raises(CsvValidationError) as exc_info:
+        parse_csv_text(TabularDataType.ACCOUNTS, bad_csv)
+
+    assert "Entity Name" in str(exc_info.value)
+
+
+def test_parse_csv_text_malformed_row_raises():
+    bad_csv = (
+        "Timestamp,From Bank,Account,To Bank,Account,Amount Received,Receiving Currency,"
+        "Amount Paid,Payment Currency,Payment Format,Is Laundering\n"
+        "not-a-timestamp,020,800104D70,020,800104D70,6794.63,US Dollar,6794.63,US Dollar,Reinvestment,0\n"
+    )
+
+    with pytest.raises(CsvValidationError):
+        parse_csv_text(TabularDataType.TRANSACTIONS, bad_csv)
+
+
+def test_parse_csv_text_empty_string_raises():
+    with pytest.raises(CsvValidationError):
+        parse_csv_text(TabularDataType.ACCOUNTS, "")

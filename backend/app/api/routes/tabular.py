@@ -9,9 +9,14 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from app.api.schemas import TabularCounts, TabularIngestResponse, TabularLocalIngestRequest
+from app.api.schemas import (
+    TabularCounts,
+    TabularIngestResponse,
+    TabularLocalIngestRequest,
+    TabularTextIngestRequest,
+)
 from app.deps import get_tabular
-from app.ingestion.tabular import TabularDataType, TabularSystem
+from app.ingestion.tabular import CsvValidationError, TabularDataType, TabularSystem
 from app.ingestion.tabular.loaders import count_rows
 from app.realtime import manager, progress_frame
 
@@ -119,6 +124,26 @@ async def ingest_local(
         await manager.broadcast(progress_frame(name, 0, "error", str(exc)))
         raise
 
+    return TabularIngestResponse(ingested=ingested, data_type=request.data_type.value)
+
+
+@router.post("/ingest/text", response_model=TabularIngestResponse)
+async def ingest_text(
+    request: TabularTextIngestRequest,
+    tabular: TabularSystem = Depends(get_tabular),
+) -> TabularIngestResponse:
+    """Ingest raw CSV/TXT text pasted (not uploaded as a file) for the selected ``data_type``.
+
+    The entire payload is validated as well-formed before any DB write (see
+    ``TabularSystem.ingest_text``): a malformed row anywhere returns ``422`` with the list
+    of problems and leaves the database untouched, no partial inserts. No ``/ws`` progress
+    broadcast (unlike the file-upload paths) — pasted text is small enough for a plain
+    synchronous-feeling request/response.
+    """
+    try:
+        ingested = await asyncio.to_thread(tabular.ingest_text, request.data_type, request.csv_text)
+    except CsvValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors) from exc
     return TabularIngestResponse(ingested=ingested, data_type=request.data_type.value)
 
 

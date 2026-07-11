@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.deps import get_tabular
+from app.ingestion.tabular import CsvValidationError
 from app.main import app
 
 ACCOUNTS_CSV = (
@@ -23,6 +24,12 @@ class FakeTabular:
         self.calls.append((data_type, path, source_file))
         if on_batch is not None:
             on_batch(1)
+        return 1
+
+    def ingest_text(self, data_type, text, source_file=None):
+        self.calls.append((data_type, text, source_file))
+        if text == "MALFORMED":
+            raise CsvValidationError(["bad row: not-a-number"])
         return 1
 
     def counts(self):
@@ -58,6 +65,18 @@ def test_ingest_patterns_accepts_txt(client):
     res = client.post("/tabular/ingest", files=files, data={"data_type": "patterns"})
     assert res.status_code == 200
     assert res.json() == {"ingested": 1, "data_type": "patterns"}
+
+
+def test_ingest_text_valid_csv(client):
+    res = client.post("/tabular/ingest/text", json={"data_type": "accounts", "csv_text": ACCOUNTS_CSV})
+    assert res.status_code == 200
+    assert res.json() == {"ingested": 1, "data_type": "accounts"}
+
+
+def test_ingest_text_malformed_returns_422(client):
+    res = client.post("/tabular/ingest/text", json={"data_type": "accounts", "csv_text": "MALFORMED"})
+    assert res.status_code == 422
+    assert res.json()["detail"] == ["bad row: not-a-number"]
 
 
 def test_counts(client):

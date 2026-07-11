@@ -106,6 +106,10 @@ tabular.ingest_accounts("HI-Large_accounts.csv", on_batch=lambda n: print(f"{n} 
 
 tabular.counts()  # {"accounts": ..., "transactions": ...}
 tabular.clear()   # delete all rows (transactions, then accounts)
+
+# Pasted/typed CSV text (validated in full before any DB write; raises CsvValidationError
+# instead of inserting anything if the text is malformed):
+tabular.ingest_text(TabularDataType.ACCOUNTS, "Bank Name,Bank ID,...\n...")
 ```
 
 ### API
@@ -172,6 +176,39 @@ curl -X POST http://localhost:8000/tabular/ingest/local \
   -d '{"data_type":"transactions","path":"/absolute/path/to/HI-Large_Trans.csv"}'
 ```
 
+**`POST /tabular/ingest/text`** — ingest raw CSV/TXT *text* pasted or typed directly
+(e.g. from a browser textarea), instead of uploading a file. JSON body:
+
+```json
+{"data_type": "accounts", "csv_text": "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\n...\n"}
+```
+
+Response (`TabularIngestResponse`), same shape as the other ingest endpoints:
+```json
+{"ingested": 3, "data_type": "accounts"}
+```
+
+**Guarantee: validate everything first, insert only if 100% valid — no partial writes.**
+The entire payload is parsed and checked (header columns present, every row
+parseable/convertible) *before* a single row is written to the database. If anything is
+wrong — a missing header column, a malformed row anywhere in the text, empty text, or
+zero data rows — the request returns `422` with a JSON body of
+`{"detail": [<error string>, ...]}` (a **list**, not a single message, so every problem
+found is reported at once) and the database is left completely untouched. This is the
+point of this endpoint: unlike the streaming file-based ingest paths (which insert
+batch-by-batch as they read), pasted text is fully materialized and validated up front so
+a malformed paste can never corrupt the DB with a partial insert.
+
+No `/ws` progress broadcast for this endpoint (unlike `/tabular/ingest` and
+`/tabular/ingest/local`) — pasted text is expected to be small, so ingestion completes in
+one synchronous-feeling request/response.
+
+```bash
+curl -X POST http://localhost:8000/tabular/ingest/text \
+  -H "Content-Type: application/json" \
+  -d '{"data_type": "accounts", "csv_text": "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\nBank A,001,111,E1,Alice\n"}'
+```
+
 ### Why a local-path endpoint
 
 `POST /tabular/ingest` round-trips the whole file over HTTP and stages a copy to disk
@@ -209,10 +246,13 @@ Exported from `backend/app/ingestion/tabular/__init__.py`:
 | `TabularConfig` | `db_url`, `batch_size`. |
 | `iter_accounts`, `iter_transactions`, `iter_patterns` | Pure row-streaming generators (`loaders.py`), reusable outside the ORM service. |
 | `count_rows(path, data_type) -> int` | Fast line-count (no parsing) matching what the corresponding `iter_*` would yield; used to size ingestion progress percentages. |
+| `parse_csv_text(data_type, text) -> list[dict]` | Validate + fully parse pasted CSV/TXT `text` for `data_type`, all-or-nothing (`loaders.py`); raises `CsvValidationError` before returning anything if the header is missing expected columns, any row fails to parse, or there are zero data rows. |
+| `CsvValidationError` | Exception raised by `parse_csv_text`/`TabularSystem.ingest_text`; carries every problem found as `.errors: list[str]` (not just the first). |
+| `TabularSystem.ingest_text(data_type, text, source_file=None) -> int` | Validate + bulk-insert pasted CSV/TXT `text`, all-or-nothing: calls `parse_csv_text` (raises before any DB write if invalid), then inserts via the same `_insert`/`_insert_ignore_duplicates` paths as the file-based ingest methods. No `on_batch` progress callback. |
 
 Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload), `POST
-/tabular/ingest/local` (server-local path, no upload), `GET /tabular/counts`, `DELETE
-/tabular/data`.
+/tabular/ingest/local` (server-local path, no upload), `POST /tabular/ingest/text` (pasted
+CSV/TXT text, validated before any write), `GET /tabular/counts`, `DELETE /tabular/data`.
 
 ## Design notes
 
@@ -235,6 +275,17 @@ Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload), `POST
 - **Thin API layer**: `app/api/routes/tabular.py` does not branch on `data_type` itself; it
   delegates to `TabularSystem.ingest`, which owns the dispatch (`Open/Closed` — adding a new
   data type only touches the service, not the route).
+- **Full eager materialization is correct for pasted text, deliberately unlike the
+  streaming file paths**: `parse_csv_text` loads and validates the *entire* input into a
+  `list[dict]` before returning anything, whereas `iter_accounts`/`iter_transactions`/
+  `iter_patterns` are pure generators sized for multi-million-row, multi-gigabyte on-disk
+  files. Pasted/typed text comes from a UI textarea — it is expected to be small (rows,
+  not millions) — so the memory cost of materializing it fully is negligible, and doing so
+  is what makes the "validate everything, then insert only if 100% valid" guarantee
+  possible: you cannot know the whole payload is valid without having parsed the whole
+  payload. Reusing the streaming generators for the file paths remains correct there
+  because progress reporting + bounded memory matter far more than atomicity for
+  multi-GB files.
 - **Testable**: `tests/test_tabular_loaders.py` (pure generators, no DB), `test_tabular_service.py`
   (against `sqlite:///:memory:`), `test_tabular_api.py` (route tested with a fake
   `TabularSystem` via FastAPI dependency override).
@@ -253,3 +304,8 @@ Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload), `POST
   no allowlist/sandboxing of which directories may be read. Acceptable for this project's
   single-user local-dev deployment model; would need a path allowlist before ever being
   exposed beyond localhost.
+- `parse_csv_text`/`POST /tabular/ingest/text` only validates header columns up front for
+  `ACCOUNTS`/`TRANSACTIONS` (`_EXPECTED_HEADERS`); `PATTERNS` text has no header to check
+  and is only validated by attempting to parse every row, so a `PATTERNS` paste with
+  entirely wrong columns fails with whatever parse error the first bad row produces rather
+  than an explicit "missing column" message.

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from app.ingestion.tabular import TabularConfig, TabularDataType, build_tabular_system
+import pytest
+
+from app.ingestion.tabular import CsvValidationError, TabularConfig, TabularDataType, build_tabular_system
 
 ACCOUNTS_CSV = (
     "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\n"
@@ -96,6 +98,29 @@ def test_clear_empties_both_tables(tmp_path):
     tabular.clear()
 
     assert tabular.counts() == {"accounts": 0, "transactions": 0}
+
+
+def test_ingest_text_inserts_valid_accounts_text():
+    tabular = _system()
+
+    ingested = tabular.ingest_text(TabularDataType.ACCOUNTS, ACCOUNTS_CSV, source_file="pasted.csv")
+
+    assert ingested == 2
+    assert tabular.counts()["accounts"] == 2
+
+
+def test_ingest_text_malformed_raises_and_writes_nothing():
+    tabular = _system()
+    bad_csv = (
+        "Timestamp,From Bank,Account,To Bank,Account,Amount Received,Receiving Currency,"
+        "Amount Paid,Payment Currency,Payment Format,Is Laundering\n"
+        "not-a-timestamp,020,800104D70,020,800104D70,6794.63,US Dollar,6794.63,US Dollar,Reinvestment,0\n"
+    )
+
+    with pytest.raises(CsvValidationError):
+        tabular.ingest_text(TabularDataType.TRANSACTIONS, bad_csv)
+
+    assert tabular.counts()["transactions"] == 0
 
 
 def test_on_batch_reports_cumulative_row_count(tmp_path):
