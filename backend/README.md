@@ -23,6 +23,7 @@ uvicorn app.main:app --reload        # http://localhost:8000  (docs at /docs)
 | DELETE | `/rag/documents/{filename}` | Delete all documents from one source file. |
 | WS | `/ws` | Realtime ingestion progress frames (`event: ingestion_progress`). |
 | POST | `/tabular/ingest` | Upload HI-Large accounts/transactions/patterns CSV/TXT (`data_type`, `files`) into SQLite; broadcasts progress over `/ws`. |
+| POST | `/tabular/ingest/local` | Ingest a file already on the server's disk by path (`data_type`, `path`) — no upload; for very large files. Broadcasts progress over `/ws`. |
 | GET | `/tabular/counts` | Ingested row counts (`{accounts, transactions}`). |
 | DELETE | `/tabular/data` | Clear all ingested tabular data (accounts + transactions). |
 

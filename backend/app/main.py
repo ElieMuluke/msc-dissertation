@@ -7,6 +7,8 @@ Thin HTTP layer over the ingestion/RAG code in ``app.ingestion``. Run with:
 
 from __future__ import annotations
 
+import os
+import tempfile
 from collections.abc import Callable
 
 from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
@@ -17,6 +19,16 @@ from app.api.schemas import HealthResponse
 from app.deps import get_llm_ping, get_rag
 from app.ingestion.rag import RagSystem
 from app.realtime import manager
+
+# `/tmp` is tmpfs (RAM-backed) on many Linux setups and can be far smaller than the
+# multi-GB tabular files this app ingests (see app/api/routes/tabular.py). Both Starlette's
+# multipart upload spooling and our own upload tempdir resolve through
+# ``tempfile.gettempdir()``, so redirecting it once here (before any request is handled)
+# fixes both call sites. Only applies if the caller hasn't already set TMPDIR themselves,
+# and only if a disk-backed fallback actually exists.
+_DISK_BACKED_TMP_DIR = "/var/tmp"
+if "TMPDIR" not in os.environ and os.path.isdir(_DISK_BACKED_TMP_DIR):
+    tempfile.tempdir = _DISK_BACKED_TMP_DIR
 
 app = FastAPI(title="AML Compliance Platform API", version="0.1.0")
 

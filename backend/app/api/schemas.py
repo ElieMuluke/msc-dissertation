@@ -6,6 +6,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.ingestion.tabular import TabularDataType
+
 
 class SearchHit(BaseModel):
     id: str
@@ -57,6 +59,11 @@ class AnswerResponse(BaseModel):
 class TabularIngestResponse(BaseModel):
     ingested: int
     data_type: str
+
+
+class TabularLocalIngestRequest(BaseModel):
+    data_type: TabularDataType
+    path: str
 
 
 class TabularCounts(BaseModel):

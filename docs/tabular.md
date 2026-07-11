@@ -155,6 +155,44 @@ Mirrors `DELETE /rag/documents`.
 {"status": "cleared"}
 ```
 
+**`POST /tabular/ingest/local`** — ingest a file already on the backend's local disk, by
+path; no HTTP upload. JSON body:
+
+```json
+{"data_type": "transactions", "path": "/absolute/path/HI-Large_Trans.csv"}
+```
+
+`400` if `path` doesn't exist or has the wrong extension for `data_type`. Response and
+`/ws` progress frames are identical to `POST /tabular/ingest`. See "Why a local-path
+endpoint" below for the reason this exists alongside the upload endpoint.
+
+```bash
+curl -X POST http://localhost:8000/tabular/ingest/local \
+  -H "Content-Type: application/json" \
+  -d '{"data_type":"transactions","path":"/absolute/path/to/HI-Large_Trans.csv"}'
+```
+
+### Why a local-path endpoint
+
+`POST /tabular/ingest` round-trips the whole file over HTTP and stages a copy to disk
+before ingesting it. That's fine for the ~148MB `HI-Large_accounts.csv`, but the real
+`HI-Large_Trans.csv` is ~17GB, and on this dev machine `/tmp` is a 7.6GB `tmpfs` (RAM-backed)
+— both Starlette's multipart upload spooling (`SpooledTemporaryFile`) and the route's own
+upload staging dir (`tempfile.TemporaryDirectory()`) resolve through `tempfile.gettempdir()`,
+which defaults to `/tmp`. A file bigger than that fails mid-upload with `OSError: No space
+left on device`; FastAPI's routing layer catches *any* exception raised while parsing the
+request body and reports it as the generic `{"detail":"There was an error parsing the
+body"}`, hiding the real cause.
+
+Two independent fixes:
+1. **`app/main.py`** redirects `tempfile.tempdir` to `/var/tmp` (disk-backed, not tmpfs) at
+   process startup, unless the caller already set `TMPDIR`. This alone fixes both temp-file
+   call sites for any upload size.
+2. **`POST /tabular/ingest/local`** sidesteps the problem architecturally for files that are
+   already on the same machine as the backend: it reads straight from the given path, with
+   no HTTP body and no temp copy at all — faster and immune to `/tmp` sizing regardless of
+   where `TMPDIR` points.
+
 ## Public API
 
 Exported from `backend/app/ingestion/tabular/__init__.py`:
@@ -172,8 +210,9 @@ Exported from `backend/app/ingestion/tabular/__init__.py`:
 | `iter_accounts`, `iter_transactions`, `iter_patterns` | Pure row-streaming generators (`loaders.py`), reusable outside the ORM service. |
 | `count_rows(path, data_type) -> int` | Fast line-count (no parsing) matching what the corresponding `iter_*` would yield; used to size ingestion progress percentages. |
 
-Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest`, `GET /tabular/counts`,
-`DELETE /tabular/data`.
+Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload), `POST
+/tabular/ingest/local` (server-local path, no upload), `GET /tabular/counts`, `DELETE
+/tabular/data`.
 
 ## Design notes
 
@@ -210,3 +249,7 @@ Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest`, `GET /tabular/coun
 - No referential-integrity checks between `accounts` and `transactions` (by design — see
   "soft relationships" above); a `from_account`/`to_account` that never appears in
   `accounts` is not flagged or rejected.
+- `POST /tabular/ingest/local` trusts any path readable by the backend process — there is
+  no allowlist/sandboxing of which directories may be read. Acceptable for this project's
+  single-user local-dev deployment model; would need a path allowlist before ever being
+  exposed beyond localhost.

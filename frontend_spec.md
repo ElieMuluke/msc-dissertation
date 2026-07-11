@@ -17,6 +17,45 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ---
 
+## 3. Local-path Tabular Ingestion (large files) — `POST /tabular/ingest/local`
+
+**Status**: 🔵 to implement (backend ready).
+
+`POST /tabular/ingest` (multipart upload) is fine for small/medium files, but very large
+source files (the real `HI-Large_Trans.csv` is ~17GB) are slow and, on hosts where `/tmp`
+is a small tmpfs, can fail outright with `{"detail":"There was an error parsing the body"}`
+(disk fills up mid-upload). For files already sitting on the machine running the backend,
+add an alternative path in the tabular upload UI: a text input for a **server-local file
+path** instead of a file picker, submitting to this endpoint instead of `/tabular/ingest`.
+No multipart body, no upload — the backend reads the file directly off its own disk.
+
+### Request
+* **Method / URL**: `POST /tabular/ingest/local`
+* **Body**: `application/json`
+```json
+{ "data_type": "transactions", "path": "/absolute/path/on/server/HI-Large_Trans.csv" }
+```
+* `data_type`: one of `accounts` | `transactions` | `patterns` (same as `/tabular/ingest`).
+* `path`: absolute path on the **backend's** filesystem (not the browser's). `400` if the
+  path doesn't exist or its extension doesn't match `data_type` (same rule as the upload
+  endpoint: `.csv` for accounts/transactions; `.csv`/`.txt` for patterns).
+
+### Response
+Same shape as `POST /tabular/ingest`:
+```json
+{ "ingested": 8000000, "data_type": "transactions" }
+```
+
+### Progress
+Broadcasts the exact same `/ws` progress frames as `POST /tabular/ingest` (`uploading` →
+`inserting` → `completed`/`error`, keyed by the file's basename) — reuse the existing
+WebSocket handling in `UploadTabular.tsx`, just triggered from this endpoint instead.
+
+Suggested UI: a small "Ingest from server path" toggle/tab next to the existing
+drag-and-drop uploader, with a text input for the path and the same submit/progress UX.
+
+---
+
 ## 2. Tabular Data Ingestion UI (accounts / transactions / patterns)
 
 **Status**: ✅ Implemented. Backend ready — `POST /tabular/ingest` and `GET
