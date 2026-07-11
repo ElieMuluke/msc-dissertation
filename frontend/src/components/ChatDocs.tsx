@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { streamAnswer, type DocType, type Citation } from "../api";
+import { streamAnswer, type Citation } from "../api";
 
 interface Message {
   id: string;
@@ -324,7 +324,6 @@ interface ChatDocsProps {
 export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [docType, setDocType] = useState<DocType | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
@@ -394,7 +393,7 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
     try {
       let accumulatedText = "";
       await streamAnswer(
-        { query: queryText, doc_type: docType || undefined },
+        { query: queryText },
         {
           onThinking: (chunk) => {
             setLoading(false); // Hide the bounce skeleton when thinking starts
@@ -500,26 +499,6 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
           <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
             Compliance RAG Chat
           </h2>
-          
-          <div className="flex items-center space-x-2 text-xs">
-            <span className="text-neutral-400 dark:text-neutral-500 shrink-0">Filter:</span>
-            <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60">
-              {(["", "policy", "action"] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setDocType(type)}
-                  className={`px-2.5 py-0.5 text-[10px] font-semibold rounded transition-all duration-200 uppercase tracking-wider ${
-                    docType === type
-                      ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                      : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  {type === "" ? "All" : type}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
@@ -528,11 +507,11 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
       </div>
 
       {/* Main Conversation & Citation Side Panel Container */}
-      <div className="flex flex-col lg:flex-row gap-6 items-stretch relative min-h-[450px] lg:min-h-[550px]">
+      <div className="flex flex-col md:flex-row gap-6 items-stretch relative min-h-[450px] md:min-h-[550px] xl:min-h-[600px]">
         
         {/* Chat Thread Panel */}
         <div className={`glass-panel rounded-2xl p-6 flex-1 flex flex-col justify-between min-h-[400px] max-h-[600px] overflow-hidden border border-neutral-200/50 dark:border-neutral-855 bg-white/40 dark:bg-neutral-900/10 transition-all duration-300 ${
-          selectedCitation ? "lg:max-w-[60%] lg:flex-1" : "w-full"
+          selectedCitation ? "md:max-w-[60%] xl:max-w-[70%] md:flex-1" : "w-full"
         }`}>
           {/* Messages scrollable viewport */}
           <div className="flex-1 overflow-y-auto space-y-5 pr-1 mb-4">
@@ -720,7 +699,7 @@ export function ChatDocs({ dbStatus, llmStatus }: ChatDocsProps) {
 
         {/* Selected Citation Side Panel */}
         {selectedCitation && (
-          <div className="w-full lg:w-[40%] lg:h-[600px] flex flex-col glass-panel rounded-2xl p-5 border border-blue-500/20 dark:border-blue-500/30 bg-white/95 dark:bg-neutral-900/90 shadow-xl shrink-0 transition-all duration-300">
+          <div className="w-full md:w-[40%] xl:w-[30%] h-auto md:h-[600px] max-h-[350px] md:max-h-none flex flex-col glass-panel rounded-2xl p-5 border border-blue-500/20 dark:border-blue-500/30 bg-white/95 dark:bg-neutral-900/90 shadow-xl shrink-0 transition-all duration-300">
             {/* Panel Header */}
             <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800/80 pb-3 mb-4 shrink-0">
               <div className="flex items-center space-x-2">

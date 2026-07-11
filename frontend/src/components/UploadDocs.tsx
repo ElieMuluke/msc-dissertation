@@ -1,22 +1,22 @@
 import React, { useState, useRef, useCallback } from "react";
-import { uploadPdfs, type DocType } from "../api";
+import { uploadPdfs } from "../api";
 import { useWebSocket } from "../hooks/useWebSocket";
 
 interface UploadDocsProps {
   /** Callback fired after successfully uploading and initiating/completing ingestion. */
-  onUploadSuccess: (files: File[], docType: DocType, totalPages: number) => void;
+  onUploadSuccess: (files: File[], totalPages: number) => void;
   /** Status of the vector database connection. Ingestion is disabled if disconnected. */
   dbStatus?: "connected" | "disconnected";
 }
 
 /**
  * UploadDocs component handles document file selection, drag-and-drop,
- * metadata classification, and uploading documents to the ingestion pipeline.
+ * and uploading documents to the ingestion pipeline.
  * It listens to real-time ingestion progress updates via WebSockets.
  */
 export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
   const [files, setFiles] = useState<File[]>([]);
-  const [docType, setDocType] = useState<DocType>("policy");
   const [status, setStatus] = useState<{ type: "success" | "error" | "info" | null; message: string }>({
     type: null,
     message: "",
@@ -133,7 +133,7 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
 
     const uploadedFilesSnapshot = [...files];
     try {
-      const ingested = await uploadPdfs(uploadedFilesSnapshot, docType, (percent) => {
+      const ingested = await uploadPdfs(uploadedFilesSnapshot, (percent) => {
         // Fallback progress: only update via XHR if WebSocket is inactive
         if (!isWsConnected) {
           setUploadProgress(percent);
@@ -149,12 +149,12 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
           type: "success",
           message: `Ingested ${ingested} pages from ${uploadedFilesSnapshot.length} document(s).`,
         });
-        onUploadSuccess(uploadedFilesSnapshot, docType, ingested);
+        onUploadSuccess(uploadedFilesSnapshot, ingested);
         setUploadProgress(null);
         activeUploadsRef.current.clear();
       } else {
         // If WS is connected, let it handle detailed completions, but sync database lists
-        onUploadSuccess(uploadedFilesSnapshot, docType, ingested);
+        onUploadSuccess(uploadedFilesSnapshot, ingested);
       }
 
       setFiles([]);
@@ -167,12 +167,28 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
   }
 
   return (
-    <section className="glass-panel rounded-2xl p-6 transition-all duration-300">
-      <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-4">
-        Import Documents
-      </h2>
+    <section className="glass-panel rounded-2xl p-6 transition-all duration-300 min-w-0 w-full">
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between cursor-pointer select-none"
+      >
+        <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+          Import Documents
+        </h2>
+        <svg 
+          className={`w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-350 transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2.5" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      {isExpanded && (
+        <div className="mt-5 space-y-5 min-w-0 w-full">
+          <form onSubmit={onSubmit} className="space-y-5">
         {/* Drag and Drop Zone */}
         <div
           onDragEnter={dbStatus === "disconnected" ? undefined : handleDrag}
@@ -279,36 +295,7 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
           </div>
         )}
 
-        {/* Custom Segmented Control for DocType */}
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider block">
-            Classification / Metadata
-          </label>
-          <div className="flex p-0.5 rounded-lg bg-neutral-200/60 dark:bg-neutral-800/80">
-            <button
-              type="button"
-              onClick={() => setDocType("policy")}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                docType === "policy"
-                  ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
-              }`}
-            >
-              Policy
-            </button>
-            <button
-              type="button"
-              onClick={() => setDocType("action")}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                docType === "action"
-                  ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
-              }`}
-            >
-              Action
-            </button>
-          </div>
-        </div>
+
 
         {/* Submit Action */}
         <button
@@ -373,6 +360,8 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
             )}
           </svg>
           <span className="leading-normal">{status.message}</span>
+        </div>
+      )}
         </div>
       )}
     </section>

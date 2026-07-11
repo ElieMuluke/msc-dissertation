@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { UploadDocs } from "./components/UploadDocs";
+import { UploadTabular } from "./components/UploadTabular";
 import { SearchDocs } from "./components/SearchDocs";
 import { ChatDocs } from "./components/ChatDocs";
 import { ManageDatabase } from "./components/ManageDatabase";
@@ -94,7 +95,7 @@ export default function App() {
   }
 
   // Handle append new files on upload success
-  function handleUploadSuccess(uploadedFiles: File[], docType: "policy" | "action", totalPages: number) {
+  function handleUploadSuccess(uploadedFiles: File[], totalPages: number) {
     if (isBackendDbSupported) {
       refreshFiles();
     } else {
@@ -102,7 +103,6 @@ export default function App() {
       const avgPages = Math.max(1, Math.round(totalPages / uploadedFiles.length));
       const newIngested = uploadedFiles.map((file) => ({
         filename: file.name,
-        doc_type: docType,
         pages: avgPages,
         ingested_at: new Date().toISOString(),
       }));
@@ -128,7 +128,7 @@ export default function App() {
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] dark:bg-[#000000] dark:text-[#f5f5f7] transition-colors duration-500 flex flex-col font-sans">
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] bg-[rgba(245,245,247,0.7)] dark:bg-[rgba(0,0,0,0.7)] backdrop-blur-md">
-        <div className="max-w-[1650px] mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-[1650px] mx-auto px-4 sm:px-6 xl:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <svg
               className="w-6 h-6 text-blue-600 dark:text-blue-500"
@@ -143,14 +143,14 @@ export default function App() {
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </svg>
-            <span className="font-semibold tracking-tight text-lg">
-              AML Compliance Platform
+            <span className="font-semibold tracking-tight text-base sm:text-lg">
+              AML Compliance <span className="hidden sm:inline">Platform</span>
             </span>
           </div>
 
           <div className="flex items-center space-x-4">
             {/* Dynamic System Status Indicators */}
-            <div className="flex items-center space-x-3.5">
+            <div className="flex items-center space-x-2 sm:space-x-3.5">
               {/* Database Status Indicator */}
               <div className="flex items-center space-x-1.5" title={dbStatus === "connected" ? "Vector Database online" : "Vector Database offline"}>
                 <span className="relative flex h-2 w-2">
@@ -163,8 +163,8 @@ export default function App() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                   )}
                 </span>
-                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-semibold tracking-tight uppercase">
-                  {dbStatus === "connected" ? "Vector DB" : "DB Offline"}
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-bold uppercase tracking-wider">
+                  DB
                 </span>
               </div>
 
@@ -182,8 +182,8 @@ export default function App() {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                   )}
                 </span>
-                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-semibold tracking-tight uppercase">
-                  {llmStatus === "connected" ? "LLM Ready" : "LLM Offline"}
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-450 font-bold uppercase tracking-wider">
+                  LLM
                 </span>
               </div>
             </div>
@@ -228,17 +228,18 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-[1650px] w-full mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-[1650px] w-full mx-auto px-4 py-6 sm:px-6 sm:py-8 md:py-10 xl:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left panel: Administration (Ingestion, File Manager & Clear) */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-col md:col-span-4 xl:col-span-3 gap-6 md:gap-8 items-stretch md:sticky md:top-20 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto pr-3 pb-4 animate-fade-in min-w-0 order-2 md:order-1">
             <UploadDocs onUploadSuccess={handleUploadSuccess} dbStatus={dbStatus} />
+            <UploadTabular />
             <FileManager files={filesList} onDelete={handleDeleteFile} />
             <ManageDatabase onClearSuccess={handleClearDatabase} />
           </div>
 
           {/* Right panel: Search and Chat Workspace */}
-          <div className="lg:col-span-9 space-y-6">
+          <div className="md:col-span-8 xl:col-span-9 space-y-6 order-1 md:order-2">
             {/* Modern Tab Selector */}
             <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 max-w-xs">
               <button

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { search, type DocType, type SearchHit } from "../api";
+import { search, type SearchHit } from "../api";
 
 // Clean up spacing, line breaks, and hyphens resulting from PDF extraction
 function cleanPdfExtractionText(text: string): string {
@@ -176,14 +176,12 @@ function SearchHitCard({ hit, query }: { hit: SearchHit; query: string }) {
     }
   }
 
-  const isPolicy = hit.doc_type === "policy";
-  
   // Extract key reference values
   const sourceFile = String(hit.metadata.source || hit.metadata.filename || "Unknown Source");
   const page = String(hit.metadata.page || hit.metadata.page_number || hit.metadata.pg || "");
 
   // Filter out redundant values from the secondary metadata tags list
-  const filterKeys = ["source", "filename", "page", "page_number", "pg", "doc_type"];
+  const filterKeys = ["source", "filename", "page", "page_number", "pg"];
   const extraMetadata = Object.entries(hit.metadata).filter(
     ([key]) => !filterKeys.includes(key.toLowerCase())
   );
@@ -195,9 +193,7 @@ function SearchHitCard({ hit, query }: { hit: SearchHit; query: string }) {
 
   return (
     <article
-      className={`glass-panel rounded-2xl p-5 border-l-4 transition-all duration-300 hover:shadow-md ${
-        isPolicy ? "border-l-blue-500" : "border-l-indigo-500"
-      }`}
+      className="glass-panel rounded-2xl p-5 border-l-4 border-l-blue-600 transition-all duration-300 hover:shadow-md"
     >
       {/* Top Source Reference Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 dark:border-neutral-800/40 pb-3 mb-3.5">
@@ -219,16 +215,6 @@ function SearchHitCard({ hit, query }: { hit: SearchHit; query: string }) {
         </div>
 
         <div className="flex items-center space-x-2">
-          {/* Classification type */}
-          <span
-            className={`text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
-              isPolicy
-                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-            }`}
-          >
-            {hit.doc_type}
-          </span>
 
           {/* Relevance Meter */}
           {matchPercent ? (
@@ -295,7 +281,6 @@ interface SearchDocsProps {
 
 export function SearchDocs({ dbStatus }: SearchDocsProps) {
   const [query, setQuery] = useState("");
-  const [docType, setDocType] = useState<DocType | "">("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [status, setStatus] = useState<{ type: "loading" | "error" | "empty" | "success" | null; message: string }>({
     type: null,
@@ -307,10 +292,10 @@ export function SearchDocs({ dbStatus }: SearchDocsProps) {
     if (!query.trim()) return;
     setStatus({ type: "loading", message: "Searching vectors…" });
     try {
-      const results = await search(query, 5, docType || undefined);
+      const results = await search(query, 5);
       setHits(results);
       if (results.length === 0) {
-        setStatus({ type: "empty", message: "No relevant documents found. Adjust query or type." });
+        setStatus({ type: "empty", message: "No relevant documents found. Adjust query." });
       } else {
         setStatus({ type: "success", message: `Found ${results.length} matched passages.` });
       }
@@ -353,30 +338,7 @@ export function SearchDocs({ dbStatus }: SearchDocsProps) {
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between pt-1">
-            {/* Filter tags/chips */}
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
-              <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500 shrink-0">
-                Filter:
-              </span>
-              <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 w-full sm:w-auto">
-                {(["", "policy", "action"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setDocType(type)}
-                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all duration-200 uppercase tracking-wider ${
-                      docType === type
-                        ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
-                        : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
-                    }`}
-                  >
-                    {type === "" ? "All" : type}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-end pt-1">
             <button
               type="submit"
               disabled={!query.trim() || dbStatus === "disconnected"}
