@@ -10,6 +10,26 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-11 — F25 out-of-scope gate: implemented, verified, re-measured
+**Done:** Retrieval-confidence gate built per the Plan-agent design (commit d854752, tests
+87 pass): `RagSystem.scope_confidence` (raw top-1 relevance — fused hybrid scores are
+per-query min-max normalized, top always ≈1−bm25_weight, useless for confidence),
+gate in `AnswerGenerator.generate/stream` via injected `confidence_fn` +
+`SCOPE_GATE_THRESHOLD` (0.46 default, 0=off), fixed `OUT_OF_SCOPE_REFUSAL`, hardened
+SYSTEM_INSTRUCTION (never general knowledge/code, injection-resistant wording). Also
+`build_report` detail layer (commit 8a6f04a): report_<run_tag>.md with distributions,
+per-category means, worst-5 per metric. **A/B re-measure** (run k4_20260711T005414Z,
+gate-on, vs 162713Z gate-off): refusal 13/13 — all via the gate text, zero LLM calls,
+now deterministic; gs-055 (OFAC, no_answer) is the single gated golden row
+(f/ar/cp = 0, cr 0.5) exactly as calibrated; cp 0.664 / cr 0.762 identical; faith 0.808,
+ar 0.772, topic F1 0.898 — all within noise. Zero NaN. FEATURES F25 ✅.
+**State:** Committed through d854752. Eval result files for 005414Z uncommitted (user
+commits results). Machine-sleep: powercfg blocked by group policy; presentation mode ON
+(resets on reboot — PowerToys Awake is the permanent option).
+**Next:** Optional phase 2: LLM scope pre-check for the borderline band + ScopeQA-style
+borderline oos questions (~15) to stress the gate; reword s46 golden ground truth (old
+Rec 3); reranker for the residual context_recall gap.
+
 ## 2026-07-09 — Final hardened-prompt eval run + before/after comparison table
 **Done:** Full 57-row run with the hardened judge prompt completed (MLflow `e2a1a269…`,
 sections_b + bm25 0.3, deepseek-r1:14b gen / mistral-nemo judge): **zero parse/shape
