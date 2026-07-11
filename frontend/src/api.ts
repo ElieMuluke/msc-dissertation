@@ -407,3 +407,99 @@ function streamFallbackAnswer(
 }
 
 
+export interface TabularCounts {
+  accounts: number;
+  transactions: number;
+}
+
+export class ValidationError extends Error {
+  details: string[];
+  constructor(details: string[]) {
+    super(details.join("\n"));
+    this.name = "ValidationError";
+    this.details = details;
+  }
+}
+
+export async function ingestTabular(
+  dataType: "accounts" | "transactions" | "patterns",
+  files: File[]
+): Promise<number> {
+  const form = new FormData();
+  form.append("data_type", dataType);
+  files.forEach((file) => form.append("files", file));
+
+  const res = await fetch(`${API_URL}/tabular/ingest`, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text() || `Ingestion failed with status ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.ingested as number;
+}
+
+export async function ingestTabularLocal(
+  dataType: "accounts" | "transactions" | "patterns",
+  path: string
+): Promise<number> {
+  const res = await fetch(`${API_URL}/tabular/ingest/local`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data_type: dataType, path }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text() || `Local ingestion failed with status ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.ingested as number;
+}
+
+export async function ingestTabularText(
+  dataType: "accounts" | "transactions" | "patterns",
+  csvText: string
+): Promise<number> {
+  const res = await fetch(`${API_URL}/tabular/ingest/text`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data_type: dataType, csv_text: csvText }),
+  });
+
+  if (res.status === 422) {
+    try {
+      const errData = await res.json();
+      if (errData && Array.isArray(errData.detail)) {
+        throw new ValidationError(errData.detail);
+      }
+    } catch (e) {
+      if (e instanceof ValidationError) throw e;
+    }
+    throw new Error("Validation failed on pasted text");
+  }
+
+  if (!res.ok) {
+    throw new Error(await res.text() || `Ingestion failed with status ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.ingested as number;
+}
+
+export async function getTabularCounts(): Promise<TabularCounts> {
+  const res = await fetch(`${API_URL}/tabular/counts`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function clearTabularData(): Promise<void> {
+  const res = await fetch(`${API_URL}/tabular/data`, { method: "DELETE" });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+
+
