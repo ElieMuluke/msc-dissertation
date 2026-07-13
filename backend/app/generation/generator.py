@@ -102,12 +102,10 @@ class AnswerGenerator:
             and self._confidence_fn(query) < self._scope_threshold
         )
 
-    def generate(
-        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
-    ) -> Answer:
+    def generate(self, query: str, k: int = 5) -> Answer:
         if self._gated(query):
             return Answer(answer=OUT_OF_SCOPE_REFUSAL, citations=[], used_context=False, contexts=[])
-        results = list(self._search(query, k, doc_type))
+        results = list(self._search(query, k))
         answer = self._complete(build_prompt(query, results)).strip()
         return Answer(
             answer=answer,
@@ -128,7 +126,7 @@ class AnswerGenerator:
                 used_context=False,
                 chunks=iter([StreamChunk("answer", OUT_OF_SCOPE_REFUSAL)]),
             )
-        results = list(self._search(query, k, doc_type))
+        results = list(self._search(query, k))
         return StreamedAnswer(
             citations=[_citation(r) for r in results],
             used_context=bool(results),

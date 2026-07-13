@@ -70,7 +70,7 @@ def test_scope_gate_refuses_below_threshold_without_llm_or_search():
 
 def test_scope_gate_passes_above_threshold():
     gen = AnswerGenerator(
-        lambda q, k, dt: [_result("p1", "Report cash over 10,000.")],
+        lambda q, k: [_result("p1", "Report cash over 10,000.")],
         lambda prompt: "File a CTR per [p1].",
         confidence_fn=lambda q: 0.7,
         scope_threshold=0.46,
@@ -82,13 +82,13 @@ def test_scope_gate_passes_above_threshold():
 
 def test_scope_gate_disabled_by_zero_threshold():
     gen = AnswerGenerator(
-        lambda q, k, dt: [], lambda prompt: "answer", confidence_fn=lambda q: 0.0, scope_threshold=0.0
+        lambda q, k: [], lambda prompt: "answer", confidence_fn=lambda q: 0.0, scope_threshold=0.0
     )
     assert gen.generate("anything").answer == "answer"
 
 
 def test_scope_gate_off_without_confidence_fn():
-    gen = AnswerGenerator(lambda q, k, dt: [], lambda prompt: "answer", scope_threshold=0.46)
+    gen = AnswerGenerator(lambda q, k: [], lambda prompt: "answer", scope_threshold=0.46)
     assert gen.generate("anything").answer == "answer"
 
 

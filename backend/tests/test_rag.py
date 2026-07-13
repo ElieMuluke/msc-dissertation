@@ -47,13 +47,6 @@ def test_search_returns_results(rag):
     assert all(0.0 <= r.score <= 1.0 for r in results)
 
 
-def test_search_filters_by_doc_type(rag):
-    rag.ingest(_docs())
-    results = rag.search("anything", k=5, doc_type=DocumentType.ACTION)
-    assert {r.id for r in results} == {"a1"}
-    assert all(r.doc_type is DocumentType.ACTION for r in results)
-
-
 def test_scope_confidence_returns_raw_relevance(rag):
     rag.ingest(_docs())
     conf = rag.scope_confidence("AML reporting policy")
