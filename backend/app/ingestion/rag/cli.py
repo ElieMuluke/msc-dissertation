@@ -3,7 +3,6 @@
 Examples:
     python -m src.ingestion.rag.cli ingest data/aml_sample.json
     python -m src.ingestion.rag.cli search "cash transaction reporting threshold" -k 3
-    python -m src.ingestion.rag.cli search "wire to shell company" --type action
 """
 
 from __future__ import annotations
@@ -16,19 +15,18 @@ from typing import Optional, Sequence
 from . import build_rag
 from .config import RagConfig
 from .loaders import load_pdfs
-from .models import Document, DocumentType
+from .models import Document
 from .section_chunking import load_pdf_sections
 
 
 def _load_documents(path: str) -> list[Document]:
-    """Load documents from a JSON array of {id, text, doc_type, metadata?} objects."""
+    """Load documents from a JSON array of {id, text, metadata?} objects."""
     with open(path, encoding="utf-8") as handle:
         rows = json.load(handle)
     return [
         Document(
             id=row["id"],
             text=row["text"],
-            doc_type=DocumentType(row["doc_type"]),
             metadata=row.get("metadata", {}),
         )
         for row in rows
@@ -47,13 +45,6 @@ def _build_parser() -> argparse.ArgumentParser:
     pdf = sub.add_parser("ingest-pdf", help="Ingest a PDF file or directory of PDFs")
     pdf.add_argument("path", help="Path to a .pdf file or a directory of PDFs")
     pdf.add_argument(
-        "--type",
-        dest="doc_type",
-        choices=[t.value for t in DocumentType],
-        default=DocumentType.POLICY.value,
-        help="Document type for the loaded pages (default policy)",
-    )
-    pdf.add_argument(
         "--chunker",
         choices=["fixed", "section"],
         default="fixed",
@@ -68,13 +59,6 @@ def _build_parser() -> argparse.ArgumentParser:
     search = sub.add_parser("search", help="Search the corpus")
     search.add_argument("query", help="Natural-language query")
     search.add_argument("-k", type=int, default=5, help="Number of results (default 5)")
-    search.add_argument(
-        "--type",
-        dest="doc_type",
-        choices=[t.value for t in DocumentType],
-        default=None,
-        help="Restrict to policy or action",
-    )
     for p in (ingest, pdf, search):
         p.add_argument("--collection", default=None, help="Chroma collection (default from RagConfig)")
     return parser
@@ -92,18 +76,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"Ingested {count} documents.")
     elif args.command == "ingest-pdf":
         if args.chunker == "section":
-            docs = load_pdf_sections(args.path, DocumentType(args.doc_type), parent_context=args.parent_context)
+            docs = load_pdf_sections(args.path, parent_context=args.parent_context)
             print(f"Ingested {rag.ingest(docs)} section chunks from {args.path}.")
         else:
-            docs = load_pdfs(args.path, DocumentType(args.doc_type))
+            docs = load_pdfs(args.path)
             print(f"Ingested {rag.ingest(docs)} pages from {args.path}.")
     elif args.command == "search":
-        doc_type = DocumentType(args.doc_type) if args.doc_type else None
-        results = rag.search(args.query, k=args.k, doc_type=doc_type)
+        results = rag.search(args.query, k=args.k)
         if not results:
             print("No matches.")
         for result in results:
-            print(f"[{result.score:.3f}] ({result.doc_type.value}) {result.id}: {result.text[:120]}")
+            print(f"[{result.score:.3f}] {result.id}: {result.text[:120]}")
     return 0
 
 

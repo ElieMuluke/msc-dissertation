@@ -12,9 +12,9 @@ from typing import Optional
 
 from app.generation.config import GenerationConfig
 from app.generation.prompt import build_prompt
-from app.ingestion.rag import DocumentType, RagSystem, SearchResult
+from app.ingestion.rag import RagSystem, SearchResult
 
-SearchFn = Callable[[str, int, Optional[DocumentType]], Sequence[SearchResult]]
+SearchFn = Callable[[str, int], Sequence[SearchResult]]
 CompleteFn = Callable[[str], str]
 
 OUT_OF_SCOPE_REFUSAL = (
@@ -116,9 +116,7 @@ class AnswerGenerator:
             contexts=[r.text for r in results],
         )
 
-    def stream(
-        self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None
-    ) -> StreamedAnswer:
+    def stream(self, query: str, k: int = 5) -> StreamedAnswer:
         """Retrieve context, then stream the answer tokens. Citations are known up front."""
         if self._stream is None:
             raise RuntimeError(
@@ -204,8 +202,8 @@ def build_answer_generator(
     complete = build_completion(config)
     stream = build_stream_completion(config)
 
-    def search(query: str, k: int, doc_type: Optional[DocumentType]):
-        return rag.search(query, k=k, doc_type=doc_type)
+    def search(query: str, k: int):
+        return rag.search(query, k=k)
 
     return AnswerGenerator(
         search,

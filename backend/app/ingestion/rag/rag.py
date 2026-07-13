@@ -1,8 +1,8 @@
 """AML RAG system built on LangChain (Chroma + sentence-transformers).
 
-Domain types (:class:`Document`, :class:`DocumentType`, :class:`SearchResult`) are kept
-independent of LangChain so application code never depends on the framework directly —
-the store can be swapped (FAISS, pgvector, Pinecone) by changing :func:`build_rag` alone.
+Domain types (:class:`Document`, :class:`SearchResult`) are kept independent of
+LangChain so application code never depends on the framework directly — the store can
+be swapped (FAISS, pgvector, Pinecone) by changing :func:`build_rag` alone.
 """
 
 from __future__ import annotations
@@ -17,9 +17,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from .config import RagConfig
 from .hybrid import Bm25Index, fuse
-from .models import Document, DocumentType, SearchResult, SourceInfo
+from .models import Document, SearchResult, SourceInfo
 
-_DOC_TYPE_KEY = "doc_type"
 _SOURCE_KEY = "source"
 _INGESTED_AT_KEY = "ingested_at"
 
@@ -53,7 +52,7 @@ class RagSystem:
         lc_docs: list[LCDocument] = []
         ids: list[str] = []
         for doc in documents:
-            metadata = {**doc.metadata, _DOC_TYPE_KEY: doc.doc_type.value, _INGESTED_AT_KEY: ingested_at}
+            metadata = {**doc.metadata, _INGESTED_AT_KEY: ingested_at}
             chunks = self._splitter.split_text(doc.text) if self._splitter else [doc.text]
             for i, chunk in enumerate(chunks):
                 lc_docs.append(LCDocument(page_content=chunk, metadata=metadata))
@@ -64,18 +63,17 @@ class RagSystem:
         self._bm25_index = None  # store changed; lexical index is stale
         return len(lc_docs)
 
-    def search(self, query: str, k: int = 5, doc_type: Optional[DocumentType] = None) -> list[SearchResult]:
-        """Return the top-``k`` matches, optionally restricted to one document type."""
-        where = {_DOC_TYPE_KEY: doc_type.value} if doc_type is not None else None
+    def search(self, query: str, k: int = 5) -> list[SearchResult]:
+        """Return the top-``k`` matches for the query."""
         if self._bm25_weight > 0:
-            return self._hybrid_search(query, k, where)
-        hits = self._store.similarity_search_with_relevance_scores(query, k=k, filter=where)
+            return self._hybrid_search(query, k)
+        hits = self._store.similarity_search_with_relevance_scores(query, k=k)
         return [_to_result(doc, score) for doc, score in hits]
 
-    def _hybrid_search(self, query: str, k: int, where: Optional[dict]) -> list[SearchResult]:
+    def _hybrid_search(self, query: str, k: int) -> list[SearchResult]:
         """Fuse BM25 and vector scores over a wide candidate pool; return top-``k``."""
         pool = max(30, 5 * k)
-        vector_hits = self._store.similarity_search_with_relevance_scores(query, k=pool, filter=where)
+        vector_hits = self._store.similarity_search_with_relevance_scores(query, k=pool)
         vector_scores = {doc.id: float(score) for doc, score in vector_hits}
         by_id = {doc.id: doc for doc, _ in vector_hits}
         if self._bm25_index is None:
@@ -83,7 +81,7 @@ class RagSystem:
             self._bm25_index = Bm25Index(
                 data.get("ids") or [], data.get("documents") or [], data.get("metadatas") or []
             )
-        bm25_scores = self._bm25_index.scores(query, where=where, top_n=pool)
+        bm25_scores = self._bm25_index.scores(query, top_n=pool)
         top = fuse(vector_scores, bm25_scores, self._bm25_weight, k)
         missing = [cid for cid, _ in top if cid not in by_id]
         if missing:
@@ -126,7 +124,6 @@ class RagSystem:
             entry = aggregated.setdefault(
                 source,
                 {
-                    "doc_type": meta.get(_DOC_TYPE_KEY, DocumentType.POLICY.value),
                     "pages": 0,
                     "ingested_at": meta.get(_INGESTED_AT_KEY, ""),
                 },
@@ -138,7 +135,6 @@ class RagSystem:
         return [
             SourceInfo(
                 filename=source,
-                doc_type=DocumentType(entry["doc_type"]),
                 pages=entry["pages"],
                 ingested_at=entry["ingested_at"],
             )
@@ -156,11 +152,9 @@ class RagSystem:
 
 def _to_result(doc: LCDocument, score: float) -> SearchResult:
     metadata = dict(doc.metadata)
-    doc_type = DocumentType(metadata.pop(_DOC_TYPE_KEY, DocumentType.POLICY.value))
     return SearchResult(
         id=doc.id or metadata.get("id", ""),
         text=doc.page_content,
-        doc_type=doc_type,
         metadata=metadata,
         score=float(score),
     )

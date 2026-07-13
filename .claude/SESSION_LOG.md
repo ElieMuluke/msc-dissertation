@@ -29,6 +29,101 @@ commits results). Machine-sleep: powercfg blocked by group policy; presentation 
 **Next:** Optional phase 2: LLM scope pre-check for the borderline band + ScopeQA-style
 borderline oos questions (~15) to stress the gate; reword s46 golden ground truth (old
 Rec 3); reranker for the residual context_recall gap.
+## 2026-07-11 (2) — Tabular ingestion perf fix + SSE progress rework, implemented (NOT committed)
+**Done:** Followed up on the perf plan from earlier the same day (see below — plan doc
+`docs/tabular_ingestion_perf_plan.md` is now deleted, superseded by this entry + `FEATURES.md`
+F32). User asked for autonomous overnight execution (auto mode), explicitly required **no
+git commits/push from either agent**, and asked me to also get Antigravity started on the
+frontend follow-up via the `agy` CLI. All of the below is fully implemented and verified but
+deliberately left **uncommitted** for the user to review in the morning.
+
+**Backend (delegated to `feature-implementer`, verified independently after):**
+- Fix 1 (I/O passes + byte progress): new `ByteCountingReader` in
+  `backend/app/ingestion/tabular/loaders.py` wraps the upload/local file directly (handles
+  pandas' `read1()` buffer-protocol calls, not just `.read()` — found and fixed via a
+  standalone repro during implementation, since a naive wrapper silently undercounted to 0
+  bytes). `count_rows()` deleted entirely (and its `__init__.py` export). The
+  `shutil.copyfileobj`/`tempfile.TemporaryDirectory()` staging block removed from
+  `POST /tabular/ingest`; both it and `/ingest/local` now pass the wrapped file straight into
+  `TabularSystem.ingest`. `TabularConfig.batch_size` 2000 → 30,000.
+- Fix 2 (SSE replaces `/ws`): new `backend/app/api/sse.py` (`sse_frame`,
+  `bridge_thread_progress` — a generic thread→`asyncio.Queue`→async-generator bridge).
+  `POST /tabular/ingest`, `POST /tabular/ingest/local`, and `POST /rag/documents/pdf` all now
+  return `StreamingResponse`/`text/event-stream` (`progress`/`error`/`done` frames) instead of
+  a JSON body + `/ws` broadcast. `app/realtime.py` (`ConnectionManager`, `/ws` route) and
+  `backend/tests/test_realtime.py` deleted entirely after confirming (grep) nothing else
+  referenced them. `routes/rag.py`'s pre-existing `answer_stream` now reuses `sse_frame` too
+  instead of its old local `_sse` helper.
+- Tests: `test_tabular_service.py` needed no changes (service-level `on_batch` contract is
+  unchanged — the route just reads bytes off the wrapper instead of using the row-count
+  argument). `test_api.py`/`test_tabular_api.py` updated for SSE assertions via a new shared
+  `parse_sse_frames` helper in a new `backend/tests/conftest.py`. Full suite: **89 passed**,
+  same 8 pre-existing unrelated failures as before this work (missing `rank_bm25`/
+  `json_repair` packages, one stale `num_predict` test) — nothing new broke.
+- Docs: `docs/tabular.md` (byte-based progress rationale, new SSE frame tables, updated
+  Public API/design-notes/limitations), `backend/README.md` (route table — dropped the `/ws`
+  row, both PDF and tabular ingest rows now note SSE).
+- `frontend_spec.md`: new `⚠️ Breaking change (2026-07-11)` note + new `## 5. SSE Progress for
+  Tabular + PDF Ingestion` section — full frame shapes, a reference TS implementation to
+  copy from (mirrors `streamAnswer`), explicit note that §2/§3/§4 below it are still
+  correct on request/response *shape*, just not on transport.
+- `FEATURES.md`: F32 flipped 🔵 → ✅. Deleted `docs/tabular_ingestion_perf_plan.md` (content
+  now captured in F32's note + the docs above).
+
+**Frontend (delegated to Antigravity via `agy` CLI, NOT written by me):**
+- Invoked `/home/eliem/.local/bin/agy --print --new-project --add-dir
+  /home/eliem/projects/ai/dissertation --dangerously-skip-permissions --print-timeout 30m`
+  (user explicitly authorized `--dangerously-skip-permissions` for this unattended run via
+  `AskUserQuestion` earlier the same session). **Note for next time**: `--add-dir` alone
+  errored with "session workspace locked" against a stale/default `agy` session — adding
+  `--new-project` alongside `--add-dir` fixed it.
+- Antigravity's own report: rewrote `frontend/src/api.ts` (new shared `readSseProgress`
+  helper backing `ingestTabular`/`ingestTabularLocal`/the PDF upload call; dropped the
+  now-dead `docType` param from `uploadPdfs`), `frontend/src/components/UploadTabular.tsx`
+  and `UploadDocs.tsx` (removed `useWebSocket`/`activeUploadsRef`, progress now driven
+  inline off each request's own stream), updated `docs/frontend/tabular_ingestion.md` /
+  `docs/frontend/upload_docs.md` / its own `.gemini/SESSION_LOG.md`. Reported `npm run build`
+  compiles cleanly. **I did not independently re-verify the frontend build or read its full
+  diff line-by-line** — only spot-checked `api.ts`'s new `ingestTabular`/`ingestTabularLocal`
+  functions, which match the `frontend_spec.md` §5 contract. Worth a closer look before
+  committing.
+
+**State:** Nothing committed by either agent — confirmed via `git log` (unchanged tip) and
+`git status` (everything sitting as unstaged `M`/`D`/`??`, nothing staged). Full diff is
+sitting in the working tree: backend fixes + docs + spec (mine), frontend rewrite
+(Antigravity's). Backend test suite green (89/89 relevant). Frontend build reported green by
+Antigravity, not independently re-verified by me.
+
+**Next:** User reviews the full diff in the morning and decides what to commit (and in how
+many commits — this session's earlier convention was small, organized, rollback-able
+commits; `git log` has examples of that style to follow, e.g. the F28/F29/F30 sequence).
+Worth independently re-running `npm run build`/`npm run dev` and clicking through an actual
+tabular upload + a PDF upload before committing, to see the new SSE progress bar behavior
+live rather than trusting Antigravity's self-report alone. If reviewing reveals problems in
+the frontend rewrite, `frontend_spec.md` §5 is the contract to hold it against.
+
+## 2026-07-11 — Tabular ingestion perf plan (deferred, not implemented)
+**Done:** User reported the real 147.7MB `HI-Large_accounts.csv` takes ~5min via
+`POST /tabular/ingest` (browser upload) vs ~2m13s already measured via
+`POST /tabular/ingest/local`. Diagnosed from code (no re-benchmark this time, per user
+request — "trust me this time"): not SQLite/WAL (already fixed, F28) — the upload route
+does 4 full file passes (multipart spool write → redundant `shutil.copyfileobj` second
+copy → separate `count_rows` read just for the progress denominator → pandas read) where
+`/ingest/local` only does 2 (skips the upload+copy). User also flagged the `/ws` WebSocket
+progress transport as feeling unnecessary. Decided: progress % should be computed from
+bytes read, not exact row count (removes the `count_rows` pass). Whether to also replace
+`/ws` with SSE-on-response (mirroring `/rag/answer/stream`) is left as an open decision —
+bigger, cross-cutting change (touches PDF ingestion too, needs a frontend rewrite).
+User is token-constrained this session — asked for a plan to resume from, not
+implementation now.
+**State:** No code changed this entry. Full step-by-step implementation plan (byte-counting
+wrapper design, exact route rewrite steps, test updates, the two transport options with a
+recommendation) written to `docs/tabular_ingestion_perf_plan.md`. `FEATURES.md` F32 added
+(🔵 requested) pointing at that doc.
+**Next:** Resume from `docs/tabular_ingestion_perf_plan.md` when picking this back up —
+implement steps 1–5 (byte-based progress, delete redundant copy/count_rows, bump
+`batch_size`), then get the user's call on the open SSE-vs-`/ws` transport decision before
+touching that part.
 
 ## 2026-07-09 — Final hardened-prompt eval run + before/after comparison table
 **Done:** Full 57-row run with the hardened judge prompt completed (MLflow `e2a1a269…`,

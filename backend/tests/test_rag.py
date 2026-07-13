@@ -1,7 +1,7 @@
 """Unit tests for the RAG facade.
 
 Uses an in-memory Chroma store with deterministic fake embeddings — no model download,
-no persistence — to test ingest/search/filtering logic fast.
+no persistence — to test ingest/search logic fast.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ import pytest
 from langchain_chroma import Chroma
 from langchain_core.embeddings import DeterministicFakeEmbedding
 
-from app.ingestion.rag.models import Document, DocumentType
+from app.ingestion.rag.models import Document
 from app.ingestion.rag.rag import RagSystem
 
 
@@ -26,9 +26,9 @@ def rag():
 
 def _docs():
     return [
-        Document("p1", "AML reporting policy", DocumentType.POLICY),
-        Document("p2", "KYC onboarding policy", DocumentType.POLICY),
-        Document("a1", "suspicious wire action", DocumentType.ACTION),
+        Document("p1", "AML reporting policy"),
+        Document("p2", "KYC onboarding policy"),
+        Document("a1", "suspicious wire action"),
     ]
 
 
@@ -88,13 +88,12 @@ def test_scope_confidence_bypasses_bm25_fusion():
 
 def test_list_and_delete_sources(rag):
     rag.ingest([
-        Document("a-0", "t1", DocumentType.POLICY, {"source": "a.pdf"}),
-        Document("a-1", "t2", DocumentType.POLICY, {"source": "a.pdf"}),
-        Document("b-0", "t3", DocumentType.ACTION, {"source": "b.pdf"}),
+        Document("a-0", "t1", {"source": "a.pdf"}),
+        Document("a-1", "t2", {"source": "a.pdf"}),
+        Document("b-0", "t3", {"source": "b.pdf"}),
     ])
     sources = {s.filename: s for s in rag.list_sources()}
     assert sources["a.pdf"].pages == 2
-    assert sources["b.pdf"].doc_type is DocumentType.ACTION
     assert sources["a.pdf"].ingested_at  # timestamp stamped at ingest
 
     assert rag.delete_by_source("a.pdf") == 2

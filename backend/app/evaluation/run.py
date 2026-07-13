@@ -19,7 +19,7 @@ import mlflow
 
 from app.evaluation.dataset import load_queries
 from app.evaluation.runner import evaluate
-from app.ingestion.rag import Document, DocumentType, RagConfig, build_rag
+from app.ingestion.rag import Document, RagConfig, build_rag
 
 _BACKEND = Path(__file__).resolve().parents[2]
 _DEFAULT_CORPUS = _BACKEND / "data" / "aml_sample.json"
@@ -28,10 +28,7 @@ _DEFAULT_QUERIES = Path(__file__).resolve().parent / "datasets" / "retrieval.jso
 
 def _load_corpus(path: Path) -> list[Document]:
     rows = json.loads(path.read_text(encoding="utf-8"))
-    return [
-        Document(r["id"], r["text"], DocumentType(r["doc_type"]), r.get("metadata", {}))
-        for r in rows
-    ]
+    return [Document(r["id"], r["text"], r.get("metadata", {})) for r in rows]
 
 
 def main(argv=None) -> int:

@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { type DocType } from "../api";
 
 export interface IngestedFile {
   filename: string;
-  doc_type: DocType;
   pages: number;
   ingested_at: string;
 }
@@ -14,6 +12,7 @@ interface FileManagerProps {
 }
 
 export function FileManager({ files, onDelete }: FileManagerProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
   const [filterQuery, setFilterQuery] = useState("");
   const [deletingFile, setDeletingFile] = useState<string | null>(null);
 
@@ -34,12 +33,27 @@ export function FileManager({ files, onDelete }: FileManagerProps) {
   );
 
   return (
-    <section className="glass-panel rounded-2xl p-6 transition-all duration-300">
-      <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-4">
-        Ingested Corpus
-      </h2>
+    <section className="glass-panel rounded-2xl p-6 transition-all duration-300 min-w-0 w-full">
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between cursor-pointer select-none"
+      >
+        <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+          Ingested Corpus
+        </h2>
+        <svg 
+          className={`w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-355 transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2.5" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
 
-      <div className="space-y-4">
+      {isExpanded && (
+        <div className="mt-5 space-y-4 min-w-0 w-full">
         {/* Search inside file list */}
         {files.length > 0 && (
           <div className="relative">
@@ -81,14 +95,13 @@ export function FileManager({ files, onDelete }: FileManagerProps) {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/50 max-h-64 overflow-y-auto pr-1">
+          <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/50 max-h-64 overflow-y-auto pr-1 min-w-0 w-full">
             {filteredFiles.map((file) => {
-              const isPolicy = file.doc_type === "policy";
               const isDeleting = deletingFile === file.filename;
               return (
                 <li
                   key={file.filename}
-                  className={`flex items-center justify-between py-3.5 first:pt-0 last:pb-0 transition-opacity duration-300 ${
+                  className={`flex items-center justify-between py-3.5 first:pt-0 last:pb-0 transition-opacity duration-300 min-w-0 w-full ${
                     isDeleting ? "opacity-50 pointer-events-none" : ""
                   }`}
                 >
@@ -109,15 +122,6 @@ export function FileManager({ files, onDelete }: FileManagerProps) {
                         {file.filename}
                       </p>
                       <div className="flex items-center space-x-1.5 mt-1">
-                        <span
-                          className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.2 rounded ${
-                            isPolicy
-                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                              : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                          }`}
-                        >
-                          {file.doc_type}
-                        </span>
                         <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
                           {file.pages} {file.pages === 1 ? "page" : "pages"}
                         </span>
@@ -158,8 +162,9 @@ export function FileManager({ files, onDelete }: FileManagerProps) {
               );
             })}
           </ul>
-        )}
-      </div>
-    </section>
+         )}
+       </div>
+       )}
+     </section>
   );
 }

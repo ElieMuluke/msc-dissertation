@@ -43,7 +43,6 @@ def _configure() -> None:
 def log_search(
     query: str,
     k: int,
-    doc_type: str | None,
     results: Sequence[SearchResult],
     latency_ms: float,
 ) -> None:
@@ -52,7 +51,7 @@ def log_search(
         _configure()
         mlflow.set_experiment(_EXPERIMENT)
         with mlflow.start_run():
-            mlflow.set_tags({"query": query[:250], "doc_type": doc_type or "all"})
+            mlflow.set_tags({"query": query[:250]})
             mlflow.log_metrics(search_metrics(results, k, latency_ms))
     except Exception:  # noqa: BLE001 - monitoring must not break search
         pass

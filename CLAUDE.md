@@ -70,16 +70,23 @@ docs still apply — but keep them tight. When in doubt, less code.
 - No cross-feature reach-ins; communicate through defined interfaces.
 - Config, I/O, and side effects isolated from core logic (pure core, thin shell).
 
-## 4b. Frontend↔backend contract: backend_spec.md (REQUIRED)
+## 4b. Frontend↔backend contract: backend_spec.md + frontend_spec.md (REQUIRED)
 
-Backend features required by the frontend are tracked in `backend_spec.md` (repo root).
-- When the frontend starts calling a backend capability that doesn't exist yet, record it
-  in `backend_spec.md` (endpoint, schema, status).
-- Consult `backend_spec.md` for pending work; implement from it; mark items done there.
-- It is the source of truth for the frontend↔backend API. Keep it current.
-- When implementing its items, still honor SOLID (rule 3): add domain-typed methods on
-  `RagSystem` (e.g. `list_sources`, `delete_by_source`) — do not leak the raw Chroma
-  collection through the API layer, even if the spec sketch does.
+Two contract files, opposite directions — never cross them, and never edit `frontend/`
+itself (frontend implementation is Gemini/Antigravity's job, always, no exceptions).
+- `backend_spec.md` (repo root): frontend's asks OF the backend + Claude's implementation
+  status. When the frontend starts calling a backend capability that doesn't exist yet,
+  it's recorded here (endpoint, schema, status). Consult it for pending work; implement
+  from it; mark items done there. Only content that originated as a frontend requirement
+  belongs here.
+- `frontend_spec.md` (repo root): backend's writeups of capabilities it exposes, for the
+  frontend to build UI against. When a backend feature needs a frontend UI (e.g. a new
+  upload/selection flow), record the request here — endpoint, schema, suggested UI,
+  status — and stop; do not also write it into `backend_spec.md`, and do not build the UI.
+- Both are kept current; when implementing backend_spec.md items, still honor SOLID
+  (rule 3): add domain-typed methods on `RagSystem` (e.g. `list_sources`,
+  `delete_by_source`) — do not leak the raw Chroma collection through the API layer, even
+  if the spec sketch does.
 
 ## 4c. Track feature-request status: FEATURES.md (REQUIRED)
 

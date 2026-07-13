@@ -2,6 +2,16 @@
 
 To fully support individual document management and listing in the frontend, the backend needs to implement two new endpoints. Since the system uses FastAPI and Chroma DB as its vector store, these specifications include recommended endpoint signatures and implementation details.
 
+> **⚠️ Breaking change (2026-07-03): `doc_type` removed from `/rag/*`.** The policy/action
+> document-type distinction has been removed from the RAG system entirely — it is now
+> generic document ingestion + search only, with no type field. The backend no longer
+> accepts `doc_type` on any `/rag/*` request (it is simply not a field on the request
+> schemas), and no `/rag/*` response body includes a `doc_type` key any more. Existing
+> frontend code that sends `doc_type` will have it silently ignored (extra JSON fields are
+> dropped); any frontend code that reads `response.doc_type` will now get `undefined` —
+> update it to stop relying on that field. Affected: §1 (`GET /rag/documents`), §4
+> (`POST /rag/answer` request/response). See `frontend_spec.md` for the mirrored note.
+
 ---
 
 ## 1. List Ingested Documents
@@ -21,7 +31,6 @@ Retrieve a list of unique files that have been successfully ingested into the ve
 [
   {
     "filename": "anti_money_laundering_act.pdf",
-    "doc_type": "policy",
     "pages": 14,
     "ingested_at": "2026-06-17T05:20:00Z"
   }
@@ -41,7 +50,6 @@ def list_documents(rag: RagSystem = Depends(get_rag)) -> list[IngestedDocument]:
     unique_docs = {}
     for meta in metadatas:
         source = meta.get("source") # e.g. "anti_money_laundering_act.pdf"
-        doc_type = meta.get("doc_type", "policy")
         
         if not source:
             continue
@@ -49,7 +57,6 @@ def list_documents(rag: RagSystem = Depends(get_rag)) -> list[IngestedDocument]:
         if source not in unique_docs:
             unique_docs[source] = {
                 "filename": Path(source).name,
-                "doc_type": doc_type,
                 "pages": 0,
                 # Use metadata field or file modification time if stored, fallback to default
                 "ingested_at": meta.get("ingested_at", "2026-06-17T00:00:00Z")
@@ -217,8 +224,7 @@ Retrieve relevant text chunks from the vector database and generate a grounded, 
 ```json
 {
   "query": "What are the suspicious transaction thresholds?",
-  "k": 5,
-  "doc_type": "policy" // Optional: "policy" | "action" | null
+  "k": 5
 }
 ```
 

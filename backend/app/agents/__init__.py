@@ -4,7 +4,7 @@
     >>> from app.agents import build_rag_tool
     >>> rag = build_rag()
     >>> tool = build_rag_tool(rag)
-    >>> tool.invoke({"query": "customer due diligence threshold", "doc_type": "policy"})
+    >>> tool.invoke({"query": "customer due diligence threshold"})
 
 Tools here take an already-built :class:`~app.ingestion.rag.RagSystem` (dependency
 injection) and expose it as LangChain :class:`~langchain_core.tools.StructuredTool`

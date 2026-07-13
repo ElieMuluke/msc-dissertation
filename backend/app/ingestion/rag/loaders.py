@@ -1,4 +1,4 @@
-"""Load real PDF policy/action documents into the RAG domain model."""
+"""Load real PDF documents into the RAG domain model."""
 
 from __future__ import annotations
 
@@ -8,12 +8,11 @@ from typing import Optional
 from langchain_community.document_loaders import PyPDFLoader
 
 from .cleaning import clean_pdf_text
-from .models import Document, DocumentType
+from .models import Document
 
 
 def load_pdfs(
     path: str,
-    doc_type: DocumentType = DocumentType.POLICY,
     metadata: Optional[dict] = None,
 ) -> list[Document]:
     """Load a PDF file, or every ``*.pdf`` in a directory, into :class:`Document` objects.
@@ -34,7 +33,6 @@ def load_pdfs(
                 Document(
                     id=f"{pdf.stem}-p{page_no}",
                     text=clean_pdf_text(page.page_content),
-                    doc_type=doc_type,
                     metadata={**base_meta, "source": pdf.name, "page": page_no},
                 )
             )

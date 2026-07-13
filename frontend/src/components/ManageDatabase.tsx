@@ -6,6 +6,7 @@ interface ManageDatabaseProps {
 }
 
 export function ManageDatabase({ onClearSuccess }: ManageDatabaseProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error" | "loading" | null; message: string }>({
     type: null,
     message: "",
@@ -24,12 +25,27 @@ export function ManageDatabase({ onClearSuccess }: ManageDatabaseProps) {
   }
 
   return (
-    <section className="glass-panel rounded-2xl p-6 transition-all duration-300">
-      <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider mb-4">
-        Database Control
-      </h2>
+    <section className="glass-panel rounded-2xl p-6 transition-all duration-300 min-w-0 w-full">
+      <div 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between cursor-pointer select-none"
+      >
+        <h2 className="text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+          Database Control
+        </h2>
+        <svg 
+          className={`w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-355 transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2.5" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
 
-      <div className="space-y-4">
+      {isExpanded && (
+        <div className="mt-5 space-y-4 min-w-0 w-full">
         <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
           Wipe the vector database storage. This operation permanently deletes all chunked PDF text and corresponding high-dimensional embeddings.
         </p>
@@ -63,6 +79,7 @@ export function ManageDatabase({ onClearSuccess }: ManageDatabaseProps) {
           </div>
         )}
       </div>
+      )}
     </section>
   );
 }

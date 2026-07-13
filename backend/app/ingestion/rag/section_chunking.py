@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Optional
 
 from .cleaning import clean_pdf_text
-from .models import Document, DocumentType
+from .models import Document
 
 # A paragraph-number line start: "5.3.108 Some...", "17. When...", "4.12. A credit...".
 # Requires an upper-case/digit/quote after the number so lowercase continuations
@@ -174,7 +174,6 @@ def _doc_title(stem: str) -> str:
 
 def load_pdf_sections(
     path: str,
-    doc_type: DocumentType = DocumentType.POLICY,
     metadata: Optional[dict] = None,
     parent_context: bool = False,
 ) -> list[Document]:
@@ -212,7 +211,6 @@ def load_pdf_sections(
                     Document(
                         id=f"{pdf.stem}-s{index}",
                         text=prefix + piece,
-                        doc_type=doc_type,
                         metadata={**base_meta, "source": pdf.name, "page": page_no, "section": heading},
                     )
                 )

@@ -12,3 +12,11 @@ frontend/dist/
 .env
 backend/data/aml_financial_actions/Assessment-Follow-Up-ICRG-Procedures-2022.pdf.coredownload.inline.pdf
 .idea
+
+# Tabular AML dataset: local SQLite store (grows unbounded with real ingestion) and the
+# raw HI-Large source files (up to 17GB) — never belong in git history.
+backend/tabular_data_db.sqlite
+backend/tabular_data_db.sqlite-wal
+backend/tabular_data_db.sqlite-shm
+backend/data/HI-Large_*.csv
+backend/data/HI-Large_*.txt

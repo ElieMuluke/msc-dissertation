@@ -5,11 +5,11 @@ from __future__ import annotations
 from app.generation.config import GenerationConfig
 from app.generation.generator import OUT_OF_SCOPE_REFUSAL, AnswerGenerator
 from app.generation.prompt import build_prompt
-from app.ingestion.rag.models import DocumentType, SearchResult
+from app.ingestion.rag.models import SearchResult
 
 
 def _result(rid, text, source="a.pdf", page=1, score=0.8):
-    return SearchResult(rid, text, DocumentType.POLICY, {"source": source, "page": page}, score)
+    return SearchResult(rid, text, {"source": source, "page": page}, score)
 
 
 def test_build_prompt_includes_context_and_ids():
@@ -28,8 +28,8 @@ def test_generate_uses_context_and_cites():
     results = [_result("p1", "Report cash over 10,000.", page=3)]
     captured = {}
 
-    def fake_search(query, k, doc_type):
-        captured["args"] = (query, k, doc_type)
+    def fake_search(query, k):
+        captured["args"] = (query, k)
         return results
 
     def fake_complete(prompt):
@@ -43,11 +43,11 @@ def test_generate_uses_context_and_cites():
     assert answer.used_context is True
     assert answer.citations[0].id == "p1"
     assert answer.citations[0].page == 3
-    assert captured["args"] == ("threshold?", 3, None)
+    assert captured["args"] == ("threshold?", 3)
 
 
 def test_generate_without_results_flags_no_context():
-    gen = AnswerGenerator(lambda q, k, dt: [], lambda prompt: "No data available.")
+    gen = AnswerGenerator(lambda q, k: [], lambda prompt: "No data available.")
     answer = gen.generate("threshold?")
     assert answer.used_context is False
     assert answer.citations == []

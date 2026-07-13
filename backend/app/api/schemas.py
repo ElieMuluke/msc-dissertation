@@ -6,24 +6,18 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.ingestion.rag import DocumentType
+from app.ingestion.tabular import TabularDataType
 
 
 class SearchHit(BaseModel):
     id: str
     text: str
-    doc_type: DocumentType
     metadata: dict
     score: float
 
 
-class IngestResponse(BaseModel):
-    ingested: int
-
-
 class IngestedDocument(BaseModel):
     filename: str
-    doc_type: DocumentType
     pages: int
     ingested_at: str
 
@@ -43,7 +37,6 @@ class HealthResponse(BaseModel):
 class AnswerRequest(BaseModel):
     query: str
     k: int = 4
-    doc_type: Optional[DocumentType] = None
 
 
 class CitationOut(BaseModel):
@@ -57,3 +50,23 @@ class AnswerResponse(BaseModel):
     answer: str
     citations: list[CitationOut]
     used_context: bool
+
+
+class TabularIngestResponse(BaseModel):
+    ingested: int
+    data_type: str
+
+
+class TabularLocalIngestRequest(BaseModel):
+    data_type: TabularDataType
+    path: str
+
+
+class TabularTextIngestRequest(BaseModel):
+    data_type: TabularDataType
+    csv_text: str
+
+
+class TabularCounts(BaseModel):
+    accounts: int
+    transactions: int
