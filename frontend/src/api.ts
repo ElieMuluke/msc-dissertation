@@ -11,50 +11,61 @@ export interface SearchHit {
   score: number;
 }
 
-export function uploadPdfs(
-  files: File[],
-  docType: DocType,
-  onProgress?: (percent: number) => void
+async function readSseProgress(
+  res: Response,
+  onProgress?: (filename: string, pct: number, status: string) => void
 ): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const form = new FormData();
-    files.forEach((file) => form.append("files", file));
-    form.append("doc_type", docType);
+  if (!res.body) throw new Error("Response body is not readable");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let total = 0;
 
-    if (onProgress && xhr.upload) {
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          onProgress(percent);
-        }
-      });
-    }
-
-    xhr.addEventListener("load", () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          resolve(data.ingested as number);
-        } catch {
-          reject(new Error("Failed to parse ingestion response"));
-        }
-      } else {
-        reject(
-          new Error(
-            xhr.responseText || `Upload failed with status ${xhr.status}`
-          )
-        );
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      if (!frame.trim()) continue;
+      let event = "message";
+      let data = "";
+      for (const line of frame.split("\n")) {
+        if (line.startsWith("event:")) event = line.slice(6).trim();
+        else if (line.startsWith("data:")) data += line.slice(5).trim();
       }
-    });
+      if (!data) continue;
+      const payload = JSON.parse(data);
+      if (event === "progress") {
+        onProgress?.(payload.filename, payload.progress, payload.status);
+      } else if (event === "error") {
+        throw new Error(`${payload.filename}: ${payload.message}`);
+      } else if (event === "done") {
+        total = payload.ingested;
+      }
+    }
+  }
+  return total;
+}
 
-    xhr.addEventListener("error", () => {
-      reject(new Error("Network upload error"));
-    });
+export async function uploadPdfs(
+  files: File[],
+  onProgress?: (filename: string, pct: number, status: string) => void
+): Promise<number> {
+  const form = new FormData();
+  files.forEach((file) => form.append("files", file));
 
-    xhr.open("POST", `${API_URL}/rag/documents/pdf`);
-    xhr.send(form);
+  const res = await fetch(`${API_URL}/rag/documents/pdf`, {
+    method: "POST",
+    body: form,
   });
+
+  if (!res.ok) {
+    throw new Error(await res.text() || `Upload failed with status ${res.status}`);
+  }
+
+  return readSseProgress(res, onProgress);
 }
 
 export async function clearDatabase(): Promise<void> {
@@ -423,7 +434,8 @@ export class ValidationError extends Error {
 
 export async function ingestTabular(
   dataType: "accounts" | "transactions" | "patterns",
-  files: File[]
+  files: File[],
+  onProgress?: (filename: string, pct: number, status: string) => void
 ): Promise<number> {
   const form = new FormData();
   form.append("data_type", dataType);
@@ -438,13 +450,13 @@ export async function ingestTabular(
     throw new Error(await res.text() || `Ingestion failed with status ${res.status}`);
   }
 
-  const data = await res.json();
-  return data.ingested as number;
+  return readSseProgress(res, onProgress);
 }
 
 export async function ingestTabularLocal(
   dataType: "accounts" | "transactions" | "patterns",
-  path: string
+  path: string,
+  onProgress?: (filename: string, pct: number, status: string) => void
 ): Promise<number> {
   const res = await fetch(`${API_URL}/tabular/ingest/local`, {
     method: "POST",
@@ -456,8 +468,7 @@ export async function ingestTabularLocal(
     throw new Error(await res.text() || `Local ingestion failed with status ${res.status}`);
   }
 
-  const data = await res.json();
-  return data.ingested as number;
+  return readSseProgress(res, onProgress);
 }
 
 export async function ingestTabularText(
