@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import shutil
 import tempfile
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
@@ -19,54 +18,64 @@ from app.api.schemas import (
     CitationOut,
     DeleteResponse,
     IngestedDocument,
-    IngestResponse,
     SearchHit,
 )
+from app.api.sse import sse_frame
 from app.deps import get_generator, get_rag
 from app.evaluation.monitoring import log_search
 from app.generation import AnswerGenerator
 from app.ingestion.rag import RagSystem, load_pdfs
-from app.realtime import manager, progress_frame
 
 router = APIRouter(prefix="/rag", tags=["rag"])
 
+_SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
-@router.post("/documents/pdf", response_model=IngestResponse)
+
+@router.post("/documents/pdf")
 async def ingest_pdfs(
     files: list[UploadFile] = File(...),
     rag: RagSystem = Depends(get_rag),
-) -> IngestResponse:
+) -> StreamingResponse:
     """Ingest one or more uploaded PDFs (one document per page).
 
-    Broadcasts per-file progress frames over the ``/ws`` WebSocket gateway.
+    Streams progress as Server-Sent Events instead of a single JSON response: one
+    ``event: progress`` frame per milestone (``{"filename", "progress", "status"}``, status
+    one of ``uploading``/``parsing``/``vectorizing``/``completed``), an ``event: error``
+    frame (``{"filename", "message"}``) if a file fails — which stops processing of any
+    remaining files in the same request — and, once every file has ingested successfully,
+    one final ``event: done`` frame (``{"ingested": <total>}``).
     """
-    ingested = 0
-    # Persist under original filenames so ids/source metadata stay meaningful.
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        for file in files:
-            name = Path(file.filename or "").name
-            try:
-                if not (file.filename or "").lower().endswith(".pdf"):
-                    raise HTTPException(status_code=400, detail=f"Expected a .pdf file: {file.filename}")
-                await manager.broadcast(progress_frame(name, 10, "uploading"))
-                dest = Path(tmp_dir) / name
-                with dest.open("wb") as out:
-                    shutil.copyfileobj(file.file, out)
-                await manager.broadcast(progress_frame(name, 40, "parsing"))
-                # Offload blocking PDF parsing + embedding to a thread so the event loop
-                # stays free and progress frames stream in realtime.
-                documents = await asyncio.to_thread(load_pdfs, str(dest))
-                await manager.broadcast(progress_frame(name, 70, "vectorizing"))
-                ingested += await asyncio.to_thread(rag.ingest, documents)
-                await manager.broadcast(progress_frame(name, 100, "completed"))
-            except HTTPException as exc:
-                await manager.broadcast(progress_frame(name, 0, "error", str(exc.detail)))
-                raise
-            except Exception as exc:  # noqa: BLE001 - report then surface
-                await manager.broadcast(progress_frame(name, 0, "error", str(exc)))
-                raise
 
-    return IngestResponse(ingested=ingested)
+    async def event_stream() -> AsyncIterator[str]:
+        total = 0
+        # Persist under original filenames so ids/source metadata stay meaningful.
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for file in files:
+                name = Path(file.filename or "").name
+                try:
+                    if not (file.filename or "").lower().endswith(".pdf"):
+                        raise HTTPException(status_code=400, detail=f"Expected a .pdf file: {file.filename}")
+                    yield sse_frame("progress", {"filename": name, "progress": 10, "status": "uploading"})
+                    dest = Path(tmp_dir) / name
+                    with dest.open("wb") as out:
+                        shutil.copyfileobj(file.file, out)
+                    yield sse_frame("progress", {"filename": name, "progress": 40, "status": "parsing"})
+                    # Offload blocking PDF parsing + embedding to a thread so the event loop
+                    # stays free and frames already yielded flush to the client promptly.
+                    documents = await asyncio.to_thread(load_pdfs, str(dest))
+                    yield sse_frame("progress", {"filename": name, "progress": 70, "status": "vectorizing"})
+                    total += await asyncio.to_thread(rag.ingest, documents)
+                    yield sse_frame("progress", {"filename": name, "progress": 100, "status": "completed"})
+                except HTTPException as exc:
+                    yield sse_frame("error", {"filename": name, "message": str(exc.detail)})
+                    return
+                except Exception as exc:  # noqa: BLE001 - report then stop
+                    yield sse_frame("error", {"filename": name, "message": str(exc)})
+                    return
+
+        yield sse_frame("done", {"ingested": total})
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=_SSE_HEADERS)
 
 
 @router.get("/documents", response_model=list[IngestedDocument])
@@ -140,11 +149,6 @@ async def answer(
     )
 
 
-def _sse(event: str, data: dict) -> str:
-    """Format one Server-Sent Event frame."""
-    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
-
-
 @router.post("/answer/stream")
 def answer_stream(
     request: AnswerRequest,
@@ -164,9 +168,9 @@ def answer_stream(
             streamed = generator.stream(request.query, request.k)
             for chunk in streamed.chunks:
                 event = "thinking" if chunk.kind == "thinking" else "token"
-                yield _sse(event, {"text": chunk.text})
+                yield sse_frame(event, {"text": chunk.text})
         except Exception as exc:  # noqa: BLE001 - surface to the client as an error frame
-            yield _sse("error", {"message": f"Generation failed (is Ollama running?): {exc}"})
+            yield sse_frame("error", {"message": f"Generation failed (is Ollama running?): {exc}"})
             return
         citations = [
             CitationOut(
@@ -177,10 +181,6 @@ def answer_stream(
             ).model_dump()
             for c in streamed.citations
         ]
-        yield _sse("done", {"citations": citations, "used_context": streamed.used_context})
+        yield sse_frame("done", {"citations": citations, "used_context": streamed.used_context})
 
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=_SSE_HEADERS)

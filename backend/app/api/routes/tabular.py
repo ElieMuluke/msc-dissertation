@@ -3,22 +3,18 @@
 from __future__ import annotations
 
 import asyncio
-import shutil
-import tempfile
+import os
+from collections.abc import AsyncIterator, Callable
 from pathlib import Path
+from typing import IO
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 
-from app.api.schemas import (
-    TabularCounts,
-    TabularIngestResponse,
-    TabularLocalIngestRequest,
-    TabularTextIngestRequest,
-)
+from app.api.schemas import TabularCounts, TabularIngestResponse, TabularLocalIngestRequest, TabularTextIngestRequest
+from app.api.sse import bridge_thread_progress, sse_frame
 from app.deps import get_tabular
-from app.ingestion.tabular import CsvValidationError, TabularDataType, TabularSystem
-from app.ingestion.tabular.loaders import count_rows
-from app.realtime import manager, progress_frame
+from app.ingestion.tabular import ByteCountingReader, CsvValidationError, TabularDataType, TabularSystem
 
 router = APIRouter(prefix="/tabular", tags=["tabular"])
 
@@ -28,103 +24,141 @@ _ALLOWED_EXTENSIONS: dict[TabularDataType, tuple[str, ...]] = {
     TabularDataType.PATTERNS: (".csv", ".txt"),
 }
 
+_SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
 
-async def _ingest_with_progress(
-    data_type: TabularDataType, path: str, name: str, tabular: TabularSystem
-) -> int:
-    """Ingest ``path`` (already on local disk) into ``tabular``, reporting progress over ``/ws``.
 
-    Shared by both the upload endpoint (which stages the file to disk first) and the
-    local-path endpoint (which reads a file already on disk), so the count/broadcast/
-    on_batch wiring exists exactly once.
+async def _ingest_file_with_progress(
+    data_type: TabularDataType,
+    name: str,
+    size: int,
+    open_binary: Callable[[], IO[bytes]],
+    tabular: TabularSystem,
+) -> AsyncIterator[dict]:
+    """Ingest one file, yielding byte-based progress dicts as ingestion proceeds.
+
+    Yields ``{"progress": int, "status": "uploading"|"inserting"}`` dicts as ingestion
+    proceeds, ending with one ``{"progress": 100, "status": "completed", "ingested": int}``
+    dict carrying the final row count. ``open_binary`` is a zero-arg callable returning a
+    fresh binary file object — deferred so nothing is opened before ingestion actually
+    starts — which is wrapped in a :class:`ByteCountingReader` and read directly by
+    ``TabularSystem.ingest`` (no second on-disk copy, no separate row-count pass; see
+    ``docs/tabular.md`` for the perf rationale). Progress percent is derived from bytes
+    read against ``size`` rather than an exact row count.
+
+    Raises whatever ``TabularSystem.ingest`` raises; shared by both the upload endpoint and
+    the local-path endpoint, whose only difference is how ``open_binary`` opens the file.
     """
-    # Off the event loop: files can be huge.
-    total = await asyncio.to_thread(count_rows, path, data_type)
-    loop = asyncio.get_running_loop()
+    yield {"progress": 10, "status": "uploading"}
+    fileobj = open_binary()
+    try:
+        reader = ByteCountingReader(fileobj)
+        result: dict[str, int] = {}
 
-    def on_batch(done: int, _total: int = total, _name: str = name) -> None:
-        pct = 10 + int(done / _total * 89) if _total else 90
-        pct = min(pct, 99)
-        asyncio.run_coroutine_threadsafe(manager.broadcast(progress_frame(_name, pct, "inserting")), loop)
+        def work(emit: Callable[[dict], None]) -> None:
+            def on_batch(_done: int) -> None:
+                pct = 10 + int(reader.bytes_read / size * 89) if size else 90
+                emit({"progress": min(pct, 99), "status": "inserting"})
 
-    ingested = await asyncio.to_thread(tabular.ingest, data_type, path, name, on_batch)
-    await manager.broadcast(progress_frame(name, 100, "completed"))
-    return ingested
+            result["ingested"] = tabular.ingest(data_type, reader, name, on_batch)
+
+        async for frame in bridge_thread_progress(work):
+            yield frame
+    finally:
+        fileobj.close()
+
+    yield {"progress": 100, "status": "completed", "ingested": result["ingested"]}
 
 
-@router.post("/ingest", response_model=TabularIngestResponse)
+@router.post("/ingest")
 async def ingest(
     data_type: TabularDataType = Form(...),
     files: list[UploadFile] = File(...),
     tabular: TabularSystem = Depends(get_tabular),
-) -> TabularIngestResponse:
+) -> StreamingResponse:
     """Ingest one or more uploaded HI-Large tabular files for the selected ``data_type``.
 
-    Broadcasts per-file progress frames over the ``/ws`` WebSocket gateway (mirrors
-    ``ingest_pdfs`` in ``app/api/routes/rag.py``). For files too large to comfortably
-    round-trip over HTTP, use ``POST /tabular/ingest/local`` instead (reads directly from
-    a server-local path, no upload).
+    Streams progress as Server-Sent Events instead of a single JSON response: one
+    ``event: progress`` frame per milestone/batch (``{"filename", "progress", "status"}``),
+    an ``event: error`` frame (``{"filename", "message"}``) if a file fails — which stops
+    processing of any remaining files in the same request — and, once every file has
+    ingested successfully, one final ``event: done`` frame
+    (``{"ingested": <total>, "data_type": ...}``). For files too large to comfortably
+    round-trip over HTTP, use ``POST /tabular/ingest/local`` instead (reads directly from a
+    server-local path, no upload).
     """
     allowed = _ALLOWED_EXTENSIONS[data_type]
-    ingested = 0
-    with tempfile.TemporaryDirectory() as tmp_dir:
+
+    async def event_stream() -> AsyncIterator[str]:
+        total = 0
         for file in files:
             name = Path(file.filename or "").name
+            if not name.lower().endswith(allowed):
+                yield sse_frame(
+                    "error",
+                    {"filename": name, "message": f"Expected one of {allowed} for {data_type.value}: {file.filename}"},
+                )
+                return
             try:
-                if not name.lower().endswith(allowed):
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Expected one of {allowed} for {data_type.value}: {file.filename}",
-                    )
-                await manager.broadcast(progress_frame(name, 10, "uploading"))
-                dest = Path(tmp_dir) / name
-                with dest.open("wb") as out:
-                    shutil.copyfileobj(file.file, out)
+                async for frame in _ingest_file_with_progress(
+                    data_type, name, file.size or 0, lambda f=file: f.file, tabular
+                ):
+                    ingested = frame.pop("ingested", None)
+                    yield sse_frame("progress", {"filename": name, **frame})
+                    if ingested is not None:
+                        total += ingested
+            except Exception as exc:  # noqa: BLE001 - report then stop
+                yield sse_frame("error", {"filename": name, "message": str(exc)})
+                return
 
-                ingested += await _ingest_with_progress(data_type, str(dest), name, tabular)
-            except HTTPException as exc:
-                await manager.broadcast(progress_frame(name, 0, "error", str(exc.detail)))
-                raise
-            except Exception as exc:  # noqa: BLE001 - report then surface
-                await manager.broadcast(progress_frame(name, 0, "error", str(exc)))
-                raise
+        yield sse_frame("done", {"ingested": total, "data_type": data_type.value})
 
-    return TabularIngestResponse(ingested=ingested, data_type=data_type.value)
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=_SSE_HEADERS)
 
 
-@router.post("/ingest/local", response_model=TabularIngestResponse)
+@router.post("/ingest/local")
 async def ingest_local(
     request: TabularLocalIngestRequest,
     tabular: TabularSystem = Depends(get_tabular),
-) -> TabularIngestResponse:
+) -> StreamingResponse:
     """Ingest a tabular file already sitting on the server's local disk, by path.
 
-    Bypasses HTTP upload entirely: no multipart body, no temp-copy of the file. Meant for
-    very large source files (e.g. multi-GB transaction dumps) where uploading over HTTP is
-    both slow and, on hosts where ``/tmp`` is a small tmpfs, prone to running out of space
-    mid-upload. Broadcasts the same progress frames over ``/ws`` as ``POST /tabular/ingest``.
+    Bypasses HTTP upload entirely: no multipart body. Meant for very large source files
+    (e.g. multi-GB transaction dumps) where uploading over HTTP is both slow and, on hosts
+    where ``/tmp`` is a small tmpfs, prone to running out of space mid-upload. Streams the
+    same Server-Sent Event frame shape as ``POST /tabular/ingest`` (see its docstring).
     """
     path = Path(request.path)
     name = path.name
     allowed = _ALLOWED_EXTENSIONS[request.data_type]
-    if not path.is_file():
-        raise HTTPException(status_code=400, detail=f"No such file: {request.path}")
-    if not name.lower().endswith(allowed):
-        raise HTTPException(
-            status_code=400, detail=f"Expected one of {allowed} for {request.data_type.value}: {name}"
-        )
 
-    try:
-        await manager.broadcast(progress_frame(name, 10, "uploading"))
-        ingested = await _ingest_with_progress(request.data_type, str(path), name, tabular)
-    except HTTPException as exc:
-        await manager.broadcast(progress_frame(name, 0, "error", str(exc.detail)))
-        raise
-    except Exception as exc:  # noqa: BLE001 - report then surface
-        await manager.broadcast(progress_frame(name, 0, "error", str(exc)))
-        raise
+    async def event_stream() -> AsyncIterator[str]:
+        if not path.is_file():
+            yield sse_frame("error", {"filename": name, "message": f"No such file: {request.path}"})
+            return
+        if not name.lower().endswith(allowed):
+            yield sse_frame(
+                "error",
+                {"filename": name, "message": f"Expected one of {allowed} for {request.data_type.value}: {name}"},
+            )
+            return
 
-    return TabularIngestResponse(ingested=ingested, data_type=request.data_type.value)
+        size = os.path.getsize(path)
+        total = 0
+        try:
+            async for frame in _ingest_file_with_progress(
+                request.data_type, name, size, lambda: open(path, "rb"), tabular
+            ):
+                ingested = frame.pop("ingested", None)
+                yield sse_frame("progress", {"filename": name, **frame})
+                if ingested is not None:
+                    total = ingested
+        except Exception as exc:  # noqa: BLE001 - report then stop
+            yield sse_frame("error", {"filename": name, "message": str(exc)})
+            return
+
+        yield sse_frame("done", {"ingested": total, "data_type": request.data_type.value})
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=_SSE_HEADERS)
 
 
 @router.post("/ingest/text", response_model=TabularIngestResponse)
@@ -136,9 +170,9 @@ async def ingest_text(
 
     The entire payload is validated as well-formed before any DB write (see
     ``TabularSystem.ingest_text``): a malformed row anywhere returns ``422`` with the list
-    of problems and leaves the database untouched, no partial inserts. No ``/ws`` progress
-    broadcast (unlike the file-upload paths) — pasted text is small enough for a plain
-    synchronous-feeling request/response.
+    of problems and leaves the database untouched, no partial inserts. Plain JSON
+    request/response (unlike the file-upload paths, which stream SSE progress) — pasted
+    text is small enough for a synchronous-feeling request.
     """
     try:
         ingested = await asyncio.to_thread(tabular.ingest_text, request.data_type, request.csv_text)

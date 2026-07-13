@@ -11,14 +11,13 @@ import os
 import tempfile
 from collections.abc import Callable
 
-from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import rag, tabular
 from app.api.schemas import HealthResponse
 from app.deps import get_llm_ping, get_rag
 from app.ingestion.rag import RagSystem
-from app.realtime import manager
 
 # `/tmp` is tmpfs (RAM-backed) on many Linux setups and can be far smaller than the
 # multi-GB tabular files this app ingests (see app/api/routes/tabular.py). Both Starlette's
@@ -57,14 +56,3 @@ def health(
         database="connected" if db_ok else "disconnected",
         llm="connected" if llm_ok else "disconnected",
     )
-
-
-@app.websocket("/ws")
-async def ingestion_progress_ws(websocket: WebSocket) -> None:
-    """Push ingestion progress frames to connected clients."""
-    await manager.connect(websocket)
-    try:
-        while True:
-            await websocket.receive_text()  # keep-alive; client messages are ignored
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)

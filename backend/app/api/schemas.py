@@ -16,10 +16,6 @@ class SearchHit(BaseModel):
     score: float
 
 
-class IngestResponse(BaseModel):
-    ingested: int
-
-
 class IngestedDocument(BaseModel):
     filename: str
     pages: int
