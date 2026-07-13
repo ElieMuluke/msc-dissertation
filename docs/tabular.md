@@ -55,13 +55,12 @@ HI-Large files can run to millions of rows, so two layers keep memory bounded
   converted back to a plain `datetime` via `.to_pydatetime()`), yielding one row dict per
   record regardless of chunk boundaries. `iter_patterns` is unchanged: still line-by-line
   with the stdlib `csv` module, because `HI-Large_Patterns.txt` mixes `BEGIN`/`END` marker
-  lines in with data rows and isn't a plain CSV pandas can parse directly. All three keep
-  the same public contract — yield one plain row `dict` at a time.
-- **`count_rows(path, data_type) -> int`** (`loaders.py`) is a separate, lightweight line
-  count — no parsing/type-conversion — used only to size progress-bar percentages (see
-  below); it is not on the hot ingestion path.
+  lines in with data rows and isn't a plain CSV pandas can parse directly. All three accept
+  either a path **or** an already-open binary file-like object (see "Byte-based progress,
+  no redundant I/O passes" below), and keep the same public contract otherwise — yield one
+  plain row `dict` at a time.
 - **The service owns the only side effects**: `TabularSystem` (`service.py`) chunks the
-  streamed rows into lists of `TabularConfig.batch_size` (default 2000) via `_batched` and
+  streamed rows into lists of `TabularConfig.batch_size` (default 30,000) via `_batched` and
   bulk-inserts each chunk in one `INSERT`. Accounts use `INSERT ... ON CONFLICT DO NOTHING`
   (SQLite upsert-ignore) on `(bank_id, account_number)` so re-ingesting is idempotent; the
   inserted-row count for that path is measured as the before/after `SELECT COUNT(*)` delta,
@@ -69,8 +68,9 @@ HI-Large files can run to millions of rows, so two layers keep memory bounded
   for `ON CONFLICT DO NOTHING`. Transactions/patterns use a plain insert and return the
   number of rows streamed. Every `ingest_*`/`ingest` method accepts an optional
   `on_batch: Callable[[int], None]`, invoked with the cumulative inserted/streamed row count
-  after *every* batch — the service has no idea who's listening (a WebSocket, a log line,
-  nothing); it just reports progress if asked (dependency inversion).
+  after *every* batch — the service itself still reports rows (its own unit of work) and has
+  no idea who's listening; the **API layer** is what turns that into a progress percentage,
+  and it does so from bytes, not rows — see below.
 - **Commit cadence is decoupled from progress reporting**: `session.commit()` only runs
   every `_COMMIT_EVERY_N_BATCHES` (25) batches, not every batch — `on_batch` still fires
   every batch since it's a cheap in-memory callback, but `commit()` triggers a disk fsync,
@@ -84,6 +84,20 @@ HI-Large files can run to millions of rows, so two layers keep memory bounded
   for this single-writer local dev setup. No-op for `sqlite:///:memory:` (used by tests).
   Combined with the decoupled commit cadence above, ingesting the real 2.1M-row
   `HI-Large_accounts.csv` (147.7MB) dropped from ~7 minutes to ~2 minutes measured locally.
+- **Byte-based progress, no redundant I/O passes**: `POST /tabular/ingest` used to make 4
+  full passes over the uploaded file before this fix — Starlette's multipart parser
+  spooling the body to a temp file, this route's own `shutil.copyfileobj` copying that into
+  a *second* temp file, a separate `count_rows()` read just to size the progress
+  percentage, then pandas reading the file a fourth time to actually ingest. `/ingest/local`
+  already skipped the first two (no upload, no copy), which is why it was always faster.
+  The route now opens the file itself (the upload's `UploadFile.file`, or the local path)
+  and wraps it in `ByteCountingReader` (`loaders.py`) — a thin file-like wrapper that counts
+  bytes read through `.read()`/`.read1()` — and passes that wrapper straight into
+  `TabularSystem.ingest`, which pandas reads directly with no on-disk copy and no separate
+  counting pass. Progress percent is `bytes_read / file_size` (from `UploadFile.size` or
+  `os.path.getsize`), not an exact row count — a good approximation since these datasets'
+  rows are roughly fixed-width, and it's what let the redundant `count_rows` pass be deleted
+  entirely (removed from `loaders.py`/`__init__.py`).
 
 ## Usage
 
@@ -119,31 +133,40 @@ tabular.ingest_text(TabularDataType.ACCOUNTS, "Bank Name,Bank ID,...\n...")
 uvicorn app.main:app --reload   # http://localhost:8000
 ```
 
-**`POST /tabular/ingest`** — multipart form:
+**`POST /tabular/ingest`** — multipart form, **streamed response**:
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `data_type` | `"accounts" \| "transactions" \| "patterns"` | Selects the table/loader. |
-| `files` | one or more file uploads | `.csv` for `accounts`/`transactions`; `.csv` or `.txt` for `patterns`. Wrong extension → `400`. |
+| `files` | one or more file uploads | `.csv` for `accounts`/`transactions`; `.csv` or `.txt` for `patterns`. Wrong extension → an `error` SSE frame. |
 
 ```bash
-curl -X POST http://localhost:8000/tabular/ingest \
+curl -N -X POST http://localhost:8000/tabular/ingest \
   -F "data_type=accounts" \
   -F "files=@HI-Large_accounts.csv"
 ```
 
-Response (`TabularIngestResponse`):
-```json
-{"ingested": 1000, "data_type": "accounts"}
+Response is `text/event-stream` (Server-Sent Events), not a single JSON body — mirrors
+`POST /rag/answer/stream`'s existing SSE pattern (`app/api/sse.py` generalizes the shared
+bits: frame formatting, and bridging a blocking worker-thread producer of progress updates
+to an async generator via `bridge_thread_progress`). Frames, per file:
+
+| event | data | when |
+| --- | --- | --- |
+| `progress` | `{"filename", "progress": 10, "status": "uploading"}` | once, before ingestion starts |
+| `progress` | `{"filename", "progress": 10-99, "status": "inserting"}` | repeatedly as bytes are read (see "Byte-based progress" above) |
+| `error` | `{"filename", "message"}` | instead of further progress, if the file fails — stops processing any remaining files in the request |
+
+Once every file in the request has ingested successfully, one final frame:
+
+```
+event: done
+data: {"ingested": 1000, "data_type": "accounts"}
 ```
 
-Per file, `/tabular/ingest` also broadcasts realtime progress frames over the shared `/ws`
-WebSocket gateway (`app/realtime.py`), the same one `POST /rag/documents/pdf` uses:
-`uploading` (10%) → `inserting` (10-99%, computed from `count_rows`'s total against the
-cumulative count reported by the `on_batch` callback, pushed from the worker thread via
-`asyncio.run_coroutine_threadsafe`) → `completed` (100%), or `error` with the failure
-message if ingestion raises. `app.realtime.Status` includes `"inserting"` for this reason
-(tabular ingestion inserts rows rather than parsing/vectorizing documents).
+`/tabular/ingest/local` streams the identical frame shape (see below). The `/ws` WebSocket
+gateway this used to broadcast over (`app/realtime.py`) has been removed entirely — progress
+is now scoped to the request that asked for it, with no separate connection to manage.
 
 **`GET /tabular/counts`** — current ingested row counts, e.g. for a frontend
 ingested-volumes display:
@@ -166,12 +189,13 @@ path; no HTTP upload. JSON body:
 {"data_type": "transactions", "path": "/absolute/path/HI-Large_Trans.csv"}
 ```
 
-`400` if `path` doesn't exist or has the wrong extension for `data_type`. Response and
-`/ws` progress frames are identical to `POST /tabular/ingest`. See "Why a local-path
-endpoint" below for the reason this exists alongside the upload endpoint.
+An `error` SSE frame (`{"filename", "message"}`) if `path` doesn't exist or has the wrong
+extension for `data_type`. Same streamed frame shape as `POST /tabular/ingest` otherwise
+(see above). See "Why a local-path endpoint" below for the reason this exists alongside the
+upload endpoint.
 
 ```bash
-curl -X POST http://localhost:8000/tabular/ingest/local \
+curl -N -X POST http://localhost:8000/tabular/ingest/local \
   -H "Content-Type: application/json" \
   -d '{"data_type":"transactions","path":"/absolute/path/to/HI-Large_Trans.csv"}'
 ```
@@ -199,9 +223,9 @@ point of this endpoint: unlike the streaming file-based ingest paths (which inse
 batch-by-batch as they read), pasted text is fully materialized and validated up front so
 a malformed paste can never corrupt the DB with a partial insert.
 
-No `/ws` progress broadcast for this endpoint (unlike `/tabular/ingest` and
-`/tabular/ingest/local`) — pasted text is expected to be small, so ingestion completes in
-one synchronous-feeling request/response.
+Plain JSON, not SSE, for this endpoint (unlike `/tabular/ingest` and `/tabular/ingest/local`)
+— pasted text is expected to be small, so ingestion completes in one synchronous-feeling
+request/response.
 
 ```bash
 curl -X POST http://localhost:8000/tabular/ingest/text \
@@ -244,15 +268,16 @@ Exported from `backend/app/ingestion/tabular/__init__.py`:
 | `TabularDataType` | `ACCOUNTS` / `TRANSACTIONS` / `PATTERNS`. |
 | `Account`, `Transaction` | ORM models (`models.py`). |
 | `TabularConfig` | `db_url`, `batch_size`. |
-| `iter_accounts`, `iter_transactions`, `iter_patterns` | Pure row-streaming generators (`loaders.py`), reusable outside the ORM service. |
-| `count_rows(path, data_type) -> int` | Fast line-count (no parsing) matching what the corresponding `iter_*` would yield; used to size ingestion progress percentages. |
+| `iter_accounts`, `iter_transactions`, `iter_patterns` | Pure row-streaming generators (`loaders.py`), reusable outside the ORM service; each accepts a path or an already-open binary file-like object. |
+| `ByteCountingReader` | Binary file-like wrapper (`loaders.py`) counting bytes read through `.read()`/`.read1()` in a public `.bytes_read` attribute; used by the API layer to compute upload/ingest progress percentages without a separate counting pass. |
 | `parse_csv_text(data_type, text) -> list[dict]` | Validate + fully parse pasted CSV/TXT `text` for `data_type`, all-or-nothing (`loaders.py`); raises `CsvValidationError` before returning anything if the header is missing expected columns, any row fails to parse, or there are zero data rows. |
 | `CsvValidationError` | Exception raised by `parse_csv_text`/`TabularSystem.ingest_text`; carries every problem found as `.errors: list[str]` (not just the first). |
 | `TabularSystem.ingest_text(data_type, text, source_file=None) -> int` | Validate + bulk-insert pasted CSV/TXT `text`, all-or-nothing: calls `parse_csv_text` (raises before any DB write if invalid), then inserts via the same `_insert`/`_insert_ignore_duplicates` paths as the file-based ingest methods. No `on_batch` progress callback. |
 
-Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload), `POST
-/tabular/ingest/local` (server-local path, no upload), `POST /tabular/ingest/text` (pasted
-CSV/TXT text, validated before any write), `GET /tabular/counts`, `DELETE /tabular/data`.
+Routes (`app/api/routes/tabular.py`): `POST /tabular/ingest` (upload, SSE), `POST
+/tabular/ingest/local` (server-local path, no upload, SSE), `POST /tabular/ingest/text`
+(pasted CSV/TXT text, validated before any write, plain JSON), `GET /tabular/counts`,
+`DELETE /tabular/data`.
 
 ## Design notes
 
@@ -275,6 +300,14 @@ CSV/TXT text, validated before any write), `GET /tabular/counts`, `DELETE /tabul
 - **Thin API layer**: `app/api/routes/tabular.py` does not branch on `data_type` itself; it
   delegates to `TabularSystem.ingest`, which owns the dispatch (`Open/Closed` — adding a new
   data type only touches the service, not the route).
+- **Progress transport is request-scoped, not a shared broadcast**: `/tabular/ingest` and
+  `/ingest/local` used to push progress over a shared `/ws` WebSocket gateway
+  (`app/realtime.py`, now deleted) that every connected client received frames from,
+  filtered client-side by filename. They now stream Server-Sent Events on the response of
+  the very request that triggered them (`app/api/sse.py`'s `bridge_thread_progress` bridges
+  the blocking worker thread doing the actual ingestion to the async generator the
+  `StreamingResponse` consumes) — no separate connection, no fan-out/filtering, and the
+  same pattern `POST /rag/answer/stream` already established for LLM token streaming.
 - **Full eager materialization is correct for pasted text, deliberately unlike the
   streaming file paths**: `parse_csv_text` loads and validates the *entire* input into a
   `list[dict]` before returning anything, whereas `iter_accounts`/`iter_transactions`/
@@ -309,3 +342,7 @@ CSV/TXT text, validated before any write), `GET /tabular/counts`, `DELETE /tabul
   and is only validated by attempting to parse every row, so a `PATTERNS` paste with
   entirely wrong columns fails with whatever parse error the first bad row produces rather
   than an explicit "missing column" message.
+- SSE progress on `/tabular/ingest`/`/ingest/local` is request-scoped: if the client
+  disconnects mid-stream, ingestion continues server-side to completion (or failure), but
+  there's no way to reconnect and resume watching it — the same limitation the old `/ws`
+  broadcast had if a client dropped and reconnected without still being subscribed.

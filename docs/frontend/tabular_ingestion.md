@@ -14,7 +14,7 @@ The `UploadTabular` component provides a premium interface for uploading structu
   - **Paste CSV**: Paste or type raw CSV text directly into a text area. Validates syntax completely before database insert.
 - **Extension Validation**: Dynamically validates staged files based on the selected table's allowed file types and alerts on failure.
 - **Volume Display**: Fetches and displays current row counts for `accounts` and `transactions` in real time, updating automatically upon successful uploads.
-- **WebSocket Progress Tracking**: Subscribes to the shared WebSocket gateway `/ws` to display a real-time progress bar through the `uploading`, `inserting`, and `completed` phases of ingestion (reused for both HTTP file uploads and server path files).
+- **SSE Progress Tracking**: Reads Server-Sent Events (SSE) progress frames (`uploading`, `inserting`, and `completed` phases of ingestion) directly from the endpoint's response stream.
 - **Validation Error Handling**: Categorizes client-side input warnings and handles backend validation responses (422) for raw text pasting, displaying a comprehensive bulleted list of errors to allow in-place corrections.
 - **Database Clear Control**: Includes a "Clear Data" capability to wipe all tabular accounts and transactions from SQLite.
 - **Status Indicators**: Show custom alerts for success, progress, or detailed backend error messages.

@@ -6,22 +6,12 @@ The `UploadDocs` component provides the interface for uploading regulatory polic
 
 - **Drag-and-Drop / File Picker**: Supports drag-and-drop file staging, as well as a native file picker.
 - **Validation**: Restricts file selections to PDF files only.
-- **Real-Time Progress Tracking**:
-  - Connects to the backend WebSocket endpoint (`/ws/progress`) to receive granular, per-page/per-file ingestion progress.
-  - Automatically falls back to standard XHR upload progress monitoring if WebSocket connection is unavailable.
+- **Real-Time Progress Tracking**: Reads Server-Sent Events (SSE) progress frames (`uploading`, `parsing`, and `vectorizing` phases) directly from the endpoint's response stream to drive the progress indicator.
 - **Connection Guard**: Disables file selection and ingestion buttons if the vector database is reported as disconnected (`dbStatus === "disconnected"`).
 
 ## Design Decisions
 
-- **Memoized WebSocket Callback**: To prevent continuous WebSocket subscription churn, the message handler callback is memoized (`handleWsMessage` via `useCallback`). This ensures that the WebSocket subscription hook (`useWebSocket`) does not tear down and re-establish the connection on every render cycle.
-- **Fallback Progress Integration**: In the absence of a working WebSocket connection, the component falls back to standard HTTP XHR upload progress updates:
-  ```typescript
-  const ingested = await uploadPdfs(files, (percent) => {
-    if (!isWsConnected) {
-      setUploadProgress(percent);
-    }
-  });
-  ```
+- **SSE Stream Ingestion**: The component calls the updated `uploadPdfs` function, passing an inline `onProgress` callback to handle incoming SSE frames. This avoids the overhead and complexity of a shared global WebSocket subscription.
 
 ## Prop Interface
 

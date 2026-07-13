@@ -6,14 +6,134 @@ backend; here the backend documents how the frontend should consume a backend ca
 
 Status: 🔵 to implement · 🟡 in progress · ✅ done
 
-> **⚠️ Breaking change (2026-07-03): `doc_type` removed from `/rag/*`.** The policy/action
-> document-type distinction has been removed from the RAG system entirely — it is now
-> generic document ingestion + search only. The backend no longer accepts `doc_type` on
-> any `/rag/*` request body (including `/rag/answer` and `/rag/answer/stream` below — it is
-> simply not a field any more) and no `/rag/*` response includes a `doc_type` key. Sending
-> `doc_type` is silently ignored; reading `doc_type` off a response will now get
-> `undefined`. Update any frontend code (e.g. `streamAnswer`'s `body` type below) that
-> still references it. See `backend_spec.md` for the mirrored note.
+> **⚠️ Breaking change (2026-07-11): `POST /tabular/ingest`, `POST /tabular/ingest/local`,
+> and `POST /rag/documents/pdf` now stream Server-Sent Events instead of broadcasting over
+> `/ws`.** The shared `/ws` WebSocket gateway (`app/realtime.py`, `event: ingestion_progress`)
+> has been **deleted entirely** — the backend no longer exposes a `/ws` route at all. These
+> three endpoints now respond with `text/event-stream` and stream `progress`/`error`/`done`
+> frames on the request itself, the same pattern `POST /rag/answer/stream` already used for
+> LLM token streaming. `UploadTabular.tsx`'s `useWebSocket`/`handleWsMessage` subscription and
+> the equivalent in `UploadDocs.tsx` need to switch from listening on the shared socket to
+> reading each of these endpoints' own response as a stream — see §5 below for the full
+> shape and a reference implementation to copy from `streamAnswer` in `api.ts`. Also:
+> `POST /tabular/ingest`/`/ingest/local` no longer return a single JSON body on success —
+> the final result now arrives as the `done` SSE frame instead.
+
+---
+
+## 5. SSE Progress for Tabular + PDF Ingestion — replaces `/ws`
+
+**Status**: 🔵 to implement (backend ready). Backend-only change already shipped; this
+section is the frontend follow-up. Supersedes the `/ws`-based progress description
+previously implied by §2/§3/§4 below (those still describe the request/response *shapes*
+correctly except for the transport itself, which is now SSE per this section).
+
+### Why
+
+The old design broadcast every ingestion's progress to *every* connected `/ws` client, and
+each upload component filtered incoming frames by matching `filename` against its own
+`activeUploadsRef`. That's more moving parts than the job needs — progress for one upload
+only matters to the request that started it. `POST /rag/answer/stream` already established
+a simpler pattern in this codebase: stream progress as SSE on the response of the very
+request that needs it. This backend change generalizes that pattern to file ingestion.
+
+### Affected endpoints
+
+| Endpoint | Old | New |
+| --- | --- | --- |
+| `POST /tabular/ingest` | JSON body + `/ws` frames | `text/event-stream`, frames below |
+| `POST /tabular/ingest/local` | JSON body + `/ws` frames | `text/event-stream`, frames below |
+| `POST /rag/documents/pdf` | JSON body + `/ws` frames | `text/event-stream`, frames below |
+
+`POST /tabular/ingest/text` is unaffected — still a single JSON request/response (pasted
+text ingests synchronously, no progress needed).
+
+### Frame shapes
+
+**Tabular** (`/tabular/ingest`, `/tabular/ingest/local`) — one `progress` frame per
+upload-percent milestone, per file:
+```
+event: progress
+data: {"filename": "HI-Large_accounts.csv", "progress": 10, "status": "uploading"}
+
+event: progress
+data: {"filename": "HI-Large_accounts.csv", "progress": 47, "status": "inserting"}
+```
+`progress` is now computed from **bytes read**, not exact row count (see `docs/tabular.md`
+for why) — expect more frequent, smoothly-incrementing updates rather than big jumps.
+On failure, instead of further `progress` frames for that file:
+```
+event: error
+data: {"filename": "HI-Large_accounts.csv", "message": "Expected one of ('.csv',) for accounts: bad.txt"}
+```
+An `error` frame stops processing of any remaining files in the same multi-file request —
+render it and stop, the same way you'd handle the old `/ws` `status: "error"` frame with
+`error_message`. Once every file in the request has ingested successfully, one final frame
+ends the stream:
+```
+event: done
+data: {"ingested": 2126855, "data_type": "accounts"}
+```
+`ingested` here is what the old JSON response body used to carry — read it off this frame
+instead of a response body, since there no longer is one beyond the stream itself.
+
+**PDF** (`/rag/documents/pdf`) — same `progress`/`error`/`done` frame shape, `status` one of
+`"uploading"` (10%) → `"parsing"` (40%) → `"vectorizing"` (70%) → `"completed"` (100%, fixed
+milestones, not byte-based — PDF parsing doesn't have a meaningful "bytes done" concept the
+way CSV row-streaming does); `done` frame is `{"ingested": <total pages ingested>}`.
+
+### Reference implementation
+
+Same client-side pattern as `streamAnswer` (`api.ts`, documented in §1 above) — `fetch()`,
+read `res.body.getReader()`, split on blank lines, parse `event:`/`data:` lines per frame.
+The only difference from `streamAnswer`: these three endpoints take a request body first
+(`FormData` for the two upload-style tabular/PDF endpoints, JSON for `/ingest/local`) rather
+than JSON only, but the response-reading side is identical. Minimal sketch:
+```ts
+export async function ingestTabular(
+  dataType: "accounts" | "transactions" | "patterns",
+  files: File[],
+  onProgress: (filename: string, pct: number, status: string) => void,
+): Promise<number> {
+  const form = new FormData();
+  form.append("data_type", dataType);
+  files.forEach((f) => form.append("files", f));
+
+  const res = await fetch(`${API_URL}/tabular/ingest`, { method: "POST", body: form });
+  if (!res.ok || !res.body) throw new Error(`Request failed: ${res.status}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let total = 0;
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      if (!frame.trim()) continue;
+      let event = "message", data = "";
+      for (const line of frame.split("\n")) {
+        if (line.startsWith("event:")) event = line.slice(6).trim();
+        else if (line.startsWith("data:")) data += line.slice(5).trim();
+      }
+      if (!data) continue;
+      const payload = JSON.parse(data);
+      if (event === "progress") onProgress(payload.filename, payload.progress, payload.status);
+      else if (event === "error") throw new Error(`${payload.filename}: ${payload.message}`);
+      else if (event === "done") total = payload.ingested;
+    }
+  }
+  return total;
+}
+```
+Apply the same shape to `ingestTabularLocal` (JSON body instead of `FormData`) and the PDF
+upload call. `UploadTabular.tsx`/`UploadDocs.tsx` no longer need `useWebSocket`/
+`activeUploadsRef` filtering at all — each component's own `fetch` call now owns its own
+progress stream directly, one fewer layer of indirection.
 
 ---
 
