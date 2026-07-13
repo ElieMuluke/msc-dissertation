@@ -1,6 +1,5 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { uploadPdfs } from "../api";
-import { useWebSocket } from "../hooks/useWebSocket";
 
 interface UploadDocsProps {
   /** Callback fired after successfully uploading and initiating/completing ingestion. */
@@ -24,55 +23,6 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const activeUploadsRef = useRef<Set<string>>(new Set());
-
-  /**
-   * WebSocket message handler that processes ingestion progress updates.
-   * Updates state with upload progress percentages and success/error notifications.
-   */
-  const handleWsMessage = useCallback((msg: any) => {
-    if (msg.event === "ingestion_progress") {
-      const { filename, progress, status: wsStatus, error_message } = msg.data;
-      if (activeUploadsRef.current.has(filename)) {
-        setUploadProgress(progress);
-
-        if (wsStatus === "completed") {
-          setStatus({
-            type: "success",
-            message: `Ingested "${filename}" successfully.`,
-          });
-          activeUploadsRef.current.delete(filename);
-          if (activeUploadsRef.current.size === 0) {
-            setUploadProgress(null);
-          }
-        } else if (wsStatus === "error") {
-          setStatus({
-            type: "error",
-            message: `Error ingesting "${filename}": ${error_message || "Unknown error"}`,
-          });
-          activeUploadsRef.current.delete(filename);
-          if (activeUploadsRef.current.size === 0) {
-            setUploadProgress(null);
-          }
-        } else {
-          const phaseLabel =
-            wsStatus === "parsing"
-              ? "Parsing PDF pages"
-              : wsStatus === "vectorizing"
-              ? "Generating vector embeddings"
-              : "Uploading document file";
-
-          setStatus({
-            type: "info",
-            message: `${phaseLabel}... (${filename})`,
-          });
-        }
-      }
-    }
-  }, []);
-
-  // Listen to WebSocket pushed progress updates
-  const { isConnected: isWsConnected } = useWebSocket(handleWsMessage);
 
   function handleDrag(e: React.DragEvent) {
     e.preventDefault();
@@ -125,44 +75,37 @@ export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
     e.preventDefault();
     if (files.length === 0) return;
 
-    // Track filenames for WebSocket updates
-    files.forEach((f) => activeUploadsRef.current.add(f.name));
-
     setStatus({ type: "info", message: `Uploading ${files.length} file(s)…` });
     setUploadProgress(0);
 
     const uploadedFilesSnapshot = [...files];
     try {
-      const ingested = await uploadPdfs(uploadedFilesSnapshot, (percent) => {
-        // Fallback progress: only update via XHR if WebSocket is inactive
-        if (!isWsConnected) {
-          setUploadProgress(percent);
-          if (percent === 100) {
-            setStatus({ type: "info", message: "Processing embeddings (HTTP fallback)..." });
-          }
-        }
+      const ingested = await uploadPdfs(uploadedFilesSnapshot, (filename, progress, currentStatus) => {
+        setUploadProgress(progress);
+        const phaseLabel =
+          currentStatus === "parsing"
+            ? "Parsing PDF pages"
+            : currentStatus === "vectorizing"
+            ? "Generating vector embeddings"
+            : "Uploading document file";
+
+        setStatus({
+          type: "info",
+          message: `${phaseLabel}... (${filename})`,
+        });
       });
 
-      // If WebSocket is not connected/supported, resolve local state success triggers
-      if (!isWsConnected) {
-        setStatus({
-          type: "success",
-          message: `Ingested ${ingested} pages from ${uploadedFilesSnapshot.length} document(s).`,
-        });
-        onUploadSuccess(uploadedFilesSnapshot, ingested);
-        setUploadProgress(null);
-        activeUploadsRef.current.clear();
-      } else {
-        // If WS is connected, let it handle detailed completions, but sync database lists
-        onUploadSuccess(uploadedFilesSnapshot, ingested);
-      }
-
+      setStatus({
+        type: "success",
+        message: `Ingested ${ingested} pages from ${uploadedFilesSnapshot.length} document(s).`,
+      });
+      onUploadSuccess(uploadedFilesSnapshot, ingested);
+      setUploadProgress(null);
       setFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       setStatus({ type: "error", message: (err as Error).message });
       setUploadProgress(null);
-      activeUploadsRef.current.clear();
     }
   }
 

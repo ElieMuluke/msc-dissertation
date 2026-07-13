@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ingestTabular,
   ingestTabularLocal,
@@ -8,7 +8,6 @@ import {
   ValidationError,
   type TabularCounts,
 } from "../api";
-import { useWebSocket } from "../hooks/useWebSocket";
 
 export function UploadTabular() {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -31,7 +30,6 @@ export function UploadTabular() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const activeUploadsRef = useRef<Set<string>>(new Set());
 
   // Load counts on mount
   async function fetchCounts() {
@@ -46,50 +44,6 @@ export function UploadTabular() {
   useEffect(() => {
     fetchCounts();
   }, []);
-
-  const handleWsMessage = useCallback((msg: any) => {
-    if (msg.event === "ingestion_progress") {
-      const { filename, progress, status: wsStatus, error_message } = msg.data;
-      if (activeUploadsRef.current.has(filename)) {
-        setUploadProgress(progress);
-
-        if (wsStatus === "completed") {
-          setStatus({
-            type: "success",
-            message: `Ingested "${filename}" successfully.`,
-          });
-          activeUploadsRef.current.delete(filename);
-          if (activeUploadsRef.current.size === 0) {
-            setUploadProgress(null);
-          }
-          fetchCounts();
-        } else if (wsStatus === "error") {
-          setStatus({
-            type: "error",
-            message: `Error ingesting "${filename}": ${error_message || "Unknown error"}`,
-          });
-          activeUploadsRef.current.delete(filename);
-          if (activeUploadsRef.current.size === 0) {
-            setUploadProgress(null);
-          }
-        } else {
-          const phaseLabel =
-            wsStatus === "inserting"
-              ? "Inserting records into DB"
-              : wsStatus === "uploading"
-              ? "Uploading tabular file"
-              : "Processing tabular data";
-
-          setStatus({
-            type: "info",
-            message: `${phaseLabel}... (${filename})`,
-          });
-        }
-      }
-    }
-  }, []);
-
-  const { isConnected: isWsConnected } = useWebSocket(handleWsMessage);
 
   const allowedExtensions = dataType === "patterns" ? [".csv", ".txt"] : [".csv"];
 
@@ -175,24 +129,33 @@ export function UploadTabular() {
       setStatus({ type: "info", message: `Uploading ${files.length} file(s)…` });
       setUploadProgress(0);
 
-      // Track filenames for WebSocket updates
-      files.forEach((f) => activeUploadsRef.current.add(f.name));
-
       const uploadedFilesSnapshot = [...files];
 
       try {
-        const rowsIngested = await ingestTabular(dataType, uploadedFilesSnapshot);
-        
-        // If WebSocket is not connected/supported, resolve local state success triggers
-        if (!isWsConnected) {
-          setStatus({
-            type: "success",
-            message: `Successfully ingested ${rowsIngested.toLocaleString()} rows into ${dataType}.`,
-          });
-          setUploadProgress(null);
-          activeUploadsRef.current.clear();
-        }
-        
+        const rowsIngested = await ingestTabular(
+          dataType,
+          uploadedFilesSnapshot,
+          (filename, progress, currentStatus) => {
+            setUploadProgress(progress);
+            const phaseLabel =
+              currentStatus === "inserting"
+                ? "Inserting records into DB"
+                : currentStatus === "uploading"
+                ? "Uploading tabular file"
+                : "Processing tabular data";
+
+            setStatus({
+              type: "info",
+              message: `${phaseLabel}... (${filename})`,
+            });
+          }
+        );
+
+        setStatus({
+          type: "success",
+          message: `Successfully ingested ${rowsIngested.toLocaleString()} rows into ${dataType}.`,
+        });
+        setUploadProgress(null);
         clearFiles();
         await fetchCounts();
       } catch (err) {
@@ -201,7 +164,6 @@ export function UploadTabular() {
           message: (err as Error).message || "An ingestion error occurred.",
         });
         setUploadProgress(null);
-        activeUploadsRef.current.clear();
       } finally {
         setIngesting(false);
       }
@@ -214,21 +176,31 @@ export function UploadTabular() {
       setStatus({ type: "info", message: `Initiating ingestion from server path: ${basename}...` });
       setUploadProgress(0);
 
-      activeUploadsRef.current.add(basename);
-
       try {
-        const rowsIngested = await ingestTabularLocal(dataType, serverPath.trim());
-        
-        // If WebSocket is not connected/supported, resolve local state success triggers
-        if (!isWsConnected) {
-          setStatus({
-            type: "success",
-            message: `Successfully ingested ${rowsIngested.toLocaleString()} rows from local path.`,
-          });
-          setUploadProgress(null);
-          activeUploadsRef.current.clear();
-        }
-        
+        const rowsIngested = await ingestTabularLocal(
+          dataType,
+          serverPath.trim(),
+          (filename, progress, currentStatus) => {
+            setUploadProgress(progress);
+            const phaseLabel =
+              currentStatus === "inserting"
+                ? "Inserting records into DB"
+                : currentStatus === "uploading"
+                ? "Uploading tabular file"
+                : "Processing tabular data";
+
+            setStatus({
+              type: "info",
+              message: `${phaseLabel}... (${filename})`,
+            });
+          }
+        );
+
+        setStatus({
+          type: "success",
+          message: `Successfully ingested ${rowsIngested.toLocaleString()} rows from local path.`,
+        });
+        setUploadProgress(null);
         setServerPath("");
         await fetchCounts();
       } catch (err) {
@@ -237,7 +209,6 @@ export function UploadTabular() {
           message: (err as Error).message || "An ingestion error occurred.",
         });
         setUploadProgress(null);
-        activeUploadsRef.current.clear();
       } finally {
         setIngesting(false);
       }
