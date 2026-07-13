@@ -6,14 +6,21 @@ from collections.abc import Callable
 from functools import lru_cache
 
 from app.generation import AnswerGenerator, build_answer_generator, build_llm_ping
-from app.ingestion.rag import RagSystem, build_rag
+from app.ingestion.rag import RagConfig, RagSystem, build_rag
 from app.ingestion.tabular import TabularSystem, build_tabular_system
+
+# Validated retrieval config (see docs/evaluation.md): section-aware chunking +
+# parent-context prefix (aml_sections_b) with hybrid BM25+vector search raises
+# context_precision/recall over the plain-vector aml_corpus baseline across repeated
+# eval runs, with no cost to faithfulness/answer_relevancy. It also matches the
+# collection the live SCOPE_GATE_THRESHOLD was calibrated against (GenerationConfig).
+_RAG_CONFIG = RagConfig(collection_name="aml_sections_b", bm25_weight=0.3)
 
 
 @lru_cache
 def get_rag() -> RagSystem:
     """Single shared RagSystem (model + store built once per process)."""
-    return build_rag()
+    return build_rag(_RAG_CONFIG)
 
 
 @lru_cache

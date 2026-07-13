@@ -108,6 +108,18 @@ rag = build_rag(RagConfig(persist_dir="./store", collection_name="aml", chunk_si
 `chunk_size > 0` splits long documents into overlapping chunks; chunk ids are suffixed
 `#0`, `#1`, ... so the source document stays traceable.
 
+### Production config (the FastAPI app)
+
+`RagConfig()`'s bare defaults above (`aml_corpus`, `bm25_weight=0.0`) are the generic
+library defaults, used by the CLI and ad-hoc scripts. The live app does **not** use them:
+`app/deps.py::get_rag()` builds `RagConfig(collection_name="aml_sections_b",
+bm25_weight=0.3)` explicitly — section-aware chunking with parent-context prefixes plus
+hybrid BM25+vector search, validated in `docs/evaluation.md` to raise context_precision/
+recall over the plain-vector baseline with no cost to faithfulness/answer_relevancy, and
+the collection the live `SCOPE_GATE_THRESHOLD` (see `docs/generation.md`) is calibrated
+against. Change the retrieval config the app serves by editing `_RAG_CONFIG` in
+`deps.py`, not `RagConfig`'s defaults (which other call sites rely on staying generic).
+
 ## Tests
 
 ```bash

@@ -10,6 +10,35 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-13 (later) — App/eval retrieval-config drift fixed (F33)
+**Done:** User asked whether the eval gains apply to the live web app. Checked: NO —
+`app/deps.py::get_rag()` called `build_rag()` with bare `RagConfig()` defaults
+(`aml_corpus`, `bm25_weight=0.0`), while every eval improvement was measured against
+`--collection aml_sections_b --bm25-weight 0.3`. Same class of bug as the 07-06 eval-vs-
+store forensics, but this time on the deploy side, not the eval side. Justified the switch
+from MLflow history (8+ full-set runs, same generator throughout): `aml_sections_b`+bm25
+gives context_precision ~0.586→~0.664 (+13% relative) and context_recall ~0.688→~0.76
+(+11% relative), faithfulness/answer_relevancy flat — reproducible, no downside. Also
+noted `aml_sections_a` alone (chunking, no hybrid) was WORSE than baseline — it's the
+combination that wins, not chunking alone. Fixed `get_rag()` to build
+`RagConfig(collection_name="aml_sections_b", bm25_weight=0.3)` explicitly (module-level
+`_RAG_CONFIG`); left `RagConfig`'s own defaults untouched (CLI/other callers still use
+generic `aml_corpus`/vector-only). This also fixes a second-order bug: the F25
+`SCOPE_GATE_THRESHOLD=0.46` was calibrated against `aml_sections_b`'s score distribution,
+but the app was never actually querying that collection — the gate was live against
+uncalibrated numbers. Verified via real `TestClient`: `/health` ok (db+llm connected),
+`/rag/search` returns hybrid-scored hits (fused score 0.935, `-s` id style, `section`
+metadata) from the 3220-chunk section store. Suite 110/110 pass. docs/rag.md new
+"Production config" subsection; FEATURES F33.
+**State:** Live app and eval pipeline now point at the same retrieval config. Caveat not
+yet addressed (flagged, not fixed): `app/api/routes/rag.py`'s PDF-upload route calls
+`load_pdfs` (fixed page loader) regardless of which collection is active — a new PDF
+uploaded through the running app would get page-window chunked into the now-default
+`aml_sections_b`, mixing chunking schemes in one collection. Not broken (ids/metadata
+still valid, search still works) but inconsistent; nobody has uploaded into it yet.
+**Next:** Decide whether the upload route should switch to `load_pdf_sections` to match
+the collection it now targets by default, or gate chunker choice on the request.
+
 ## 2026-07-11 — F25 out-of-scope gate: implemented, verified, re-measured
 **Done:** Retrieval-confidence gate built per the Plan-agent design (commit d854752, tests
 87 pass): `RagSystem.scope_confidence` (raw top-1 relevance — fused hybrid scores are
