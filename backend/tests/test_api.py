@@ -12,6 +12,7 @@ from app.deps import get_generator, get_llm_ping, get_rag
 from app.generation.generator import Answer, Citation, StreamChunk, StreamedAnswer
 from app.ingestion.rag.models import Document, SearchResult, SourceInfo
 from app.main import app
+from conftest import parse_sse_frames
 
 
 class FakeGenerator:
@@ -86,13 +87,23 @@ def test_multi_pdf_upload(client):
     ]
     res = client.post("/rag/documents/pdf", files=files)
     assert res.status_code == 200
-    assert res.json() == {"ingested": 2}
+    assert res.headers["content-type"].startswith("text/event-stream")
+    frames = parse_sse_frames(res.text)
+
+    statuses = [f["data"]["status"] for f in frames if f["event"] == "progress" and f["data"]["filename"] == "a.pdf"]
+    assert statuses == ["uploading", "parsing", "vectorizing", "completed"]
+    done = frames[-1]
+    assert done["event"] == "done"
+    assert done["data"] == {"ingested": 2}
 
 
 def test_rejects_non_pdf(client):
     files = [("files", ("notes.txt", b"hello", "text/plain"))]
     res = client.post("/rag/documents/pdf", files=files)
-    assert res.status_code == 400
+    assert res.status_code == 200
+    frames = parse_sse_frames(res.text)
+    assert frames[0]["event"] == "error"
+    assert "notes.txt" in frames[0]["data"]["message"]
 
 
 def test_search(client):
@@ -175,14 +186,3 @@ def test_health_degraded_when_llm_down(client):
     assert res.json() == {"status": "degraded", "database": "connected", "llm": "disconnected"}
 
 
-def test_ws_ingestion_progress(client):
-    with client.websocket_connect("/ws") as ws:
-        res = client.post(
-            "/rag/documents/pdf",
-            files=[("files", ("a.pdf", b"%PDF-1.4", "application/pdf"))],
-        )
-        assert res.status_code == 200
-        frames = [ws.receive_json() for _ in range(4)]
-    statuses = [f["data"]["status"] for f in frames]
-    assert statuses == ["uploading", "parsing", "vectorizing", "completed"]
-    assert all(f["event"] == "ingestion_progress" for f in frames)

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from app.deps import get_tabular
 from app.ingestion.tabular import CsvValidationError
 from app.main import app
+from conftest import parse_sse_frames
 
 ACCOUNTS_CSV = (
     "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\n"
@@ -51,20 +52,54 @@ def test_ingest_accounts_csv(client):
     files = [("files", ("accounts.csv", ACCOUNTS_CSV.encode(), "text/csv"))]
     res = client.post("/tabular/ingest", files=files, data={"data_type": "accounts"})
     assert res.status_code == 200
-    assert res.json() == {"ingested": 1, "data_type": "accounts"}
+    assert res.headers["content-type"].startswith("text/event-stream")
+    frames = parse_sse_frames(res.text)
+
+    statuses = [f["data"]["status"] for f in frames if f["event"] == "progress"]
+    assert statuses[0] == "uploading"
+    assert statuses[-1] == "completed"
+    done = frames[-1]
+    assert done["event"] == "done"
+    assert done["data"] == {"ingested": 1, "data_type": "accounts"}
 
 
 def test_ingest_rejects_wrong_extension(client):
     files = [("files", ("accounts.pdf", b"hello", "application/pdf"))]
     res = client.post("/tabular/ingest", files=files, data={"data_type": "accounts"})
-    assert res.status_code == 400
+    assert res.status_code == 200
+    frames = parse_sse_frames(res.text)
+    assert frames[0]["event"] == "error"
+    assert "accounts.pdf" in frames[0]["data"]["message"]
 
 
 def test_ingest_patterns_accepts_txt(client):
     files = [("files", ("patterns.txt", b"BEGIN LAUNDERING ATTEMPT - CYCLE\nEND LAUNDERING ATTEMPT - CYCLE\n", "text/plain"))]
     res = client.post("/tabular/ingest", files=files, data={"data_type": "patterns"})
     assert res.status_code == 200
-    assert res.json() == {"ingested": 1, "data_type": "patterns"}
+    frames = parse_sse_frames(res.text)
+    done = frames[-1]
+    assert done["event"] == "done"
+    assert done["data"] == {"ingested": 1, "data_type": "patterns"}
+
+
+def test_ingest_local(client, tmp_path):
+    path = tmp_path / "accounts.csv"
+    path.write_text(ACCOUNTS_CSV)
+    res = client.post("/tabular/ingest/local", json={"data_type": "accounts", "path": str(path)})
+    assert res.status_code == 200
+    frames = parse_sse_frames(res.text)
+    done = frames[-1]
+    assert done["event"] == "done"
+    assert done["data"] == {"ingested": 1, "data_type": "accounts"}
+
+
+def test_ingest_local_missing_file_reports_error(client, tmp_path):
+    res = client.post(
+        "/tabular/ingest/local", json={"data_type": "accounts", "path": str(tmp_path / "missing.csv")}
+    )
+    assert res.status_code == 200
+    frames = parse_sse_frames(res.text)
+    assert frames[0]["event"] == "error"
 
 
 def test_ingest_text_valid_csv(client):

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import io
 from datetime import datetime
 
 import pytest
 
 from app.ingestion.tabular.loaders import (
+    ByteCountingReader,
     CsvValidationError,
-    count_rows,
     iter_accounts,
     iter_patterns,
     iter_transactions,
@@ -101,20 +102,38 @@ def test_iter_patterns_tags_block_rows_and_leaves_others_null(tmp_path):
     assert pattern_row["is_laundering"] == 1
 
 
-def test_count_rows_matches_iter_row_counts(tmp_path):
-    accounts_path = tmp_path / "accounts.csv"
-    accounts_path.write_text(ACCOUNTS_CSV)
-    trans_path = tmp_path / "trans.csv"
-    trans_path.write_text(TRANSACTIONS_CSV)
-    patterns_path = tmp_path / "patterns.txt"
-    patterns_path.write_text(PATTERNS_TXT)
+def test_iter_accounts_accepts_binary_file_object(tmp_path):
+    path = tmp_path / "accounts.csv"
+    path.write_text(ACCOUNTS_CSV)
 
-    assert count_rows(str(accounts_path), TabularDataType.ACCOUNTS) == 2
-    assert count_rows(str(trans_path), TabularDataType.TRANSACTIONS) == 2
-    # PATTERNS_TXT here has one row before the BEGIN block plus one row inside it (2
-    # data rows total) — matches what iter_patterns yields for this fixture (see
-    # test_iter_patterns_tags_block_rows_and_leaves_others_null: len(rows) == 2).
-    assert count_rows(str(patterns_path), TabularDataType.PATTERNS) == 2
+    with path.open("rb") as fh:
+        reader = ByteCountingReader(fh)
+        rows = list(iter_accounts(reader))
+
+    assert len(rows) == 2
+    assert reader.bytes_read == len(ACCOUNTS_CSV.encode())
+
+
+def test_iter_patterns_accepts_binary_file_object_and_counts_bytes(tmp_path):
+    path = tmp_path / "patterns.txt"
+    path.write_text(PATTERNS_TXT)
+
+    with path.open("rb") as fh:
+        reader = ByteCountingReader(fh)
+        rows = list(iter_patterns(reader))
+
+    assert len(rows) == 2
+    assert rows[1]["pattern_type"] == "CYCLE"
+    assert reader.bytes_read == len(PATTERNS_TXT.encode())
+
+
+def test_byte_counting_reader_delegates_unknown_attributes():
+    raw = io.BytesIO(b"hello world")
+    reader = ByteCountingReader(raw)
+
+    assert reader.read(5) == b"hello"
+    assert reader.bytes_read == 5
+    assert reader.tell() == 5  # delegated to the wrapped BytesIO via __getattr__
 
 
 def test_parse_csv_text_accounts_returns_rows():
