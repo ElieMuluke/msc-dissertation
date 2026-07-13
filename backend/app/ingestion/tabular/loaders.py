@@ -14,7 +14,7 @@ import io
 from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import IO, Optional, Union
 
 import pandas as pd
 
@@ -59,14 +59,71 @@ class CsvValidationError(Exception):
         super().__init__("; ".join(errors))
 
 
-def iter_accounts(path: str) -> Iterator[dict]:
+class ByteCountingReader:
+    """Wraps a binary file-like object, counting bytes consumed via ``.read()``.
+
+    Lets the API routes (``app/api/routes/tabular.py``) derive an upload/ingest progress
+    percentage from bytes actually read — a free byproduct of the read pandas/csv parsing
+    already performs — instead of a separate full-file pass just to size a percentage (see
+    the removed ``count_rows``, which this supersedes). Delegates every other attribute to
+    the wrapped file object, so an instance is a transparent drop-in anywhere a binary
+    file-like object is expected: ``pandas.read_csv`` accepts it directly (see
+    :func:`iter_accounts`/:func:`iter_transactions`), and :func:`_iter_binary_lines` reads
+    from it for the non-pandas ``PATTERNS`` ``.txt`` path (see :func:`iter_patterns`).
+    """
+
+    def __init__(self, fileobj: IO[bytes]) -> None:
+        self._fileobj = fileobj
+        self.bytes_read = 0
+
+    def read(self, *args, **kwargs) -> bytes:
+        chunk = self._fileobj.read(*args, **kwargs)
+        self.bytes_read += len(chunk)
+        return chunk
+
+    # pandas' C parser prefers `read1` over `read` for real (fileno()-backed) file objects —
+    # without this override, `__getattr__` would delegate `read1` straight to the wrapped
+    # file, silently bypassing `read()` above and undercounting bytes (confirmed empirically:
+    # a plain `__getattr__`-only delegate reports 0 bytes read against a real open file,
+    # while it works fine against an `io.BytesIO`, which pandas drives via `.read()` instead).
+    def read1(self, *args, **kwargs) -> bytes:
+        return self.read(*args, **kwargs)
+
+    def readable(self) -> bool:
+        return True
+
+    def __getattr__(self, name):
+        return getattr(self._fileobj, name)
+
+
+def _iter_binary_lines(reader: IO[bytes], encoding: str = "utf-8", chunk_size: int = 1 << 16) -> Iterator[str]:
+    """Yield decoded text lines from a binary ``reader``, reading in fixed-size chunks.
+
+    Used instead of ``io.TextIOWrapper`` so that a wrapping :class:`ByteCountingReader`'s
+    ``.read()`` override actually gets invoked — ``TextIOWrapper`` calls lower-level buffer
+    protocol methods (``read1``/``readinto``) that would silently bypass a plain ``.read()``
+    override and undercount bytes.
+    """
+    buffer = b""
+    while chunk := reader.read(chunk_size):
+        buffer += chunk
+        while b"\n" in buffer:
+            line, buffer = buffer.split(b"\n", 1)
+            yield line.decode(encoding)
+    if buffer:
+        yield buffer.decode(encoding)
+
+
+def iter_accounts(source: Union[str, IO[bytes]]) -> Iterator[dict]:
     """Yield one row dict per line of ``HI-Large_accounts.csv``.
 
     Header: ``Bank Name, Bank ID, Account Number, Entity ID, Entity Name``. ``bank_id``
-    and ``account_number`` are kept as strings (leading zeros must be preserved).
+    and ``account_number`` are kept as strings (leading zeros must be preserved). ``source``
+    may be a path or an already-open binary file-like object (e.g. a
+    :class:`ByteCountingReader`) — ``pandas.read_csv`` accepts either transparently.
     """
     dtype = {"Bank ID": str, "Account Number": str, "Entity ID": str}
-    for chunk in pd.read_csv(path, dtype=dtype, chunksize=_CHUNK_SIZE):
+    for chunk in pd.read_csv(source, dtype=dtype, chunksize=_CHUNK_SIZE):
         for row in chunk.to_dict("records"):
             yield {
                 "bank_name": row["Bank Name"],
@@ -113,16 +170,17 @@ def _parse_transaction_fields(fields: list[str]) -> dict:
     }
 
 
-def iter_transactions(path: str) -> Iterator[dict]:
+def iter_transactions(source: Union[str, IO[bytes]]) -> Iterator[dict]:
     """Yield one row dict per line of ``HI-Large_Trans.csv`` (real, unlabeled-by-pattern rows).
 
     ``pattern_type``/``pattern_group_id`` are always ``None`` here (they only apply to
     rows sourced from the patterns file). The header has two columns both literally named
     "Account"; pandas' C parser auto-dedupes the second occurrence to ``Account.1``, which
-    we rely on instead of positional parsing.
+    we rely on instead of positional parsing. ``source`` may be a path or an already-open
+    binary file-like object, same as :func:`iter_accounts`.
     """
     dtype = {"From Bank": str, "Account": str, "To Bank": str, "Account.1": str}
-    for chunk in pd.read_csv(path, dtype=dtype, chunksize=_CHUNK_SIZE):
+    for chunk in pd.read_csv(source, dtype=dtype, chunksize=_CHUNK_SIZE):
         chunk["Timestamp"] = pd.to_datetime(chunk["Timestamp"], format=_TIMESTAMP_FORMAT)
         for row in chunk.to_dict("records"):
             yield {
@@ -168,7 +226,7 @@ def _iter_pattern_lines(lines: Iterable[str]) -> Iterator[dict]:
         yield row
 
 
-def iter_patterns(path: str) -> Iterator[dict]:
+def iter_patterns(source: Union[str, IO[bytes]]) -> Iterator[dict]:
     """Yield one row dict per transaction line inside ``HI-Large_Patterns.txt``.
 
     Blocks are delimited by ``BEGIN LAUNDERING ATTEMPT - <TYPE>`` / ``END LAUNDERING
@@ -177,9 +235,17 @@ def iter_patterns(path: str) -> Iterator[dict]:
     pattern-group counter; an ``END`` line is a no-op; every other non-blank line is a
     transaction row, parsed with the same positional logic as :func:`iter_transactions`
     and tagged with the current ``pattern_type``/``pattern_group_id``.
+
+    ``source`` may be a path (opened here, text mode) or an already-open binary file-like
+    object (e.g. a :class:`ByteCountingReader`), read line-by-line via
+    :func:`_iter_binary_lines` — unlike :func:`iter_accounts`/:func:`iter_transactions`,
+    this loader doesn't go through pandas, so it needs its own binary-source branch.
     """
-    with Path(path).open(encoding="utf-8") as f:
-        yield from _iter_pattern_lines(f)
+    if isinstance(source, (str, Path)):
+        with Path(source).open(encoding="utf-8") as f:
+            yield from _iter_pattern_lines(f)
+    else:
+        yield from _iter_pattern_lines(_iter_binary_lines(source))
 
 
 def parse_csv_text(data_type: TabularDataType, text: str) -> list[dict]:
@@ -222,23 +288,3 @@ def parse_csv_text(data_type: TabularDataType, text: str) -> list[dict]:
     if not rows:
         raise CsvValidationError(["No data rows found."])
     return rows
-
-
-def count_rows(path: str, data_type: TabularDataType) -> int:
-    """Fast, non-pandas count of the data rows a matching ``iter_*`` would yield.
-
-    Used only for progress-bar percentages (e.g. the WebSocket ingestion progress in
-    ``app/api/routes/tabular.py``), so it deliberately skips parsing/type-conversion and
-    just counts lines. For ``ACCOUNTS``/``TRANSACTIONS`` (plain CSV with a header): total
-    lines minus one. For ``PATTERNS``: non-blank lines that aren't ``BEGIN``/``END``
-    marker lines (case-insensitive), matching what :func:`iter_patterns` yields.
-    """
-    if data_type is TabularDataType.PATTERNS:
-        with Path(path).open(encoding="utf-8") as f:
-            return sum(
-                1
-                for raw_line in f
-                if (line := raw_line.strip()) and not line.upper().startswith(("BEGIN", "END"))
-            )
-    with Path(path).open(newline="", encoding="utf-8") as f:
-        return sum(1 for _ in f) - 1

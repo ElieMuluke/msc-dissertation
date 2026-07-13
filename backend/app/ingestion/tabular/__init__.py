@@ -16,7 +16,7 @@ load into memory at once; the service layer batches inserts. Swap the store by e
 from __future__ import annotations
 
 from .config import TabularConfig
-from .loaders import CsvValidationError, count_rows, iter_accounts, iter_patterns, iter_transactions, parse_csv_text
+from .loaders import ByteCountingReader, CsvValidationError, iter_accounts, iter_patterns, iter_transactions, parse_csv_text
 from .models import Account, TabularDataType, Transaction
 from .service import TabularSystem, build_tabular_system
 
@@ -30,7 +30,7 @@ __all__ = [
     "iter_accounts",
     "iter_transactions",
     "iter_patterns",
-    "count_rows",
+    "ByteCountingReader",
     "parse_csv_text",
     "CsvValidationError",
 ]

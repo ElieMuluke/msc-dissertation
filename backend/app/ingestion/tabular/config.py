@@ -16,7 +16,10 @@ class TabularConfig:
     Attributes:
         db_url: SQLAlchemy database URL for the SQLite store.
         batch_size: Number of rows per bulk-insert batch (streamed, chunked ingestion).
+            30,000 balances fewer `session.execute()` round-trips (lower per-row Python/
+            SQLAlchemy overhead, bigger win on multi-million-row files) against peak memory
+            per batch.
     """
 
     db_url: str = "sqlite:///./tabular_data_db.sqlite"
-    batch_size: int = 2000
+    batch_size: int = 30_000
