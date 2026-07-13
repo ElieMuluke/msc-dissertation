@@ -5,6 +5,21 @@ Updated at the end of every session (GEMINI.md rule 0).
 
 ---
 
+## 2026-07-11 — Migrated Ingestion (Tabular + PDF) from WebSocket to Server-Sent Events (SSE)
+
+**Done:**
+- Rewrote `uploadPdfs`, `ingestTabular`, and `ingestTabularLocal` in [api.ts](file:///home/eliem/projects/ai/dissertation/frontend/src/api.ts) to parse progress, error, and done Server-Sent Events (SSE) from the fetch request stream using a unified `readSseProgress` helper.
+- Removed the optional `docType` parameter from `uploadPdfs` as RAG `doc_type` classification was deleted in a previous update.
+- Refactored [UploadTabular.tsx](file:///home/eliem/projects/ai/dissertation/frontend/src/components/UploadTabular.tsx) and [UploadDocs.tsx](file:///home/eliem/projects/ai/dissertation/frontend/src/components/UploadDocs.tsx) to remove the old shared WebSocket (`/ws`) connection, `handleWsMessage`, and `activeUploadsRef` entirely.
+- Driven ingestion progress updates directly from the SSE stream callback on the request itself.
+- Verified TypeScript compilation and production build cleanliness via `npm run build` from the frontend directory.
+
+**State:**
+- Clean-compiling frontend client with local SSE-driven progress tracking for document and tabular ingestion.
+
+**Next:**
+- None. All user requirements met.
+
 ## 2026-07-11 — Implemented Layout Responsiveness (sm, md, xl), Sticky Sidebar, and Tabular Ingestion UX Enhancements
 
 **Done:**
