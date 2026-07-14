@@ -10,6 +10,40 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-07-13 (even later) — Metrics grouped by layer (retrieval/generation × population)
+**Done:** User asked (1) to stop auto-committing — captured as a LEARNINGS entry (a prior
+"commit each rec" instruction was scoped to that task, not a standing policy; must not be
+inferred going forward — NOT committed this round per that same instruction), (2) an
+explanation of the four retrieval-config table rows (answered inline, no code), (3) eval
+metrics grouped by layer (retrieval/chunking/generation) × population (57 golden/in-scope/
+out-of-scope). Confirmed with user: chunking has no standalone RAGAS metric (it's an A/B
+design variable under retrieval, not a parallel layer) — asked and got: (a) add
+`retrieval_scope_confidence`/`gated_by_retrieval_confidence_rate` as the out-of-scope
+retrieval-layer signal (reuses the F25 gate's `RagSystem.scope_confidence`), (b) split
+`out_of_scope_refusal_rate` into gate-caught vs generation-layer refusal. Implemented in
+`ragas_run.py`: `_run_out_of_scope` (renamed from `_run_refusal_rate`) detects gated rows by
+exact match against the now-exported `OUT_OF_SCOPE_REFUSAL` string (skips the judge call
+entirely for those — cheaper and definitionally correct), judges only ungated rows via
+ragas's `TopicRefusedPrompt`; new `generation_refusal_rate` is NaN-flagged (not hidden) when
+every query was gated. New pure `build_layer_summary()` renders a "Metrics by layer" table
+(Retrieval/Generation/Combined rows × 57-golden/51-in-scope/13-out-of-scope columns),
+wired into `build_report` via a new `layer_summary` param, printed + persisted at the top
+of every run's report.md. `app/generation/__init__.py` now exports `OUT_OF_SCOPE_REFUSAL`.
+8 new tests (mixed gated/ungated split, all-gated NaN case, layer-summary rendering incl.
+missing-section "—" handling); suite 113/113. docs/evaluation.md: rewrote the out-of-scope
+section + new "Metrics by layer" subsection. Verified live: bounded `--limit 4` run against
+`aml_sections_b`+bm25 rendered the layer table correctly with real data (smoke-test
+eval_results files deleted after verification — not real dissertation data; the MLflow run
+itself was left in `mlflow.db`, tagged `n_golden=4`, safely excluded by anyone filtering on
+`n_golden=57`).
+**State:** All code changes complete, tested, documented — NOT committed (per instruction
+1 above). `git status` will show modified: `app/deps.py` (from the prior F33 fix, already
+committed separately), `app/generation/__init__.py`, `app/evaluation/ragas_run.py`,
+`tests/test_ragas_eval.py`, `docs/evaluation.md`, `.claude/LEARNINGS.md`, this file.
+**Next:** User to review and explicitly request a commit when ready. Then: re-run the full
+57+13 eval against `aml_sections_b`+bm25 (current app config) to get real layer-grouped
+numbers for the dissertation — no full run has been made with this reporting shape yet.
+
 ## 2026-07-13 (later) — App/eval retrieval-config drift fixed (F33)
 **Done:** User asked whether the eval gains apply to the live web app. Checked: NO —
 `app/deps.py::get_rag()` called `build_rag()` with bare `RagConfig()` defaults
