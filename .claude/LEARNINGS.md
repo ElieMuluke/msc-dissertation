@@ -12,6 +12,18 @@ Format per entry:
 
 ---
 
+## 2026-07-13 — Don't commit automatically by default
+**Remark:** "I do not want you to keep on commiting automatically. it was a one time
+request." A prior turn asked for one commit per recommendation while implementing a
+specific batch of fixes ("make a commit for each... while implementing this fix"); that
+was scoped to that task, not a standing workflow preference. Committing again on the very
+next, unrelated fix without being asked was wrong.
+**Apply:** Never infer a standing "commit as you go" policy from one past instance, even
+within the same session. Only commit when the user explicitly asks for that specific
+piece of work. CLAUDE.md/global git-safety guidance already says "only commit when
+requested" — this remark exists because that rule was violated by over-generalizing a
+scoped instruction; treat each commit request as scoped to the work it named.
+
 ## 2026-06-17 — Track feature-request status
 **Remark:** Keep track of the status of feature requests.
 **Apply:** Maintain `FEATURES.md` (repo root) — durable status of every feature request
