@@ -65,13 +65,39 @@ mode, renamed `topic_adherence_{precision,recall,f1}`). Answers are classified a
 `REFERENCE_TOPICS` (the AML domain scope, in `ragas_eval.py`). The dataset is **in-scope
 golden questions only**.
 
-Out-of-scope behavior is reported as a separate metric, `out_of_scope_refusal_rate`: the
-fraction of deliberately off-topic queries (chit-chat, unrelated finance,
-prompt-injection-style asks) the agent refuses/deflects, judged with RAGAS's own
-`TopicRefusedPrompt` (the same refusal judge TopicAdherence uses internally). The split
-exists because RAGAS's precision formula scores a *correct refusal* as 0.0 (true positives
-= answered∧on-topic = 0, false positives = 0 → 0/(0+1e-10)), so mixing out-of-scope queries
-into the topic-adherence dataset pinned ~20% of the mean at 0 regardless of agent behavior.
+Out-of-scope behavior is reported separately, split by which layer does the refusing (RAGAS's
+precision formula scores a *correct refusal* as 0.0 — true positives = answered∧on-topic = 0,
+false positives = 0 → 0/(0+1e-10) — so mixing out-of-scope queries into the topic-adherence
+dataset pinned ~20% of the mean at 0 regardless of agent behavior):
+
+- `retrieval_scope_confidence` / `gated_by_retrieval_confidence_rate` — the F25 out-of-scope
+  gate (`RagSystem.scope_confidence`, raw top-1 vector relevance) short-circuits generation
+  *before* any retrieval is surfaced or LLM call made, whenever confidence is below
+  `SCOPE_GATE_THRESHOLD`. Detected here by the generator returning the exact fixed refusal
+  string, so the two metrics are pure retrieval-layer signal.
+- `generation_refusal_rate` — for queries the gate did *not* catch, the answer is judged with
+  RAGAS's own `TopicRefusedPrompt` for whether the model declined anyway. NaN when the gate
+  caught every out-of-scope query (nothing reaches generation to judge).
+- `out_of_scope_refusal_rate` — combined figure (gate ∨ generation-refusal), kept for
+  continuity with pre-gate runs; not a single layer's number.
+
+### Metrics by layer
+
+Every run prints/persists a **"Metrics by layer"** table (`build_layer_summary` in
+`ragas_run.py`) grouping every metric above by which layer produced it and which question
+population it was scored over:
+
+| Layer | 57 golden (core-4) | 51 in-scope (topic adherence) | 13 out-of-scope |
+| --- | --- | --- | --- |
+| Retrieval | `context_precision`, `context_recall` | — | `retrieval_scope_confidence`, `gated_by_retrieval_confidence_rate` |
+| Generation | `faithfulness`, `answer_relevancy` | `topic_adherence_{precision,recall,f1}` | `generation_refusal_rate` |
+| Combined | — | — | `out_of_scope_refusal_rate` |
+
+**Chunking is not a fourth layer** — RAGAS has no standalone chunk-quality metric. Chunking
+is a retrieval *design variable*, only observable as a shift in the retrieval-layer numbers
+when comparing collections (`--collection`/`--bm25-weight` A/B runs, all logged to MLflow
+experiment `rag-ragas`) — see the retrieval-config comparison table maintained alongside the
+dissertation write-up.
 
 ### Golden dataset
 

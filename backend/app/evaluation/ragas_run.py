@@ -23,12 +23,31 @@ Two evaluations are run and persisted:
   over the golden set, using the ground-truth answer as the RAGAS ``reference``.
 - TopicAdherence (precision/recall/F1) over in-scope golden questions only, scored against
   the KYC/AML ``REFERENCE_TOPICS``.
-- Out-of-scope refusal rate over deliberately off-topic queries
-  (``datasets/out_of_scope_v1.jsonl``), judged with RAGAS's ``TopicRefusedPrompt``. This is
+- Out-of-scope behavior over deliberately off-topic queries (``datasets/out_of_scope_v1.jsonl``),
   reported *separately* from topic adherence because RAGAS's precision formula scores a
   correct refusal as 0.0 (answered∧on-topic true positives = 0, false positives = 0 →
   0/(0+1e-10)); mixing the two sets pinned ~20% of the topic-adherence mean at 0
   regardless of agent behavior.
+
+Every metric is grouped by which layer produced it (see :func:`build_layer_summary`,
+printed/persisted as "Metrics by layer" at the top of each run's report):
+
+- **Retrieval layer**: ``context_precision``/``context_recall`` (57 golden questions,
+  against the ground-truth reference); ``retrieval_scope_confidence`` and
+  ``gated_by_retrieval_confidence_rate`` (13 out-of-scope queries — the F25 scope gate's
+  raw top-1 relevance signal and how often it alone short-circuits generation).
+- **Generation layer**: ``faithfulness``/``answer_relevancy`` (57 golden questions);
+  ``topic_adherence_{precision,recall,f1}`` (51 in-scope questions, golden minus
+  ``no_answer``); ``generation_refusal_rate`` (out-of-scope queries the retrieval gate did
+  *not* catch, judged via RAGAS's ``TopicRefusedPrompt`` for whether the model declined
+  anyway — NaN if the gate caught every query).
+- ``out_of_scope_refusal_rate`` is a **combined** figure (gate ∨ generation-refusal, kept
+  for continuity with pre-gate runs) — not a single layer's number.
+
+Chunking is *not* a fourth parallel layer: RAGAS has no standalone chunk-quality metric.
+It is a retrieval design variable, only observable as a shift in the retrieval-layer
+numbers when comparing collections (``--collection``/``--bm25-weight`` A/B runs, all
+logged to the same MLflow experiment).
 
 Judge independence: to avoid self-evaluation bias the RAGAS LLM judge should be a
 *different model family* than the agent's answer generator. Set an independent judge via
@@ -66,7 +85,7 @@ from app.evaluation.ragas_eval import (
     to_topic_adherence_sample,
     topic_adherence_metrics,
 )
-from app.generation import GenerationConfig, build_answer_generator
+from app.generation import OUT_OF_SCOPE_REFUSAL, GenerationConfig, build_answer_generator
 from app.ingestion.rag import RagConfig, build_rag
 
 _BACKEND = Path(__file__).resolve().parents[2]
@@ -326,6 +345,7 @@ def build_report(
     header: str,
     sections: list[tuple[str, RagasResult, list[str]]],
     categories: dict[str, str] | None = None,
+    layer_summary: str | None = None,
 ) -> str:
     """Build a detailed markdown diagnostic report from one or more RAGAS results.
 
@@ -336,8 +356,12 @@ def build_report(
     categories such as clear/ambiguous/no_answer), and the worst-5 queries sorted
     ascending by score. Refusal-shaped rows (a boolean ``refused`` column) additionally
     get a "Non-refused queries" list. Anything a section's rows don't carry is skipped.
+    ``layer_summary`` (e.g. from :func:`build_layer_summary`) is inserted right after the
+    header, before the per-section detail.
     """
     lines = ["# RAGAS evaluation report", "", header]
+    if layer_summary:
+        lines += ["", layer_summary.rstrip("\n")]
     for title, result, metric_names in sections:
         rows = result.sample_scores
         lines += ["", f"## {title}", "", "**Means**", ""]
@@ -413,6 +437,63 @@ def build_report(
     return "\n".join(lines) + "\n"
 
 
+def _fmt_cell(result: RagasResult | None, metric_names: list[str]) -> str:
+    """Render ``name: value`` pairs from a result's mean_scores, comma-joined; "—" if none.
+
+    NaN means are shown, flagged ``[NaN]`` — never silently hidden (matches
+    :func:`_print_summary`'s convention).
+    """
+    if result is None:
+        return "—"
+    parts = []
+    for name in metric_names:
+        if name not in result.mean_scores:
+            continue
+        value = result.mean_scores[name]
+        flag = " [NaN]" if value != value else ""  # NaN != NaN
+        parts.append(f"{name}: {value:.3f}{flag}")
+    return ", ".join(parts) if parts else "—"
+
+
+def build_layer_summary(
+    core4: RagasResult,
+    topic: RagasResult | None,
+    out_of_scope: RagasResult | None,
+    n_golden: int,
+    n_in_scope: int,
+    n_out_of_scope: int,
+) -> str:
+    """Group the run's metrics by evaluation layer (retrieval vs generation) and by
+    question population, so it is clear which layer produced which number.
+
+    Chunking is **not** an independent layer here — RAGAS has no standalone "chunk
+    quality" metric; chunking is a retrieval *design variable*, only observable as a
+    shift in the retrieval-layer numbers when comparing collections (see the
+    ``--collection``/``--bm25-weight`` A/B runs logged to MLflow experiment ``rag-ragas``),
+    not a parallel metric set measured here.
+    """
+    golden_col = f"{n_golden} golden questions (core-4)"
+    in_scope_col = f"{n_in_scope} in-scope questions (topic adherence)"
+    oos_col = f"{n_out_of_scope} out-of-scope questions"
+    lines = [
+        "## Metrics by layer",
+        "",
+        f"| Layer | {golden_col} | {in_scope_col} | {oos_col} |",
+        "|---|---|---|---|",
+        f"| Retrieval | {_fmt_cell(core4, ['context_precision', 'context_recall'])} | — | "
+        f"{_fmt_cell(out_of_scope, ['retrieval_scope_confidence', 'gated_by_retrieval_confidence_rate'])} |",
+        f"| Generation | {_fmt_cell(core4, ['faithfulness', 'answer_relevancy'])} | "
+        f"{_fmt_cell(topic, ['topic_adherence_precision', 'topic_adherence_recall', 'topic_adherence_f1'])} | "
+        f"{_fmt_cell(out_of_scope, ['generation_refusal_rate'])} |",
+        f"| Combined (gate ∨ generation) | — | — | {_fmt_cell(out_of_scope, ['out_of_scope_refusal_rate'])} |",
+        "",
+        "Chunking has no standalone metric — it is a retrieval design variable, evaluated by "
+        "A/B-comparing `--collection`/`--bm25-weight` runs (see `rag-ragas` in MLflow), not a "
+        "parallel layer measured per-run.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def _describe_store(rag) -> tuple[int, str]:
     """Fingerprint the store the eval will retrieve from: chunk count + chunking style.
 
@@ -449,38 +530,63 @@ def _run_topic_adherence(generator, k, in_scope_rows, llm) -> RagasResult:
     return run_ragas(dataset, llm=llm, metrics=topic_adherence_metrics())
 
 
-def _run_refusal_rate(generator, k, out_of_scope_rows, llm) -> RagasResult:
-    """Fraction of out-of-scope queries the agent refuses/deflects (higher is better).
+def _run_out_of_scope(rag, generator, k, out_of_scope_rows, llm) -> RagasResult:
+    """Out-of-scope behavior, split by which layer actually did the refusing.
 
-    Each query is answered by the generator, then judged with RAGAS's own
-    ``TopicRefusedPrompt`` (the same refusal judge TopicAdherence uses internally). Rows
-    are driven sequentially — a local CPU Ollama serves one request at a time.
+    Two independent mechanisms can produce a refusal, and conflating them hides which
+    one is doing the work:
+
+    - **Retrieval layer**: ``RagSystem.scope_confidence`` (raw top-1 vector relevance,
+      bypassing hybrid fusion) is low, so ``AnswerGenerator``'s F25 gate short-circuits
+      *before* any retrieval is surfaced or any LLM call is made — detected here by the
+      generator returning the exact fixed :data:`OUT_OF_SCOPE_REFUSAL` string. Reported as
+      ``retrieval_scope_confidence`` (mean top-1 relevance over all queries — low is
+      correct here) and ``gated_by_retrieval_confidence_rate`` (fraction the gate caught).
+    - **Generation layer**: for the remaining, *ungated* queries (the gate let them
+      through, or the gate is disabled), the agent still received context and generated
+      an answer; that answer is judged with RAGAS's ``TopicRefusedPrompt`` for whether it
+      declined anyway. Reported as ``generation_refusal_rate`` (NaN if every query was
+      gated — there is nothing left to judge).
+
+    ``out_of_scope_refusal_rate`` (gate ∨ generation-refusal, over all queries) is kept
+    for continuity with earlier runs but is a combined figure, not a single layer's.
     """
     import asyncio
 
     from ragas.metrics._topic_adherence import TopicRefusedInput, TopicRefusedPrompt
 
     prompt = TopicRefusedPrompt()
-    rows = [(row["question"], generator.generate(row["question"], k=k).answer) for row in out_of_scope_rows]
+    rows = []
+    for row in out_of_scope_rows:
+        question = row["question"]
+        confidence = rag.scope_confidence(question)
+        answer = generator.generate(question, k=k)
+        gated = answer.answer == OUT_OF_SCOPE_REFUSAL
+        rows.append({"question": question, "answer": answer.answer, "scope_confidence": confidence, "gated": gated})
 
-    async def _judge_all() -> list[bool]:
-        verdicts = []
-        for question, answer in rows:
-            data = TopicRefusedInput(user_input=f"Human: {question}\nAI: {answer}", topic=question)
-            verdicts.append((await prompt.generate(data=data, llm=llm)).refused_to_answer)
-        return verdicts
+    async def _judge_ungated() -> None:
+        for row in rows:
+            if row["gated"]:
+                row["refused"] = True  # the gate's fixed message is a refusal by construction
+                continue
+            data = TopicRefusedInput(user_input=f"Human: {row['question']}\nAI: {row['answer']}", topic=row["question"])
+            row["refused"] = (await prompt.generate(data=data, llm=llm)).refused_to_answer
 
-    refused = asyncio.run(_judge_all())
-    samples = [
-        {"question": question, "answer": answer, "refused": verdict}
-        for (question, answer), verdict in zip(rows, refused)
-    ]
-    mean = sum(refused) / len(refused) if refused else float("nan")
-    return RagasResult(
-        mean_scores={"out_of_scope_refusal_rate": mean},
-        sample_scores=samples,
-        nan_counts={},
-    )
+    asyncio.run(_judge_ungated())
+
+    n = len(rows)
+    gated_count = sum(row["gated"] for row in rows)
+    ungated = [row for row in rows if not row["gated"]]
+    mean_scores = {
+        "retrieval_scope_confidence": sum(row["scope_confidence"] for row in rows) / n if n else float("nan"),
+        "gated_by_retrieval_confidence_rate": gated_count / n if n else float("nan"),
+        "generation_refusal_rate": (
+            sum(row["refused"] for row in ungated) / len(ungated) if ungated else float("nan")
+        ),
+        "out_of_scope_refusal_rate": sum(row["refused"] for row in rows) / n if n else float("nan"),
+    }
+    nan_counts = {"generation_refusal_rate": 0 if ungated else 1}
+    return RagasResult(mean_scores=mean_scores, sample_scores=rows, nan_counts=nan_counts)
 
 
 def main(argv=None) -> int:
@@ -539,7 +645,7 @@ def main(argv=None) -> int:
         in_scope = [r for r in golden if r.get("category") != "no_answer"]
         topic = _run_topic_adherence(generator, args.k, in_scope, llm)
         run_files += _persist(topic, f"topic_adherence_per_query_{run_tag}", args.results_dir)
-        refusal = _run_refusal_rate(generator, args.k, out_of_scope, llm)
+        refusal = _run_out_of_scope(rag, generator, args.k, out_of_scope, llm)
         run_files += _persist(refusal, f"out_of_scope_refusal_per_query_{run_tag}", args.results_dir)
 
     categories = {row["question"]: row.get("category", "?") for row in golden}
@@ -566,9 +672,19 @@ def main(argv=None) -> int:
         )
     if refusal is not None:
         sections.append(
-            (f"Out-of-scope refusal rate over {len(out_of_scope)} queries", refusal, ["out_of_scope_refusal_rate"])
+            (
+                f"Out-of-scope behavior over {len(out_of_scope)} queries",
+                refusal,
+                [
+                    "retrieval_scope_confidence",
+                    "gated_by_retrieval_confidence_rate",
+                    "generation_refusal_rate",
+                    "out_of_scope_refusal_rate",
+                ],
+            )
         )
-    report = build_report(header, sections, categories)
+    layer_summary = build_layer_summary(core4, topic, refusal, len(golden), len(in_scope), len(out_of_scope))
+    report = build_report(header, sections, categories, layer_summary=layer_summary)
     report_path = args.results_dir / f"report_{run_tag}.md"
     report_path.write_text(report, encoding="utf-8")
     run_files.append(report_path)
@@ -613,7 +729,7 @@ def main(argv=None) -> int:
     if topic is not None:
         _print_summary(f"Topic adherence over {len(in_scope)} in-scope questions", topic)
     if refusal is not None:
-        _print_summary(f"Out-of-scope refusal rate over {len(out_of_scope)} queries", refusal)
+        _print_summary(f"Out-of-scope behavior over {len(out_of_scope)} queries", refusal)
     print()
     print(report)
     print(f"Per-query results written to {args.results_dir} (detail report: {report_path.name})")

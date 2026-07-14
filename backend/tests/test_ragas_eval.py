@@ -282,34 +282,124 @@ def test_build_ragas_llm_enforces_json_decoding():
     assert llm.langchain_llm.format == "json"
 
 
-def test_run_refusal_rate_means_judge_verdicts_and_keeps_per_row_detail():
-    """Recommendation 1 (metric split): out-of-scope refusals are scored by their own
-    judge-based metric, not folded into topic adherence (whose precision formula scores a
-    correct refusal as 0.0). No Ollama: the generator and the ragas TopicRefusedPrompt
-    judge are both faked; verdicts alternate refused/answered -> mean 0.5."""
+def test_run_out_of_scope_splits_retrieval_gate_from_generation_refusal():
+    """Recommendation 1 (metric split) + layer split: out-of-scope behavior separates the
+    retrieval-layer F25 gate (short-circuits before any LLM call, detected by the exact
+    OUT_OF_SCOPE_REFUSAL string) from generation-layer refusal (judged only for queries
+    the gate let through). No Ollama: rag/generator/judge are all faked. q0,q2 are gated;
+    q1,q3 reach generation and the judge alternates refused/answered."""
     from types import SimpleNamespace
 
-    from app.evaluation.ragas_run import _run_refusal_rate
+    from app.generation import OUT_OF_SCOPE_REFUSAL
+    from app.evaluation.ragas_run import _run_out_of_scope
+
+    class _FakeRag:
+        def scope_confidence(self, question):
+            return {"q0": 0.1, "q1": 0.5, "q2": 0.2, "q3": 0.6}[question]
 
     class _FakeGenerator:
         def generate(self, question, k):
+            if question in ("q0", "q2"):
+                return SimpleNamespace(answer=OUT_OF_SCOPE_REFUSAL)
             return SimpleNamespace(answer=f"answer to {question}")
 
-    verdicts = iter([True, False, True, False])
+    verdicts = iter([True, False])  # only for q1, q3 (ungated)
+    judge_calls: list[str] = []
 
     async def fake_generate(self, data=None, llm=None, **kwargs):
-        assert data.user_input.startswith("Human: ") and "\nAI: answer to " in data.user_input
-        assert data.topic in data.user_input
+        judge_calls.append(data.topic)
         return SimpleNamespace(refused_to_answer=next(verdicts))
 
     rows = [{"question": f"q{i}"} for i in range(4)]
     with patch("ragas.metrics._topic_adherence.TopicRefusedPrompt.generate", fake_generate):
-        result = _run_refusal_rate(_FakeGenerator(), 4, rows, llm=object())
+        result = _run_out_of_scope(_FakeRag(), _FakeGenerator(), 4, rows, llm=object())
 
-    assert result.mean_scores["out_of_scope_refusal_rate"] == 0.5
-    assert result.nan_counts == {}
-    assert [s["refused"] for s in result.sample_scores] == [True, False, True, False]
-    assert result.sample_scores[0] == {"question": "q0", "answer": "answer to q0", "refused": True}
+    assert judge_calls == ["q1", "q3"]  # judge never invoked for gated rows
+    assert abs(result.mean_scores["retrieval_scope_confidence"] - (0.1 + 0.5 + 0.2 + 0.6) / 4) < 1e-9
+    assert result.mean_scores["gated_by_retrieval_confidence_rate"] == 0.5  # q0, q2
+    assert result.mean_scores["generation_refusal_rate"] == 0.5  # q1 refused, q3 didn't
+    assert result.mean_scores["out_of_scope_refusal_rate"] == 0.75  # q0,q1,q2 refused; q3 didn't
+    assert result.nan_counts == {"generation_refusal_rate": 0}
+    gated_rows = [s for s in result.sample_scores if s["gated"]]
+    assert all(s["refused"] for s in gated_rows)
+
+
+def test_run_out_of_scope_generation_refusal_rate_is_nan_when_gate_catches_everything():
+    import math
+    from types import SimpleNamespace
+
+    from app.generation import OUT_OF_SCOPE_REFUSAL
+    from app.evaluation.ragas_run import _run_out_of_scope
+
+    class _FakeRag:
+        def scope_confidence(self, question):
+            return 0.1
+
+    class _FakeGenerator:
+        def generate(self, question, k):
+            return SimpleNamespace(answer=OUT_OF_SCOPE_REFUSAL)
+
+    def fail_if_called(self, data=None, llm=None, **kwargs):
+        raise AssertionError("judge should never be invoked when every row is gated")
+
+    rows = [{"question": "q0"}, {"question": "q1"}]
+    with patch("ragas.metrics._topic_adherence.TopicRefusedPrompt.generate", fail_if_called):
+        result = _run_out_of_scope(_FakeRag(), _FakeGenerator(), 4, rows, llm=object())
+
+    assert result.mean_scores["gated_by_retrieval_confidence_rate"] == 1.0
+    assert math.isnan(result.mean_scores["generation_refusal_rate"])
+    assert result.nan_counts == {"generation_refusal_rate": 1}
+
+
+def test_build_layer_summary_groups_metrics_by_layer_and_population():
+    """The user-facing ask: metrics grouped by layer (retrieval/generation), shown against
+    each question population (57 golden, 51 in-scope, 13 out-of-scope), so it's clear
+    which layer produced which number."""
+    from app.evaluation.ragas_run import build_layer_summary
+
+    core4 = RagasResult(
+        mean_scores={"context_precision": 0.664, "context_recall": 0.762, "faithfulness": 0.8, "answer_relevancy": 0.79},
+        sample_scores=[],
+        nan_counts={},
+    )
+    topic = RagasResult(
+        mean_scores={"topic_adherence_precision": 0.9, "topic_adherence_recall": 0.99, "topic_adherence_f1": 0.93},
+        sample_scores=[],
+        nan_counts={},
+    )
+    oos = RagasResult(
+        mean_scores={
+            "retrieval_scope_confidence": 0.3,
+            "gated_by_retrieval_confidence_rate": 1.0,
+            "generation_refusal_rate": float("nan"),
+            "out_of_scope_refusal_rate": 1.0,
+        },
+        sample_scores=[],
+        nan_counts={"generation_refusal_rate": 1},
+    )
+
+    summary = build_layer_summary(core4, topic, oos, n_golden=57, n_in_scope=51, n_out_of_scope=13)
+
+    assert "57 golden questions" in summary and "51 in-scope questions" in summary and "13 out-of-scope" in summary
+    retrieval_row = summary.splitlines()[summary.splitlines().index(next(l for l in summary.splitlines() if l.startswith("| Retrieval")))]
+    assert "context_precision: 0.664" in retrieval_row and "context_recall: 0.762" in retrieval_row
+    assert "retrieval_scope_confidence: 0.300" in retrieval_row and "gated_by_retrieval_confidence_rate: 1.000" in retrieval_row
+    generation_row = next(l for l in summary.splitlines() if l.startswith("| Generation"))
+    assert "faithfulness: 0.800" in generation_row and "topic_adherence_f1: 0.930" in generation_row
+    assert "generation_refusal_rate: nan [NaN]" in generation_row  # NaN shown, flagged, never hidden
+    combined_row = next(l for l in summary.splitlines() if l.startswith("| Combined"))
+    assert "out_of_scope_refusal_rate: 1.000" in combined_row
+    assert "chunking" in summary.lower() and "not" in summary.lower()  # documents chunking isn't a 4th layer
+
+
+def test_build_layer_summary_handles_missing_sections():
+    """--skip-topic runs have no topic/out-of-scope results; cells render '—' not crash."""
+    from app.evaluation.ragas_run import build_layer_summary
+
+    core4 = RagasResult(mean_scores={"context_precision": 0.5}, sample_scores=[], nan_counts={})
+    summary = build_layer_summary(core4, None, None, n_golden=6, n_in_scope=0, n_out_of_scope=0)
+    assert "—" in summary
+    assert "context_precision: 0.500" in summary
 
 
 def test_build_report_means_distribution_categories_and_worst_queries():

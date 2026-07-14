@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from .config import GenerationConfig
 from .generator import (
+    OUT_OF_SCOPE_REFUSAL,
     Answer,
     AnswerGenerator,
     Citation,
@@ -27,6 +28,7 @@ __all__ = [
     "StreamChunk",
     "StreamedAnswer",
     "AnswerGenerator",
+    "OUT_OF_SCOPE_REFUSAL",
     "build_answer_generator",
     "build_completion",
     "build_stream_completion",
