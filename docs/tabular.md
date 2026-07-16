@@ -98,6 +98,17 @@ HI-Large files can run to millions of rows, so two layers keep memory bounded
   `os.path.getsize`), not an exact row count — a good approximation since these datasets'
   rows are roughly fixed-width, and it's what let the redundant `count_rows` pass be deleted
   entirely (removed from `loaders.py`/`__init__.py`).
+- **`counts()` is cached, not re-scanned per call**: at real dataset scale (the live
+  `transactions` table has ~180M rows), a fresh `SELECT COUNT(*)` on every call is slow
+  enough to occasionally look like a failure — and since `GET /tabular/counts` is polled by
+  the frontend on every page load, that repeated full scan was the actual cause of "no
+  tabular data" showing up in the UI despite data being present (a slow/failed fetch
+  rendered identically to a genuinely-empty result). `TabularSystem` now keeps an in-memory
+  `_counts_cache`, populated by one scan the first time `counts()` is called and kept correct
+  incrementally by every `ingest_*`/`clear()` call afterwards (`_bump_counts_cache`) — so at
+  most one full table scan happens per process lifetime, not per request. Since
+  `get_tabular()` (`app/deps.py`) is `@lru_cache`d to a single process-wide `TabularSystem`,
+  this cache is safe as long as nothing else writes to the same SQLite file out-of-process.
 
 ## Usage
 

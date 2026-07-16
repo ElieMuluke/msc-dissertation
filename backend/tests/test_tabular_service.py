@@ -123,6 +123,23 @@ def test_ingest_text_malformed_raises_and_writes_nothing():
     assert tabular.counts()["transactions"] == 0
 
 
+def test_counts_stay_correct_across_repeated_calls_without_rescanning(tmp_path, monkeypatch):
+    """`counts()` must not re-run `SELECT COUNT(*)` on every call (see service.py cache)."""
+    from sqlalchemy.orm import Session
+
+    tabular = _system()
+    path = tmp_path / "accounts.csv"
+    path.write_text(ACCOUNTS_CSV)
+    tabular.ingest_accounts(str(path), source_file="accounts.csv")
+    tabular.counts()  # first call populates the cache
+
+    def _fail_if_called(self, *args, **kwargs):
+        raise AssertionError("counts() re-scanned the table instead of using the cache")
+
+    monkeypatch.setattr(Session, "scalar", _fail_if_called)
+    assert tabular.counts() == {"accounts": 2, "transactions": 0}
+
+
 def test_on_batch_reports_cumulative_row_count(tmp_path):
     tabular = build_tabular_system(TabularConfig(db_url="sqlite:///:memory:", batch_size=1))
     path = tmp_path / "accounts.csv"

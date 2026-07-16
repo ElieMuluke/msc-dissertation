@@ -21,6 +21,27 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ---
 
+## 6. `GET /tabular/counts` — don't swallow fetch errors as "no data"
+
+**Status**: 🔵 to implement (backend unaffected, frontend-only fix).
+
+### Why
+`UploadTabular.tsx`'s `fetchCounts()` (mount + post-ingest) currently does
+`catch (err) { console.warn(...) }` and leaves `counts` as `null`, which renders the same
+as a genuinely-empty `{"accounts": 0, "transactions": 0}` response — a failed request and
+an empty dataset are indistinguishable to the user. At real dataset scale (100M+ rows in
+`transactions`), `/tabular/counts` is more likely to be slow or occasionally fail than on a
+toy dataset, so this indistinguishability turned into a real user-facing bug: uploaded data
+existed the whole time, but a slow/failed counts fetch made the UI say "no tabular data."
+
+### Ask
+On a failed `/tabular/counts` fetch, render a distinct state — e.g. "Couldn't load counts
+(retry)" — instead of falling through to the same UI as zero rows. A manual retry
+action (button, not just relying on next mount) would also help, since currently the only
+retriggers are page load and a successful ingest.
+
+---
+
 ## 5. SSE Progress for Tabular + PDF Ingestion — replaces `/ws`
 
 **Status**: 🔵 to implement (backend ready). Backend-only change already shipped; this
