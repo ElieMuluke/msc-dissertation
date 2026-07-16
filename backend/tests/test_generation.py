@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+from unittest.mock import patch
+
 from app.generation.config import GenerationConfig
 from app.generation.generator import OUT_OF_SCOPE_REFUSAL, AnswerGenerator
 from app.generation.prompt import build_prompt
@@ -115,3 +118,35 @@ def test_default_num_predict_leaves_room_for_reasoning_and_an_answer():
     eval run. The default must be large enough to cover a reasoning trace plus a full
     answer, matching the num_predict already used for the RAGAS judge LLM."""
     assert GenerationConfig().num_predict >= 2048
+
+
+def test_resolve_scope_gate_threshold_known_embedders():
+    """Each calibrated embedder resolves to its own gate threshold, not a shared default —
+    a single value is wrong for both (see 2026-07-16 finding: bge-small-en-v1.5's
+    out-of-scope confidence distribution sits far above all-MiniLM-L6-v2's, so reusing
+    MiniLM's 0.46 would leave the gate almost inert for bge-small)."""
+    from app.generation.config import resolve_scope_gate_threshold
+
+    with patch.dict(os.environ, {}, clear=False):
+        os.environ.pop("SCOPE_GATE_THRESHOLD", None)
+        assert resolve_scope_gate_threshold("all-MiniLM-L6-v2") == 0.46
+        assert resolve_scope_gate_threshold("BAAI/bge-small-en-v1.5") == 0.638
+
+
+def test_resolve_scope_gate_threshold_unknown_embedder_falls_back_to_minilm():
+    from app.generation.config import resolve_scope_gate_threshold
+
+    with patch.dict(os.environ, {}, clear=False):
+        os.environ.pop("SCOPE_GATE_THRESHOLD", None)
+        assert resolve_scope_gate_threshold("some/uncalibrated-model") == 0.46
+
+
+def test_resolve_scope_gate_threshold_explicit_env_var_always_wins():
+    """An explicit SCOPE_GATE_THRESHOLD must override the per-embedder lookup for every
+    embedder, calibrated or not — this is what makes the lookup a default, not a cage."""
+    from app.generation.config import resolve_scope_gate_threshold
+
+    with patch.dict(os.environ, {"SCOPE_GATE_THRESHOLD": "0.3"}):
+        assert resolve_scope_gate_threshold("all-MiniLM-L6-v2") == 0.3
+        assert resolve_scope_gate_threshold("BAAI/bge-small-en-v1.5") == 0.3
+        assert resolve_scope_gate_threshold("some/uncalibrated-model") == 0.3

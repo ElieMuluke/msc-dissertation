@@ -5,6 +5,32 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from app.ingestion.rag.config import RagConfig
+
+# Per-embedder calibrated defaults for scope_gate_threshold, keyed by RagConfig.embedding_model
+# (see that field's docstring for how "active embedder" resolves). Consulted only when
+# SCOPE_GATE_THRESHOLD isn't set explicitly — an explicit env var always wins. An embedder not
+# in this table falls back to the all-MiniLM-L6-v2 value rather than guessing.
+_SCOPE_GATE_DEFAULTS = {
+    "all-MiniLM-L6-v2": 0.46,
+    "BAAI/bge-small-en-v1.5": 0.638,
+}
+
+
+def resolve_scope_gate_threshold(embedding_model: str) -> float:
+    """Per-embedder default scope-gate threshold, honoring an explicit env override.
+
+    ``GenerationConfig``'s own field default calls this with the *env-derived*
+    ``RagConfig().embedding_model`` — correct for callers (e.g. the live app) that never
+    override the embedder outside ``RAG_EMBEDDING_MODEL``. Callers that resolve the
+    embedder differently per-invocation (e.g. ``ragas_run.py``'s ``--embedding-model`` CLI
+    flag, which can diverge from the env var) must call this explicitly with their own
+    resolved ``RagConfig.embedding_model`` and pass the result into
+    ``GenerationConfig(scope_gate_threshold=...)`` — the field default alone, evaluated once
+    at import time, cannot see a later per-invocation CLI override.
+    """
+    return float(os.getenv("SCOPE_GATE_THRESHOLD", str(_SCOPE_GATE_DEFAULTS.get(embedding_model, 0.46))))
+
 
 @dataclass(frozen=True)
 class GenerationConfig:
@@ -36,10 +62,26 @@ class GenerationConfig:
             which emits no ``<think>`` trace). ``num_predict`` must cover reasoning *and*
             leave room for the answer when this is on.
         scope_gate_threshold: Refuse-without-generating when the query's top-1 raw vector
-            relevance is below this value; 0 (or negative) disables the gate. Env-tunable
-            via ``SCOPE_GATE_THRESHOLD``. Calibrated 2026-07 for all-MiniLM-L6-v2 cosine
-            relevance on collection ``aml_sections_b`` (out-of-scope max 0.4585, next
-            golden 0.4758); re-calibrate if the embedder or corpus changes.
+            relevance is below this value; 0 (or negative) disables the gate. Defaults to a
+            per-embedder value (see ``resolve_scope_gate_threshold``/``_SCOPE_GATE_DEFAULTS``)
+            selected by ``RagConfig.embedding_model``:
+            - ``all-MiniLM-L6-v2`` -> ``0.46``, calibrated 2026-07 on collection
+              ``aml_sections_b`` (out-of-scope max 0.4585, next golden 0.4758).
+            - ``BAAI/bge-small-en-v1.5`` -> ``0.638``, calibrated 2026-07 on collection
+              ``aml_sections_c`` (out-of-scope max 0.6513, next golden 0.6392 — note the
+              ranges *overlap*: no threshold separates all 13 out-of-scope queries from all
+              57 golden questions without a false gate. 0.638 catches 12/13 with zero false
+              gates; the one miss, a prompt-injection attempt, is still caught by the
+              generator's own scope-refusal instruction as a second line of defense. An
+              initial calibration of 0.58 was found to be based on contaminated
+              out-of-scope confidence data from a since-reproduced-stable collection state
+              and was corrected after independent re-verification — see SESSION_LOG.md.
+            Set ``SCOPE_GATE_THRESHOLD`` explicitly to override the lookup for any embedder,
+            including ones not yet calibrated (which otherwise fall back to the MiniLM
+            value). This field's own default only sees the env-derived embedder
+            (``RAG_EMBEDDING_MODEL``) — a caller that resolves the embedder differently
+            per-invocation (e.g. a CLI flag) must call ``resolve_scope_gate_threshold``
+            explicitly with its own resolved model.
     """
 
     model: str = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
@@ -49,4 +91,4 @@ class GenerationConfig:
     num_ctx: int = 4096
     keep_alive: str = "30m"
     reasoning: bool = os.getenv("OLLAMA_REASONING", "").lower() in {"1", "true", "yes"}
-    scope_gate_threshold: float = float(os.getenv("SCOPE_GATE_THRESHOLD", "0.46"))
+    scope_gate_threshold: float = resolve_scope_gate_threshold(RagConfig().embedding_model)

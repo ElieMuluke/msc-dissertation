@@ -85,7 +85,12 @@ from app.evaluation.ragas_eval import (
     to_topic_adherence_sample,
     topic_adherence_metrics,
 )
-from app.generation import OUT_OF_SCOPE_REFUSAL, GenerationConfig, build_answer_generator
+from app.generation import (
+    OUT_OF_SCOPE_REFUSAL,
+    GenerationConfig,
+    build_answer_generator,
+    resolve_scope_gate_threshold,
+)
 from app.ingestion.rag import RagConfig, build_rag
 
 _BACKEND = Path(__file__).resolve().parents[2]
@@ -597,6 +602,11 @@ def main(argv=None) -> int:
     parser.add_argument("--persist-dir", default="./chroma_db", help="Chroma store with the real corpus")
     parser.add_argument("--collection", default="aml_corpus")
     parser.add_argument("--bm25-weight", type=float, default=0.0, help="BM25 weight for hybrid search (0 = pure vector)")
+    parser.add_argument(
+        "--embedding-model",
+        default=None,
+        help="sentence-transformers model id (default from RagConfig / RAG_EMBEDDING_MODEL env var)",
+    )
     parser.add_argument("--experiment", default="rag-ragas")
     parser.add_argument("--results-dir", type=Path, default=_BACKEND / "eval_results")
     parser.add_argument("--limit", type=int, default=None, help="Cap questions per set (bounded runs)")
@@ -610,9 +620,15 @@ def main(argv=None) -> int:
         out_of_scope = out_of_scope[: args.limit]
 
     rag_config = RagConfig(
-        persist_dir=args.persist_dir, collection_name=args.collection, bm25_weight=args.bm25_weight
+        persist_dir=args.persist_dir,
+        collection_name=args.collection,
+        bm25_weight=args.bm25_weight,
+        **({"embedding_model": args.embedding_model} if args.embedding_model else {}),
     )
-    gen_config = GenerationConfig()
+    # gen_config's own field default only sees RAG_EMBEDDING_MODEL (the env var); --embedding-model
+    # can override rag_config's embedder independently of that env var, so the scope-gate default
+    # must be resolved from rag_config's actual embedding_model, not gen_config's own default.
+    gen_config = GenerationConfig(scope_gate_threshold=resolve_scope_gate_threshold(rag_config.embedding_model))
     rag = build_rag(rag_config)  # real, already-ingested corpus — no ingestion here
     generator = build_answer_generator(rag, gen_config)
 
@@ -625,7 +641,8 @@ def main(argv=None) -> int:
     print(
         f"Active config: collection={args.collection!r} @ {args.persist_dir} | "
         f"{n_chunks} chunks ({chunk_style} chunking) | bm25_weight={args.bm25_weight} | "
-        f"k={args.k} | generator={gen_config.model} | scope_gate={gen_config.scope_gate_threshold}"
+        f"k={args.k} | generator={gen_config.model} | scope_gate={gen_config.scope_gate_threshold} | "
+        f"embedding_model={rag_config.embedding_model!r}"
     )
 
     llm, judge_model = _build_ragas_llm(gen_config)

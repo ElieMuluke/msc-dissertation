@@ -392,6 +392,42 @@ def test_build_layer_summary_groups_metrics_by_layer_and_population():
     assert "chunking" in summary.lower() and "not" in summary.lower()  # documents chunking isn't a 4th layer
 
 
+def test_main_resolves_scope_gate_threshold_from_embedding_model_cli_flag():
+    """Regression (2026-07-16): ragas_run.main() previously built `gen_config =
+    GenerationConfig()` bare, whose own field default only sees RAG_EMBEDDING_MODEL (the
+    env var) — a `--embedding-model` CLI flag silently had no effect on scope_gate_threshold,
+    so a bge-small-en-v1.5 run kept using MiniLM's threshold. Drives the real argparse +
+    RagConfig-construction path in main() (not just the helper functions in isolation) so a
+    regression in main() itself, not just in resolve_scope_gate_threshold, is caught. Mocks
+    build_rag/build_answer_generator only, aborting main() the instant gen_config would be
+    used, before any Ollama/network/real-store access."""
+    from types import SimpleNamespace
+
+    import app.evaluation.ragas_run as ragas_run_module
+
+    class _StopTestEarly(Exception):
+        pass
+
+    captured = {}
+
+    def fake_build_rag(config):
+        return SimpleNamespace(embedding_model=config.embedding_model)
+
+    def fake_build_answer_generator(rag, gen_config):
+        captured["gen_config"] = gen_config
+        raise _StopTestEarly()
+
+    with patch.object(ragas_run_module, "build_rag", fake_build_rag), patch.object(
+        ragas_run_module, "build_answer_generator", fake_build_answer_generator
+    ):
+        try:
+            ragas_run_module.main(["--collection", "aml_sections_c", "--embedding-model", "BAAI/bge-small-en-v1.5"])
+        except _StopTestEarly:
+            pass
+
+    assert captured["gen_config"].scope_gate_threshold == 0.638  # bge-small's default, NOT MiniLM's 0.46
+
+
 def test_build_layer_summary_handles_missing_sections():
     """--skip-topic runs have no topic/out-of-scope results; cells render '—' not crash."""
     from app.evaluation.ragas_run import build_layer_summary

@@ -124,13 +124,13 @@ def split_sections(pages: list[str]) -> list[tuple[str, int, str]]:
     return sections
 
 
-def _merge_small(sections: list[tuple[str, int, str]]) -> list[list]:
+def _merge_small(sections: list[tuple[str, int, str]], max_chunk_chars: int = MAX_CHUNK_CHARS) -> list[list]:
     """Merge undersized sections into same-heading neighbours (complete units only)."""
     out: list[list] = []
     for heading, page, text in sections:
-        if out and out[-1][0] == heading and len(out[-1][2]) < _MIN_MERGE_CHARS and len(out[-1][2]) + len(text) <= MAX_CHUNK_CHARS:
+        if out and out[-1][0] == heading and len(out[-1][2]) < _MIN_MERGE_CHARS and len(out[-1][2]) + len(text) <= max_chunk_chars:
             out[-1][2] += "\n" + text
-        elif out and len(text) < _ORPHAN_CHARS and len(out[-1][2]) + len(text) <= MAX_CHUNK_CHARS:
+        elif out and len(text) < _ORPHAN_CHARS and len(out[-1][2]) + len(text) <= max_chunk_chars:
             out[-1][2] += "\n" + text
         else:
             out.append([heading, page, text])
@@ -176,6 +176,7 @@ def load_pdf_sections(
     path: str,
     metadata: Optional[dict] = None,
     parent_context: bool = False,
+    max_chunk_chars: int = MAX_CHUNK_CHARS,
 ) -> list[Document]:
     """Load PDF(s) into section-aligned :class:`Document` chunks.
 
@@ -189,6 +190,9 @@ def load_pdf_sections(
         parent_context: When True, prefix each chunk with its document title and
             section heading (``[JMLSG Guidance Part I — Higher risks] ...``) so the
             embedding and the LLM see where the text sits in the document.
+        max_chunk_chars: Defaults to the ``all-MiniLM-L6-v2``-calibrated
+            :data:`MAX_CHUNK_CHARS`; pass a larger value when ingesting with a
+            longer-context embedder so chunks use its full window.
     """
     from langchain_community.document_loaders import PyPDFLoader
 
@@ -201,12 +205,12 @@ def load_pdf_sections(
         pages = _strip_repeated_lines([p.page_content for p in PyPDFLoader(str(pdf)).load()])
         title = _doc_title(pdf.stem)
         index = 0
-        for heading, page_no, text in _merge_small(split_sections(pages)):
+        for heading, page_no, text in _merge_small(split_sections(pages), max_chunk_chars):
             prefix = ""
             if parent_context:
                 label = f"{title} — {heading}" if heading else title
                 prefix = f"[{label}] "
-            for piece in _sub_split(clean_pdf_text(text), MAX_CHUNK_CHARS - len(prefix)):
+            for piece in _sub_split(clean_pdf_text(text), max_chunk_chars - len(prefix)):
                 documents.append(
                     Document(
                         id=f"{pdf.stem}-s{index}",

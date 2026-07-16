@@ -12,11 +12,25 @@ import json
 import sys
 from typing import Optional, Sequence
 
-from . import build_rag
+from . import RagSystem, build_rag
 from .config import RagConfig
 from .loaders import load_pdfs
 from .models import Document
-from .section_chunking import load_pdf_sections
+from .section_chunking import MAX_CHUNK_CHARS, load_pdf_sections
+
+_MINILM_MAX_SEQ_LENGTH = 256  # token window MAX_CHUNK_CHARS (1100 chars) was calibrated against
+
+
+def _resolve_max_chunk_chars(rag: RagSystem) -> int:
+    """Scale MAX_CHUNK_CHARS to the active embedder's actual token window.
+
+    Falls back to the MiniLM-calibrated default when the window isn't introspectable, so
+    ingesting with the default embedder produces byte-identical chunk boundaries to before.
+    """
+    max_seq_length = rag.embedding_max_seq_length()
+    if max_seq_length is None:
+        return MAX_CHUNK_CHARS
+    return int(max_seq_length * MAX_CHUNK_CHARS / _MINILM_MAX_SEQ_LENGTH)
 
 
 def _load_documents(path: str) -> list[Document]:
@@ -47,13 +61,21 @@ def _build_parser() -> argparse.ArgumentParser:
     pdf.add_argument(
         "--chunker",
         choices=["fixed", "section"],
-        default="fixed",
-        help="fixed = per-page + character windows (default); section = structure-aware",
+        default=None,
+        help="fixed = per-page + character windows; section = structure-aware "
+        "(default from RagConfig / RAG_CHUNKER env var)",
     )
     pdf.add_argument(
         "--parent-context",
-        action="store_true",
-        help="With --chunker section: prefix chunks with doc title + section heading",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="With --chunker section: prefix chunks with doc title + section heading "
+        "(default from RagConfig / RAG_PARENT_CONTEXT env var)",
+    )
+    pdf.add_argument(
+        "--embedding-model",
+        default=None,
+        help="sentence-transformers model id (default from RagConfig / RAG_EMBEDDING_MODEL env var)",
     )
 
     search = sub.add_parser("search", help="Search the corpus")
@@ -66,17 +88,29 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _build_parser().parse_args(argv)
-    config = RagConfig(**({"collection_name": args.collection} if args.collection else {}))
-    if getattr(args, "chunker", None) == "section":
-        config = RagConfig(collection_name=config.collection_name, chunk_size=0)  # store sections as-is
+    overrides: dict = {}
+    if args.collection:
+        overrides["collection_name"] = args.collection
+    if getattr(args, "embedding_model", None):
+        overrides["embedding_model"] = args.embedding_model
+    if getattr(args, "chunker", None):
+        overrides["chunker"] = args.chunker
+    if getattr(args, "parent_context", None) is not None:
+        overrides["parent_context"] = args.parent_context
+    config = RagConfig(**overrides)
+    if config.chunker == "section":
+        config = RagConfig(**overrides, chunk_size=0)  # store sections as-is
     rag = build_rag(config)
 
     if args.command == "ingest":
         count = rag.ingest(_load_documents(args.path))
         print(f"Ingested {count} documents.")
     elif args.command == "ingest-pdf":
-        if args.chunker == "section":
-            docs = load_pdf_sections(args.path, parent_context=args.parent_context)
+        if config.chunker == "section":
+            max_chunk_chars = _resolve_max_chunk_chars(rag)
+            docs = load_pdf_sections(
+                args.path, parent_context=config.parent_context, max_chunk_chars=max_chunk_chars
+            )
             print(f"Ingested {rag.ingest(docs)} section chunks from {args.path}.")
         else:
             docs = load_pdfs(args.path)

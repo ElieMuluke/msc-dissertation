@@ -112,6 +112,18 @@ class RagSystem:
         except Exception:  # noqa: BLE001 - any failure means unreachable
             return False
 
+    def embedding_max_seq_length(self) -> Optional[int]:
+        """Token window of the configured embedding model, if introspectable.
+
+        Reads sentence-transformers' ``max_seq_length`` off the underlying HuggingFace
+        embeddings client — a private, undocumented attribute of an unpinned dependency.
+        Degrades to ``None`` (never raises) if that attribute has moved, the embeddings
+        backend isn't HuggingFaceEmbeddings, or the model itself reports no window.
+        """
+        client = getattr(getattr(self._store, "embeddings", None), "_client", None)
+        value = getattr(client, "max_seq_length", None)
+        return value if isinstance(value, (int, float)) and value > 0 else None
+
     def list_sources(self) -> list[SourceInfo]:
         """List ingested source files, aggregating pages/chunks per source."""
         data = self._store.get(include=["metadatas"])

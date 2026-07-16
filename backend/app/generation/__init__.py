@@ -7,7 +7,7 @@ both the vector store and the LLM backend.
 
 from __future__ import annotations
 
-from .config import GenerationConfig
+from .config import GenerationConfig, resolve_scope_gate_threshold
 from .generator import (
     OUT_OF_SCOPE_REFUSAL,
     Answer,
@@ -29,6 +29,7 @@ __all__ = [
     "StreamedAnswer",
     "AnswerGenerator",
     "OUT_OF_SCOPE_REFUSAL",
+    "resolve_scope_gate_threshold",
     "build_answer_generator",
     "build_completion",
     "build_stream_completion",
