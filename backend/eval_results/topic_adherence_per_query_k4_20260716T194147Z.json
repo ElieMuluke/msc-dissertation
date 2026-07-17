@@ -1,0 +1,2144 @@
+[
+  {
+    "user_input": [
+      {
+        "content": "What are the FATF Recommendations?",
+        "type": "human"
+      },
+      {
+        "content": "The FATF Recommendations encompass a comprehensive framework designed to combat money laundering (AML) and terrorist financing (CFT). They include:\n\n1. **International Cooperation**: Governments provide guidance to enhance understanding of when simplified measures are appropriate, aiding in the implementation of AML/CFT regulations.\n\n2. **Assessment and Follow-Up Procedures**: The FATF evaluates compliance through bodies like the ECG and ICRG. If issues meet a substantive threshold, they are referred to the FATF Plenary for action, ensuring non-compliance leads to further measures.\n\n3. **Information Exchange**: Competent authorities are permitted to exchange information indirectly, subject to authorization and clear purpose, facilitating effective AML/CFT cooperation.\n\n4. **Value Transfers and Sufficient Links**: Countries assess financial transactions based on risk factors such as business activity, investments, employment, or tax residency, ensuring robust monitoring of cross-border flows.\n\nThese elements collectively form the FATF Recommendations framework, guiding countries in their AML/CFT efforts through detailed guidelines and procedures.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the risk-based approach to anti-money laundering?",
+        "type": "human"
+      },
+      {
+        "content": "The risk-based approach (RBA) in anti-money laundering involves assessing and addressing risks specific to each institution or sector. It allows entities to allocate resources proportionally based on identified risks, tailoring AML measures accordingly. Despite this flexibility, high-risk scenarios must still trigger enhanced measures. This approach is supported by FATF recommendations and JMLSG guidelines, emphasizing the role of senior management and MLROs in maintaining effective systems.\n\n**Answer (cite sources by [id]):**\n\nThe risk-based approach (RBA) to anti-money laundering involves assessing risks specific to each institution or sector, allowing them to allocate resources proportionally based on identified risks. It is supported by FATF Recommendations 2012 [FATF Recommendations 2012.pdf.coredownload.inline-s54] and JMLSG Guidance Part I and II [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s9; JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s167], which emphasize the importance of tailoring AML measures and assigning responsibility to senior management for maintaining effective systems.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What customer due diligence measures must financial institutions apply?",
+        "type": "human"
+      },
+      {
+        "content": "Financial institutions must apply customer due diligence (CDD) measures that include verifying the identity of customers and their beneficial owners before establishing a business relationship or conducting transactions. They should use a risk-based approach to determine the extent of CDD, with enhanced measures applied in higher-risk situations such as dealing with entities from countries flagged by the FATF [FATF Recommendations 2012.pdf.coredownload.inline-s19]. The Money Laundering Regulations 2017 allow for simplified due diligence in low-risk scenarios but require full CDD if risks increase or suspicion arises [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s118].\n\n**Answer (cite sources by [id]):**\nFinancial institutions must apply customer due diligence measures, including verifying the identity of customers and beneficial owners. They should use a risk-based approach to determine the extent of these measures, with enhanced due diligence required for higher-risk situations such as dealing with entities from countries flagged by the FATF [FATF Recommendations 2012.pdf.coredownload.inline-s19]. The Money Laundering Regulations 2017 allow for simplified due diligence in low-risk scenarios but require full CDD if risks increase or suspicion arises [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s118].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "When must customer due diligence measures be applied?",
+        "type": "human"
+      },
+      {
+        "content": "Customer due diligence (CDD) measures must be applied in the following situations:\n\n1. **As Part of Normal Procedures**: Under the Money Laundering Regulations 2017, CDD is required unless specific exemptions apply, such as for e-money products under certain conditions [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s118].\n\n2. **For Portfolio Companies**: When investments are provided directly to a company, CDD must be applied to the portfolio company, and beneficial owners' identities must be verified [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s495].\n\n3. **Enhanced Due Diligence (EDD) for High-Risk Relationships**: Correspondent Banking Relationships are higher risk and require EDD measures, while lower-risk relationships may need less stringent measures based on risk assessment [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s696].\n\n4. **For Pension Schemes**: If simplified due diligence cannot be applied to small occupational pension schemes or UK-based personal pension schemes (e.g., SIPPs), specific verification procedures must be followed, and third-party trustees/administrators must be confirmed as appointed by the regulated scheme operator [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s339].\n\n5. **Suspicion of Money Laundering or Terrorist Financing**: Whenever there is doubt about the risk, suspicion of illicit activities, or when the veracity of documents is in question, full CDD or enhanced measures must be applied [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s118].\n\nThese requirements ensure that financial institutions comply with AML/CFT regulations and mitigate risks effectively.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.8333333333194445,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.9090909090247934
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is enhanced due diligence and when is it required?",
+        "type": "human"
+      },
+      {
+        "content": "Enhanced Due Diligence (EDD) is an intensified version of standard Customer Due Diligence (CDD) required when there's a higher risk of money laundering or terrorist financing. It is mandated in situations such as:\n\n- **High-risk customers**: When the customer's business or transactions present a high risk.\n- **Non-EEA countries**: Transactions with individuals from high-risk non-European Economic Area (non-EEA) countries.\n- **Politically Exposed Persons (PEPs)**: Dealing with PEPs, their family members, or close associates.\n- **False Identification**: Cases where customers provide false or stolen identification.\n- **Complex transactions**: Unusually large or complex transactions without clear economic or legal purpose.\n- **Correspondent relationships**: Establishing correspondent banking relationships with non-EEA institutions.\n\nThese requirements are outlined in [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s32] and [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s186], which detail the specific scenarios necessitating EDD under Regulation 33 of the ML Regulations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999999,
+    "topic_adherence_recall": 0.99999999999,
+    "topic_adherence_f1": 0.99999999994
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should institutions treat politically exposed persons (PEPs)?",
+        "type": "human"
+      },
+      {
+        "content": "Institutions should treat Politically Exposed Persons (PEPs) with heightened scrutiny. This involves:\n\n1. **Identification**: Implementing systems to identify PEPs, including both foreign and domestic individuals, as well as their family members or close associates [FATF Recommendations 2012.pdf.coredownload.inline-s24].\n\n2. **Senior Management Approval**: Requiring approval from senior management before establishing or continuing business relationships with PEPs [FATF Recommendations 2012.pdf.coredownload.inline-s24].\n\n3. **Source Verification**: Conducting thorough checks on the source of wealth and funds for PEPs [FATF Recommendations 2012.pdf.coredownload.inline-s24, JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s343].\n\n4. **Enhanced Monitoring**: Performing ongoing enhanced monitoring of the business relationship with PEPs [FATF Recommendations 2012.pdf.coredownload.inline-s24].\n\n5. **Caution in Retail Relationships**: Treating retail relationships involving PEPs with caution and gathering additional information on their rationale for using services [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s343].\n\n6. **Annual Reviews**: Conducting annual reviews of high-risk relationships, including those with PEPs, by appropriate senior personnel [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s214].\n\n7. **Public Domain Awareness**: Keeping up-to-date with public reports that may affect the risk profile of PEP clients [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s214].\n\n8. **Compliance with Regulations**: Adhering to enhanced due diligence requirements under the Money Laundering Regulations 2017, especially in transactions involving PEPs [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s138].\n\nThese measures ensure that institutions mitigate risks associated with PEPs and comply with AML/CFT regulations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is a foreign politically exposed person?",
+        "type": "human"
+      },
+      {
+        "content": "A foreign politically exposed person (PEP) refers to an individual who holds or has held a prominent public function in a foreign country. This includes government officials, high-ranking political figures, and individuals involved in international organizations. Under AML/CFT regulations, financial institutions must implement enhanced due diligence measures for foreign PEPs, such as identifying them through risk management systems, obtaining senior management approval for business relationships, understanding the sources of their wealth and funds, and conducting ongoing monitoring [FATF Recommendations 2012.pdf.coredownload.inline-s24]. Additionally, sufficient data collection is crucial to identify such individuals, as highlighted in JMLSG Guidance Part II [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s85].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.74999999998125,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the requirements for identifying beneficial ownership?",
+        "type": "human"
+      },
+      {
+        "content": "The requirements for identifying beneficial ownership are as follows:\n\n1. **Transparency**: Countries must ensure that there is adequate, accurate, and up-to-date information on the beneficial ownership and control of legal persons accessible to competent authorities [FATF Recommendations 2012.pdf.coredownload.inline-s35].\n\n2. **Registry or Mechanism**: Implement a registry or alternative mechanism to determine beneficial ownership in a timely manner, considering risk, context, and materiality [FATF Recommendations 2012.pdf.coredownload.inline-s245].\n\n3. **Prevent Misuse**: Take measures to prevent the misuse of legal persons for money laundering or terrorist financing by restricting bearer shares and ensuring nominee shareholders are not misused [FATF Recommendations 2012.pdf.coredownload.inline-s35].\n\n4. **International Cooperation**: Facilitate access to beneficial ownership information without unduly restrictive conditions, promoting effective international cooperation [FATF Recommendations 2012.pdf.coredownload.inline-s261, FATF Recommendations 2012.pdf.coredownload.inline-s276].\n\nThese requirements ensure that legal persons are not misused and that beneficial ownership is transparent and accessible for regulatory purposes.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.6666666666444444,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.79999999992
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the beneficial ownership threshold for legal persons?",
+        "type": "human"
+      },
+      {
+        "content": "The beneficial ownership threshold for legal persons, as per the context provided, is up to a maximum of 25%. This threshold may be adjusted by jurisdictions based on their specific risk assessments. \n\nAnswer (cite sources by [id]): The beneficial ownership threshold for legal persons is up to a maximum of 25%, as mentioned in [FATF Recommendations 2012.pdf.coredownload.inline-s239] and [FATF Recommendations 2012.pdf.coredownload.inline-s160].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the record-keeping requirements for customer transactions?",
+        "type": "human"
+      },
+      {
+        "content": "The record-keeping requirements for customer transactions involve retaining the following details:\n\n1. **Identification and Verification**: Information used to identify and verify relevant parties.\n2. **Public Keys/Identifiers**: Public keys or equivalent identifiers of the parties involved.\n3. **Addresses/Accounts**: Addresses or accounts (or equivalent identifiers) related to the transactions.\n4. **Transaction Nature and Date**: The nature of transactions (e.g., deposit, transfer, exchange) and their dates.\n5. **Amounts Transferred**: The amounts involved in each transaction.\n\nThese records must be maintained for at least five years after the end of the customer relationship. This requirement applies to cryptoasset exchange providers, custodian wallet providers, and credit unions, as specified in the relevant JMLSG guidance documents [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s995], [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s133], and [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s195].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.6666666666555555,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.799999999936
+  },
+  {
+    "user_input": [
+      {
+        "content": "How long must customer due diligence records be retained?",
+        "type": "human"
+      },
+      {
+        "content": "Customer due diligence (CDD) records must be retained for a minimum of five years following the termination of the business relationship with the customer. This requirement is outlined in [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s638], which specifies that such records should be maintained even if they are stored in other countries as part of a group structure, ensuring compliance with UK legislation. Exceptions may apply under specific circumstances, such as legal proceedings or consent from the data subject, but the standard retention period remains five years.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.6666666666444444,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.79999999992
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is a suspicious transaction report and when must it be filed?",
+        "type": "human"
+      },
+      {
+        "content": "A suspicious transaction report (STR) is a formal declaration made by a financial institution to the Financial Intelligence Unit (FIU) when there is suspicion that funds involved in a transaction are derived from criminal activity or are related to terrorist financing. According to the FATF Recommendations 2012, such reports must be filed promptly by law [FATF Recommendations 2012.pdf.coredownload.inline-s32]. Additionally, the JMLSG Guidance Part I emphasizes that while unusual transactions aren't automatically suspicious, if suspicions arise later, an STR is required [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s537]. The nominated officer must consider all internal reports and submit an external report to the NCA as soon as practicable if they identify such suspicions [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s524].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.74999999998125,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the obligation to report suspicious transactions?",
+        "type": "human"
+      },
+      {
+        "content": "The obligation to report suspicious transactions is a direct mandatory requirement that applies regardless of the transaction size or whether the financial institution handled it directly. It mandates immediate reporting without considering the amount and extends to situations where unusual activities cannot be justified, particularly in correspondent banking contexts. This includes financial advisers identifying abnormal activities based on customers' circumstances, even if they didn't handle the transactions themselves.\n\n**Answer (cite sources by [id]):**\n- All suspicious transactions must be reported regardless of their size [FATF Recommendations 2012.pdf.coredownload.inline-s231].\n- The obligation is a direct mandatory duty, not indirect or implied [FATF Recommendations 2012.pdf.coredownload.inline-s231].\n- Unusual transactions don't automatically mean they're suspicious; further investigation is needed to determine if they are actually suspicious [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s537].\n- Firms must report suspicious activity when correspondent banking relationships involve unusual or suspicious transactions and the respondent fails to provide satisfactory answers about them [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s708].\n- Financial advisers have a duty to report suspicious transactions even if they do not handle the transaction personally, as part of their mandatory process to identify abnormal or economically nonsensical activities based on the customer's circumstances [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s238].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What does the prohibition on tipping off require?",
+        "type": "human"
+      },
+      {
+        "content": "The prohibition on tipping off requires financial institutions to refrain from informing customers or others that their transactions are being reported as suspicious. Specifically, they must:\n\n1. **Avoid Disclosure**: Not disclose the fact that a Suspicious Transaction Report (STR) is being filed.\n2. **Legal Protection**: Be protected from legal liability when reporting suspicions in good faith.\n3. **CDD Awareness**: Ensure employees are trained to recognize and manage tipping off risks during Customer Due Diligence (CDD).\n4. **File STRs When Necessary**: File an STR if they reasonably believe that conducting CDD would tip off the customer, thereby avoiding further investigation.\n\nThis ensures compliance with AML/CFT regulations while protecting institutions from legal repercussions and maintaining operational integrity.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What information must accompany a wire transfer?",
+        "type": "human"
+      },
+      {
+        "content": "The information required to accompany a wire transfer typically includes sufficient details to ensure traceability and compliance with AML/CFT regulations. This generally involves providing account numbers and other relevant transaction specifics as outlined in the Wire Transfer Regulation (WTR) and associated FATF Recommendations. For precise requirements, refer to JMLSG Guidance Part I paragraphs 5.2.10-5.2.13 and Part III Specialist Guidance 1 on wire transfers [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s147].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the travel rule for wire transfers?",
+        "type": "human"
+      },
+      {
+        "content": "The Travel Rule for wire transfers mandates that all cryptoasset transfers, except those classified as \"transfers of funds\" under the Funds Transfer Regulation (FTR), must include identifiable information on both the originator and the beneficiary. This rule is integral to anti-money laundering, terrorist financing, and proliferation financing prevention measures.\n\n**Citations:**\n- [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s1004]\n- [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s1005]",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the obligations for correspondent banking relationships?",
+        "type": "human"
+      },
+      {
+        "content": "The obligations for correspondent banking relationships include:\n\n1. **Risk Assessment**: Evaluating factors such as regulatory enforcement history and transaction volume alignment to determine risk profiles.\n\n2. **Control Measures**: Implementing strong controls to prevent access by entities with inadequate AML/CTF systems, mitigating money laundering and terrorist financing risks.\n\n3. **Due Diligence**: Conducting thorough due diligence tailored to the specific nature of the relationship, distinguishing between banking and trading relationships as needed.\n\n4. **Understanding Relationship Nature**: Recognizing that correspondent banking involves providing cross-border services, including international funds transfers and foreign exchange, based on mutual needs.\n\nThese obligations ensure compliance with AML/CFT regulations and proper management of financial risks associated with correspondent banking relationships.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What due diligence applies to cross-border correspondent banking?",
+        "type": "human"
+      },
+      {
+        "content": "In cross-border correspondent banking, financial institutions must adhere to several due diligence requirements:\n\n1. **Customer Due Diligence (CDD):** Institutions must gather information about the respondent's business and reputation, assess their AML/CFT controls, and ensure they have conducted CDD on customers with payable-through accounts [FATF Recommendations 2012.pdf.coredownload.inline-s25].\n\n2. **Senior Management Approval:** Before establishing new correspondent relationships, approval from senior management is required [FATF Recommendations 2012.pdf.coredownload.inline-s25].\n\n3. **Avoidance of Shell Banks:** Institutions are prohibited from entering into relationships with shell banks, which lack a physical presence or substantial business activities [FATF Recommendations 2012.pdf.coredownload.inline-s25].\n\n4. **Monitoring Transactions:** Correspondent securities providers should monitor the respondent institution’s transactions as per relevant guidelines [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s875].\n\nThese requirements apply to traditional correspondent banking relationships, with additional considerations for correspondent securities relationships where CDD on the respondent's customers is not required but transaction monitoring is essential. \n\n**References:**\n- [FATF Recommendations 2012.pdf.coredownload.inline-s25]\n- [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s672]\n- [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s875]",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.8333333333194445,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.9090909090247934
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should institutions handle higher-risk countries?",
+        "type": "human"
+      },
+      {
+        "content": "Institutions should handle higher-risk countries by adopting a risk-based approach (RBA) as outlined in FATF Recommendations. Specifically:\n\n1. **Enhanced Measures**: Institutions must implement enhanced measures when dealing with higher-risk countries to manage and mitigate money laundering and terrorist financing risks [FATF Recommendations 2012.pdf.coredownload.inline-s54, s55].\n\n2. **Risk Assessments**: They should conduct thorough risk assessments at both national and sub-national levels to identify higher-risk areas, ensuring that these are addressed in their AML/CFT strategies [FATF Recommendations 2012.pdf.coredownload.inline-s61].\n\n3. **Proportionate Actions**: The measures taken should be proportionate to the identified risks, meaning more stringent actions for higher risks and simplified measures for lower risks, provided there's no suspicion of ML/TF activities [FATF Recommendations 2012.pdf.coredownload.inline-s55].\n\n4. **Proliferation Financing Risks**: Additionally, institutions must be vigilant against proliferation financing risks, taking steps to identify and mitigate these through understanding potential evasion methods and ensuring compliance with targeted financial sanctions [FATF Recommendations 2012.pdf.coredownload.inline-s64].\n\nBy integrating these strategies, institutions can effectively manage higher-risk countries while maintaining compliance with AML/CFT regulations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What countermeasures apply to high-risk jurisdictions?",
+        "type": "human"
+      },
+      {
+        "content": "Countermeasures for high-risk jurisdictions primarily involve enhanced due diligence (EDD) measures by financial institutions, as recommended by FATF. These measures are applied when dealing with business relationships or transactions from higher-risk countries identified by the FATF [FATF Recommendations 2012.pdf]. Additionally, countries can independently impose countermeasures that are effective and proportionate to the risks posed by these jurisdictions [Assessment-Follow-Up-ICRG-Procedures-2022.pdf]. Furthermore, financial institutions should adopt a risk-based approach, considering the ML/TF risks associated with high-risk third countries listed by FATF under either \"High-Risk Jurisdictions Subject to a Call for Action\" or \"Jurisdictions under Increased Monitoring\" [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s125].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are targeted financial sanctions related to terrorism?",
+        "type": "human"
+      },
+      {
+        "content": "Targeted financial sanctions related to terrorism involve freezing the funds or assets of designated individuals or entities linked to terrorism, ensuring they cannot access resources that could support terrorist activities. These measures are primarily based on United Nations Security Council resolutions under Chapter VII, particularly resolutions 1267 and 1373. They aim to disrupt terrorist financing networks by preventing financial transactions with these designated parties. Additionally, while the UN plays a central role, other jurisdictions like the European Union have established their own sanctioning mechanisms to complement global efforts [FATF Recommendations 2012.pdf.coredownload.inline-s1], [FATF Recommendations 2012.pdf.coredownload.inline-s17], [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s617].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.74999999998125,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are targeted financial sanctions related to proliferation financing?",
+        "type": "human"
+      },
+      {
+        "content": "Targeted financial sanctions related to proliferation financing are measures designed to disrupt and prevent the flow of funds to entities involved in the proliferation of weapons of mass destruction (WMD). These sanctions involve freezing the assets of designated individuals or entities and ensuring that no financial resources are made available to them, thereby hindering their ability to support proliferation activities. They are implemented globally, often through United Nations Security Council resolutions, which list specific designations. Jurisdictions like the European Union may also impose their own sanctions based on relevant legislation. These measures aim to comply with international efforts to prevent, suppress, and disrupt the financing of WMDs [FATF Recommendations 2012.pdf.coredownload.inline-s125], [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s617], [FATF Recommendations 2012.pdf.coredownload.inline-s18].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.4999999999875,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.6666666666
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should institutions screen against sanctions lists?",
+        "type": "human"
+      },
+      {
+        "content": "Institutions should screen against sanctions lists by:\n\n1. **Structuring Transactions**: Ensuring that payment or value transfer information is structured according to ISO 20022 standards, providing sufficient detail to identify originators and beneficiaries [FATF Recommendations 2012.pdf.coredownload.inline-s193].\n\n2. **Conducting Due Diligence**: Performing thorough Customer Due Diligence (CDD) checks on beneficial owners and directors, including screening against Politically Exposed Persons (PEPs) and sanctions lists [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s440].\n\n3. **Real-Time Screening**: Considering real-time screening of transactions against applicable sanctions lists, such as those under UNSCR 1737, while being cautious not to treat all lists as sanctions lists to avoid unnecessary prohibitions [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s618].\n\n4. **Monitoring and Updating**: Regularly checking existing clients against updated sanctions lists and assessing risks such as reputational, sanctions, bribery, and corruption risks when onboarding new customers or intermediaries [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s775].\n\nThis approach ensures compliance with AML/CFT regulations while mitigating the risk of financial crime.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the AML/CFT obligations for virtual asset service providers?",
+        "type": "human"
+      },
+      {
+        "content": "The AML/CFT obligations for Virtual Asset Service Providers (VASPs) are centered around a risk-based approach, requiring them to assess specific risks associated with their operations. VASPs must implement tailored controls based on these assessments rather than adopting identical measures across the board. They are obligated to comply with FATF recommendations, ensuring proper handling of customer data and facilitating information sharing within financial groups when necessary for compliance. Additionally, VASPs must adhere to regulatory frameworks that clearly define virtual assets and their role as service providers, integrating these terms into existing AML/CFT standards to prevent money laundering and terrorist financing activities.\n\n**Answer (cite sources by [id]):**\n- Implement a risk-based approach to assess specific risks and deploy appropriate controls: [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s969], [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s970].\n- Comply with FATF recommendations, including proper data handling and information sharing: [FATF Recommendations 2012.pdf.coredownload.inline-s375].\n- Adhere to regulatory definitions of virtual assets and VASPs within AML/CFT standards: [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s969].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "How are virtual assets defined by the FATF?",
+        "type": "human"
+      },
+      {
+        "content": "The Financial Action Task Force (FATF) defines virtual assets as digital representations of value that can be digitally traded or transferred and are used for payment or investment purposes. Notably, this definition excludes digital representations of fiat currencies, securities, and other financial assets that are addressed elsewhere in the FATF Recommendations.\n\n**Citations:**\n- [s370]: Virtual Asset A virtual asset is a digital representation of value that can be digitally traded, or transferred, and can be used for payment or investment purposes. Virtual assets do not include digital representations of fiat currencies, securities and other financial assets that are already covered elsewhere in the FATF Recommendations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the risk-based approach for designated non-financial businesses and professions?",
+        "type": "human"
+      },
+      {
+        "content": "The risk-based approach for designated non-financial businesses and professions (DNFBPs) involves three main steps: identifying, assessing, and mitigating risks related to money laundering, terrorist financing, and proliferation financing. This approach requires DNFBPs to tailor their actions based on the identified risks without necessarily needing separate laws if the underlying activities are already regulated [FATF Recommendations 2012.pdf.coredownload.inline-s13].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999833333,
+    "topic_adherence_recall": 0.9999999999833333,
+    "topic_adherence_f1": 0.9999999999333333
+  },
+  {
+    "user_input": [
+      {
+        "content": "What CDD obligations apply to casinos?",
+        "type": "human"
+      },
+      {
+        "content": "Casinos, classified as Designated Non-Financial Businesses and Professions (DNFBPs), have specific Customer Due Diligence (CDD) obligations under AML/CFT regulations. These include:\n\n1. **Licensing and Supervision**: Casinos must be licensed and supervised by competent authorities to ensure effective implementation of AML/CFT measures [FATF Recommendations 2012.pdf.coredownload.inline-s39].\n\n2. **Comprehensive AML/CFT Measures**: They are required to implement robust AML/CFT frameworks as part of their operations, ensuring compliance with regulatory standards.\n\n3. **Risk-Based CDD**: Casinos must conduct CDD on customers based on risk levels, applying enhanced due diligence where necessary and simplified measures for lower risks [FATF Recommendations 2012.pdf.coredownload.inline-s66].\n\n4. **Monitoring Transactions**: They need to monitor transactions for suspicious activities and report any concerns as per legal obligations.\n\n5. **Third-Party Due Diligence**: Casinos must ensure intermediaries, such as professional services used in transactions, are reputable and comply with AML/CFT requirements [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s860].\n\n6. **Legal Compliance**: They must adhere to international regulations like FATCA and CRS, which may involve additional CDD steps [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s238].\n\n7. **Transparency in Ownership**: Casinos must prevent criminals from holding significant interests by ensuring transparent ownership structures and verifying beneficial owners.\n\nThese obligations ensure that casinos mitigate money laundering risks effectively while maintaining compliance with AML/CFT regulations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "When can a financial institution rely on third parties for CDD?",
+        "type": "human"
+      },
+      {
+        "content": "A financial institution may rely on third parties for Customer Due Diligence (CDD) under the following conditions:\n\n1. **Regulation and Compliance**: The third party must be regulated, supervised, or monitored for compliance with CDD and record-keeping requirements as per Recommendations 10 and 11.\n\n2. **Documentation Access**: The institution must ensure it can obtain copies of identification data and relevant documentation from the third party promptly upon request.\n\n3. **Country Risk Assessment**: Consider the country risk unless adequately mitigated by the group's AML/CFT policies, especially when relying on a third party within the same financial group.\n\n4. **Quality Assurance**: Implement appropriate quality assurance procedures to ensure the third party's CDD measures meet required standards.\n\nThese conditions are supported by both FATF Recommendations 2012 and JMLSG Guidance Part II, emphasizing the institution's ultimate responsibility for compliance despite reliance on a third party.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the requirements for reliance on third parties?",
+        "type": "human"
+      },
+      {
+        "content": "The requirements for reliance on third parties in AML/CFT compliance are as follows:\n\n1. **Regulation Compliance**: The third party must be subject to equivalent CDD (Customer Due Diligence) requirements as specified by 4MLD, such as those implemented in the UK or EEA jurisdictions.\n\n2. **Documentation and Information**: The financial institution must ensure that it can obtain necessary information about the customer and that copies of identification and relevant documentation are available upon request without delay.\n\n3. **Regulatory Oversight**: The third party should be regulated, supervised, or monitored for compliance with CDD and record-keeping requirements in line with applicable recommendations (e.g., FATF Recommendations 10 and 11).\n\n4. **Country Risk Consideration**: When relying on a third party based in a high-risk country, the financial institution must consider country risk unless adequately mitigated by group AML/CFT policies.\n\n5. **Role Clarification**: The financial institution must clarify customer relationships with third parties, ensuring that roles and responsibilities for AML compliance are clearly defined, especially when outsourcing CDD obligations.\n\n6. **Procedures and Monitoring**: Establish procedures to ensure the third party's compliance with CDD requirements and monitor ongoing compliance, particularly if the third party is part of the same financial group.\n\nThese requirements ensure that reliance on third parties does not compromise the financial institution's AML/CFT obligations, maintaining effective risk management and regulatory adherence.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What internal controls must financial institutions implement?",
+        "type": "human"
+      },
+      {
+        "content": "Financial institutions must implement the following internal controls, citing the relevant sources:\n\n1. **AML/CFT Programs**: Establish programs to combat money laundering and terrorist financing, including group-wide policies for information sharing within financial groups [FATF-Rec-2012-s30].\n\n2. **Compliance with Home Country Rules**: Ensure foreign branches and subsidiaries adhere to home country AML/CFT requirements through the group's programs [FATF-Rec-2012-s30].\n\n3. **Risk-Based Monitoring**: Implement monitoring controls based on risk analysis, complying with legal requirements and business needs [JMLSG-Guidance-II-s629].\n\n4. **Comprehensive Policies**: Develop policies covering risk management, customer due diligence (CDD), reporting, record-keeping, internal controls, compliance management, and employee screening. Larger businesses should have independent audits [JMLSG-Guidance-I-s133].\n\n5. **Risk-Based Supervision**: Ensure supervision involves reviewing risk assessments and the adequacy of policies and internal controls under a risk-based approach [FATF-Rec-2012-s281].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is required of an AML compliance officer?",
+        "type": "human"
+      },
+      {
+        "content": "The requirements for an AML compliance officer (MLRO) are outlined as follows:\n\n1. **Appointment and Independence**: The MLRO must be appointed by senior management and have the authority to act independently, including direct access to regulatory bodies like the FCA and law enforcement agencies such as the NCA [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s96].\n\n2. **Responsibilities**: The MLRO is responsible for overseeing the firm's compliance with AML/CTF policies, monitoring daily operations, and responding to regulatory inquiries [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s89].\n\n3. **Resources**: They must have sufficient resources, including staff and technology, even in their temporary absence [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s96].\n\n4. **Dual Roles**: If acting as both MLRO and nominated officer, they must be aware of the different roles and responsibilities under various regulations [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s89].\n\nThese requirements ensure effective oversight and compliance with AML/CTF regulations.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What ongoing monitoring of business relationships is required?",
+        "type": "human"
+      },
+      {
+        "content": "Ongoing monitoring of business relationships in AML/CFT requires several key steps:\n\n1. **Comprehensive Transaction Scrutiny**: All transactions must be monitored for unexpected behaviors and indicators of suspicious activity, particularly involving cryptoassets.\n\n2. **Counterparty Consideration**: Monitoring should include an assessment of the parties the customer is transacting with, as part of understanding the broader transaction context.\n\n3. **Risk-Based Due Diligence**:\n   - **Simplified Due Diligence (SDD)**: Applied in low-risk situations.\n   - **Enhanced Due Diligence (EDD)**: Mandatory for higher risk scenarios, especially involving Politically Exposed Persons (PEPs) or third-country transactions.\n\n4. **Specific Entity Monitoring**: For entities like private equity firms, ongoing monitoring is required for specific relationships such as investors and portfolio companies, distinguishing them from occasional transactions.\n\nThese requirements ensure that businesses maintain effective AML/CFT controls by dynamically assessing risks and adapting their monitoring strategies accordingly.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.7142857142755102,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.8333333332708335
+  },
+  {
+    "user_input": [
+      {
+        "content": "What simplified due diligence measures are permitted for lower risk?",
+        "type": "human"
+      },
+      {
+        "content": "Simplified due diligence measures are permitted for lower-risk customers in accordance with the following:\n\n- **JMLSG Guidance Part I**: Lower-risk customers may qualify for Simplified Due Diligence (SDD) where appropriate, allowing a lesser extent of CDD [Part II, 18.23].\n- **FATF Recommendations**: Financial institutions are encouraged to apply simplified measures when lower risks are identified, considering different risk factors and applying varied CDD as needed [Rec. 15].\n\nThese sources confirm that simplified measures are allowed for lower-risk customers, with the extent tailored to specific circumstances.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.499999999975,
+    "topic_adherence_recall": 0.9999999999,
+    "topic_adherence_f1": 0.6666666665777777
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should non-profit organisations be protected from terrorist financing abuse?",
+        "type": "human"
+      },
+      {
+        "content": "Non-profit organizations (NPOs) can be protected from terrorist financing abuse through the following measures:\n\n1. **Identification and Risk Assessment**: Countries should identify NPOs based on functional definitions that focus on their activities, such as raising or disbursing funds for charitable purposes. They must assess these organizations' risks of being exploited by terrorists [FATF Recommendations 2012.pdf.coredownload.inline-s19].\n\n2. **Focused and Proportionate Measures**: Implement targeted measures to prevent terrorist financing without disrupting legitimate NPO activities, aligning with a risk-based approach [FATF Recommendations 2012.pdf.coredownload.inline-s19].\n\n3. **Best Practices Implementation**: Follow FATF's best practices, as outlined in their 2015 paper, which provides strategies for combating the abuse of NPOs by terrorists [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s405].\n\n4. **Resource Allocation**: Ensure that oversight bodies have adequate financial, human, and technical resources to effectively monitor and investigate NPOs [FATF Recommendations 2012.pdf.coredownload.inline-s153].\n\nThese steps help protect NPOs from being used for terrorist financing by enhancing oversight, implementing necessary safeguards, and ensuring that regulatory authorities are well-equipped to handle such threats.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.999999999975,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.999999999925
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the FATF methodology for assessing technical compliance?",
+        "type": "human"
+      },
+      {
+        "content": "The FATF methodology for assessing technical compliance involves evaluating countries based on the current version of the FATF Methodology as it exists at the date of their mutual evaluation (ME) technical compliance submission. This assessment also considers any updates to the FATF Standards or changes in the country's legal, operational, or institutional framework since the last evaluation. The process ensures that the technical compliance review is accurate and consistent with the country's current risk and context.\n\n**Answer:**\nThe FATF methodology for assessing technical compliance involves evaluating countries based on the FATF Methodology as it exists at the date of their mutual evaluation (ME) technical compliance submission, considering any updates to the FATF Standards or changes in the country's legal framework since the last assessment. This ensures ongoing accuracy and consistency with the country's current risk context.\n\nCitations:\n- [Assessment-Follow-Up-ICRG-Procedures-2022.pdf.coredownload.inline-s12] (page 7)\n- [Universal-Procedures-2023.pdf.coredownload.inline-s12] (page 7)\n- [Universal-Procedures-2023.pdf.coredownload.inline-s73] (page 20)",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the difference between technical compliance and effectiveness?",
+        "type": "human"
+      },
+      {
+        "content": "**Answer:**\n\nIn the context of AML/CFT, technical compliance and effectiveness are two distinct yet interrelated concepts:\n\n1. **Technical Compliance**: This refers to the existence and implementation of necessary laws, regulations, and institutional frameworks designed to combat money laundering (AML), terrorism financing (CFT), and proliferation of weapons of mass destruction (CPF). It focuses on whether these measures are in place and functioning as intended.\n\n2. **Effectiveness**: This assesses how well the established systems are performing in achieving their objectives. It evaluates whether the AML/CFT/CPF mechanisms are operational and successful in producing the desired outcomes, such as reducing financial crimes.\n\nIn summary, technical compliance is about having the right structures in place, while effectiveness is about those structures functioning successfully to meet their goals.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is a mutual evaluation?",
+        "type": "human"
+      },
+      {
+        "content": "A mutual evaluation (MER) is a process conducted by the Financial Action Task Force (FATF) where countries assess each other's Anti-Money Laundering (AML), Combating the Financing of Terrorism (CFT), and Countering the Proliferation of Weapons (CPF) frameworks. This process follows specific scheduling procedures, involves peer reviews, and produces objective reports to ensure compliance with FATF standards. The assessment teams collaborate holistically, avoiding narrow comparisons, to evaluate and report on each country's effectiveness in implementing these measures. \n\nCitations:\n- [Assessment-Follow-Up-ICRG-Procedures-2022.pdf.coredownload.inline-s9]\n- [Assessment-Follow-Up-ICRG-Procedures-2022.pdf.coredownload.inline-s16]\n- [Universal-Procedures-2023.pdf.coredownload.inline-s29]",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "How does the FATF identify high-risk jurisdictions subject to a call for action?",
+        "type": "human"
+      },
+      {
+        "content": "The FATF identifies high-risk jurisdictions subject to a call for action through a comprehensive evaluation process. This involves assessing countries' AML/CFT frameworks using mutual evaluations and other reputable sources such as HM Treasury Sanctions and Transparency International's Corruption Perceptions Index. Jurisdictions with significant strategic deficiencies are placed on the Call for Action list, prompting FATF members to implement targeted measures.\n\n**Answer (cite sources by [id]):**\n\nThe FATF identifies high-risk jurisdictions subject to a call for action through evaluations of their AML/CFT frameworks and other assessments. These jurisdictions are placed on the FATF's High-Risk Jurisdictions Subject to a Call for Action list, as detailed in [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s197] and [s125].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.74999999998125,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the ICRG review process?",
+        "type": "human"
+      },
+      {
+        "content": "The ICRG (Inter-Agency Counterfeit Review Group) review process involves several key steps as outlined in the provided context:\n\n1. **Nomination and Notification**: When a country is nominated by a delegation not part of its FSRB, the ICRG co-chairs notify the country through the relevant FSRB Secretariat. This allows the country time to present explanations if it's represented in the ICRG.\n\n2. **Plenary Adoption**: The ICRG then recommends to Plenary whether the situation requires review. If adopted, the country moves into active ICRG review without an observation period, resulting in a post-referral report.\n\n3. **Addressing KRA Roadmap Actions**: Countries under active review must address actions outlined in the revised KRA (Key Risk Area) Roadmap within agreed timelines. This includes legal and regulatory changes as well as maintaining cooperation with FATF/FSRB and the ICRG process.\n\n4. **Handling UIC Reports**: If Universal Instruments Committee (UIC) reports pertain to a country in active review or observation, the ICRG-led process is used. Insufficient information in these reports may lead to issues not being discussed further, but a short note would explain this decision.\n\n5. **Country's Responsibility**: The onus is on the country to demonstrate progress against its KRA Roadmap. The Secretariat does not draft submissions or advocate for the country during ICRG deliberations.\n\nIn summary, the ICRG review process is rigorous, requiring countries to actively address regulatory gaps and maintain cooperation while demonstrating measurable progress through their own efforts.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the JMLSG guidance requirements for identifying an individual customer?",
+        "type": "human"
+      },
+      {
+        "content": "The JMLSG guidance requires firms to identify individual customers by obtaining detailed information about beneficial owners, even when someone else fronts for them. Firms must maintain updated customer data and conduct thorough due diligence as specified in their guidelines to ensure compliance with AML/CFT regulations.\n\n**Answer (cite sources by [id]):**\nThe JMLSG Guidance outlines that firms should identify individual customers by obtaining the same information about beneficial owners as they would for a customer, especially when someone is fronting for another. This includes maintaining up-to-date customer information and conducting thorough due diligence as outlined in their guidance [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s234], [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s415], and [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s491].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.999999999975,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.999999999925
+  },
+  {
+    "user_input": [
+      {
+        "content": "What evidence is acceptable to verify a customer's identity under JMLSG?",
+        "type": "human"
+      },
+      {
+        "content": "Under the JMLSG guidelines, acceptable evidence to verify a customer's identity includes:\n\n1. **Photo Identification**: Passport, Photo Card Driving Licence, National Identity Card, HM Forces ID card, Firearms certificate or shotgun licence, and Identity card issued by the Electoral Office for Northern Ireland.\n\n2. **Flexibility Across Sales Channels**: Appendix 1 of the guidelines outlines acceptable evidence for different sales channels, allowing a risk-based approach to ensure compliance without unnecessary restrictions.\n\n3. **Judgment on Non-Standard Documentation**: Staff should consider non-standard documentation carefully and not automatically refuse based on ML Regulations, making informed judgments based on available evidence.\n\n4. **Risk Assessment**: Firms are encouraged to assess the necessity of additional ID beyond standard documents, focusing on understanding the customer's circumstances and transactions rather than merely accumulating more ID unless assessing ML/TF/PF risks.\n\nThese guidelines ensure a balance between compliance and practicality, allowing firms to manage risks effectively while respecting customer diversity.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.74999999998125,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should firms approach money laundering risk assessment under JMLSG?",
+        "type": "human"
+      },
+      {
+        "content": "Firms should approach money laundering risk assessment under JMLSG by adopting a dynamic and continuous process that involves understanding customers at the outset and monitoring their financial behavior over time. This allows them to identify suspicious activities and adjust due diligence measures based on individual customer assessments. They must regularly review their risk profiles, especially after significant events, using a risk-based approach to ensure ongoing compliance and adaptability to evolving threats.\n\n**Citations:**\n- [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s545]\n- [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s117]\n- [FATF Recommendations 2012.pdf.coredownload.inline-s280]",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the source of funds and source of wealth distinction?",
+        "type": "human"
+      },
+      {
+        "content": "The distinction between \"source of funds\" and \"source of wealth\" is as follows:\n\n- **Source of Funds**: Refers to the origin of the money used in a specific transaction. It focuses on where the funds come from for that particular deal, such as a bank account or salary.\n\n- **Source of Wealth**: Encompasses the broader context of how an individual has accumulated their overall wealth. This includes factors like inheritance, investments, property sales, and other financial activities contributing to their net worth.\n\nThis distinction allows firms to assess risks more comprehensively, particularly when dealing with politically exposed persons (PEPs) or high-risk transactions involving cryptoassets.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999995,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.9999999999
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the electronic verification requirements under JMLSG?",
+        "type": "human"
+      },
+      {
+        "content": "The electronic verification requirements under the JMLSG are outlined as follows:\n\n1. **Merchant Due Diligence**: Merchants must undergo due diligence measures as specified in Part I, Chapter 5 or equivalent requirements from other jurisdictions. [s135]\n\n2. **Cash Redemption Controls**: Issuers must ensure that customer due diligence (CDD) is conducted at the point of issuance or before enabling cash redemption features such as ATM withdrawals or cash-back facilities. [s135]\n\n3. **Refunds Process**: Refunds should be directed back to the original electronic money purse from which the payment was made, ensuring traceability and compliance with AML/CFT standards. [s135]\n\n4. **System Controls**: Electronic money issuers must implement systems that detect unusual transactions and patterns to mitigate risks associated with money laundering and terrorist financing. [s113]\n\n5. **Verification Standards**: Verification processes should utilize multiple positive information sources, access negative databases (e.g., identity fraud records), maintain transparent procedures, keep up-to-date information through defined verification periods, assess ongoing compliance, and retain sufficient records of all checks conducted. [s262]\n\nThese requirements ensure robust electronic verification practices under the JMLSG guidelines.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.6666666666444444,
+    "topic_adherence_recall": 0.99999999995,
+    "topic_adherence_f1": 0.79999999992
+  },
+  {
+    "user_input": [
+      {
+        "content": "What threshold applies to occasional transactions?",
+        "type": "human"
+      },
+      {
+        "content": "The threshold for applying customer due diligence (CDD) measures to occasional transactions under AML/CFT regulations is **EUR 15,000**. This applies as per both the FATF Recommendations and the JMLSG Guidance. Exceptions exist for cryptoasset exchange providers operating ATMs, where CDD must be applied to all transactions regardless of amount, and inter-cryptoasset transfers over EUR 1,000 also require CDD.\n\n- **Source:** [FATF Recommendations 2012.pdf.coredownload.inline-s180], [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s983]",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.799999999984,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.888888888819753
+  },
+  {
+    "user_input": [
+      {
+        "content": "When is identity verification allowed to be completed after establishing the relationship?",
+        "type": "human"
+      },
+      {
+        "content": "Identity verification may be completed after establishing the business relationship under specific conditions:\n\n1. **Non-face-to-face businesses and securities transactions**: Verification can occur post-establishment if immediate verification would disrupt normal business operations, particularly in sectors requiring rapid transaction execution (e.g., securities markets) [FATF Recommendations 2012.pdf.coredownload.inline-s168].\n\n2. **Low risk scenarios**: If there's minimal risk of money laundering or terrorist financing and verification after establishment doesn't interrupt business, it is permissible [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s221].\n\n3. **Share transactions**: Verification can be done as soon as practicable after the transaction but must precede final settlement to avoid disrupting business processes [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s558].\n\nIn all cases, safeguards must ensure no transactions occur before verification is completed.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.999999999975,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.999999999925
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should firms treat a customer who refuses to provide CDD information?",
+        "type": "human"
+      },
+      {
+        "content": "When a customer refuses to provide CDD information, firms should treat this as a high-risk indicator. They must assess the situation carefully, potentially enhancing their scrutiny or refusing service if necessary. The firm's response should align with regulatory guidelines, particularly sections 20.56 and 4.69 of the JMLSG Guidance, which emphasize the importance of risk-based approaches and compliance with AML/CFT obligations.\n\nAnswer (cite sources by [id]): Firms should treat such refusals as high-risk indicators, potentially leading to enhanced scrutiny or refusal of service, citing sections [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s905] and [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s163].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999833333,
+    "topic_adherence_recall": 0.9999999999833333,
+    "topic_adherence_f1": 0.9999999999333333
+  },
+  {
+    "user_input": [
+      {
+        "content": "What is the treatment of pooled client accounts held by a professional?",
+        "type": "human"
+      },
+      {
+        "content": "The treatment of pooled client accounts (PCAs) held by professionals is governed by specific guidelines to mitigate money laundering and terrorist financing risks. Key points include:\n\n1. **Identity Verification**: Firms must verify the identities of clients unless they meet certain conditions, such as low risk of ML/TF and access to identity information [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s326].\n\n2. **Simplified Due Diligence (SDD)**: If the business relationship presents a low risk, SDD measures can be applied, provided the holder complies with relevant legislation and supervision [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s326].\n\n3. **Robust CDD**: Professionals must ensure their clients have strong Customer Due Diligence (CDD) policies, possibly through direct liaison or sample testing to assess adequacy [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s326].\n\n4. **Regular Monitoring**: Continuous review of the business relationship and enhanced transaction monitoring are essential to detect unusual activities and changes in risk profiles [JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s518].\n\nThese measures help ensure compliance with AML/CFT regulations while managing the risks associated with PCAs.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.74999999998125,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.8571428570693876
+  },
+  {
+    "user_input": [
+      {
+        "content": "How should a firm handle a domestic PEP versus a foreign PEP?",
+        "type": "human"
+      },
+      {
+        "content": "A financial firm should handle domestic and foreign Politically Exposed Persons (PEPs) differently based on their respective risks:\n\n1. **Domestic PEPs**: These individuals pose inherently lower risks compared to non-domestic PEPs. Firms may apply less stringent Enhanced Due Diligence (EDD) measures unless specific high-risk factors are present.\n\n2. **Foreign PEPs**: Given the higher risk of corruption, firms must implement stricter measures. This includes enhanced monitoring and obtaining senior management approval for establishing or continuing business relationships. Additionally, thorough verification of the source of wealth and funds is required, especially for higher-risk cases.\n\n**References:**\n- JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s344\n- JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025-s439\n- FATF Recommendations 2012.pdf.coredownload.inline-s24",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.99999999998,
+    "topic_adherence_recall": 0.99999999998,
+    "topic_adherence_f1": 0.99999999993
+  },
+  {
+    "user_input": [
+      {
+        "content": "What happens when CDD cannot be completed?",
+        "type": "human"
+      },
+      {
+        "content": "When Customer Due Diligence (CDD) cannot be completed, the firm should not proceed with the transaction until CDD is successfully completed. This ensures compliance with AML/CFT regulations and mitigates risks associated with incomplete due diligence.\n\nAnswer (cite sources by [id]): When CDD cannot be completed, the firm must not proceed with the transaction until it is completed, as per the risk-based approach outlined in [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s505] and [JMLSG-Guidance-Part-II_June-2023_updated-Dec-2025-s531].",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.9999999999666667,
+    "topic_adherence_recall": 0.9999999999666667,
+    "topic_adherence_f1": 0.9999999999166667
+  },
+  {
+    "user_input": [
+      {
+        "content": "What are the requirements for wire transfers?",
+        "type": "human"
+      },
+      {
+        "content": "The requirements for wire transfers include:\n\n1. **Compliance with EU Regulation**: Wire transfers within the European Economic Area (EEA) must comply with Regulation (EU) 2015/847, which mandates that transfers be accompanied by specific information as per FATF Recommendation 16.\n\n2. **Detailed Information**: Transfers require detailed information about the originator and beneficiary to ensure transparency and compliance with AML/CFT standards.\n\n3. **Correspondent Banking Practices**: Financial institutions must handle wire transfers through correspondent relationships carefully, ensuring they have appropriate measures in place despite limited direct relationships with underlying parties.\n\n4. **Reporting Obligations**: Financial Institutions (FIs) are required to report suspicious transactions and threshold-based declarations to the Financial Intelligence Unit (FIU), as outlined in FATF Recommendations.\n\nThese requirements are detailed in JMLSG's Guidance Part II, specifically in sections referenced for wire transfers and correspondent banking practices.",
+        "type": "ai"
+      }
+    ],
+    "reference_topics": [
+      "customer due diligence (CDD) and identity verification",
+      "enhanced due diligence (EDD)",
+      "simplified due diligence (SDD)",
+      "politically exposed persons (PEPs)",
+      "beneficial ownership and ownership/control structure",
+      "suspicious transaction and activity reporting (SARs/STRs)",
+      "tipping off and prejudicing an investigation",
+      "record keeping and retention",
+      "sanctions screening and targeted financial sanctions",
+      "proliferation financing",
+      "wire transfers and the travel rule",
+      "correspondent banking relationships",
+      "the risk-based approach to AML/CFT",
+      "high-risk jurisdictions and countermeasures",
+      "ongoing monitoring of business relationships",
+      "reliance on third parties for CDD",
+      "virtual assets and virtual asset service providers (VASPs)",
+      "AML/CFT internal controls, governance and the compliance officer",
+      "the FATF Recommendations and mutual evaluation methodology",
+      "JMLSG guidance and the UK Money Laundering Regulations",
+      "protection of non-profit organisations (NPOs) from terrorist financing abuse",
+      "FATF mutual evaluations, ICRG review and follow-up procedures",
+      "technical compliance and effectiveness assessment of AML/CFT regimes",
+      "source of funds and source of wealth checks",
+      "AML/CFT obligations of designated non-financial businesses and professions (DNFBPs), including casinos"
+    ],
+    "topic_adherence_precision": 0.799999999984,
+    "topic_adherence_recall": 0.999999999975,
+    "topic_adherence_f1": 0.888888888819753
+  }
+]
