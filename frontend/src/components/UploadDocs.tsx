@@ -11,7 +11,7 @@ interface UploadDocsProps {
 /**
  * UploadDocs component handles document file selection, drag-and-drop,
  * and uploading documents to the ingestion pipeline.
- * It listens to real-time ingestion progress updates via WebSockets.
+ * It listens to real-time ingestion progress updates via Server-Sent Events (SSE).
  */
 export function UploadDocs({ onUploadSuccess, dbStatus }: UploadDocsProps) {
   const [isExpanded, setIsExpanded] = useState(true);

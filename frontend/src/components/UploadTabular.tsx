@@ -17,6 +17,7 @@ export function UploadTabular() {
   const [serverPath, setServerPath] = useState("");
   const [csvText, setCsvText] = useState("");
   const [counts, setCounts] = useState<TabularCounts | null>(null);
+  const [countsError, setCountsError] = useState(false);
   const [ingesting, setIngesting] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -33,11 +34,13 @@ export function UploadTabular() {
 
   // Load counts on mount
   async function fetchCounts() {
+    setCountsError(false);
     try {
       const data = await getTabularCounts();
       setCounts(data);
     } catch (err) {
       console.warn("Failed to fetch tabular counts", err);
+      setCountsError(true);
     }
   }
 
@@ -300,32 +303,54 @@ export function UploadTabular() {
 
       {/* Volume Display Stats */}
       <div className="grid grid-cols-2 gap-3.5">
-        <div className="relative overflow-hidden bg-white/40 dark:bg-neutral-900/20 border border-neutral-100 dark:border-neutral-800/50 rounded-xl p-3.5 flex flex-col transition-all duration-300 hover:border-blue-500/30 hover:bg-blue-500/[0.01] hover:shadow-[0_2px_8px_rgba(59,130,246,0.04)] group">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-              Accounts
-            </span>
-            <svg className="w-4 h-4 text-neutral-400/70 group-hover:text-blue-500/70 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+        {countsError ? (
+          <div className="col-span-2 relative overflow-hidden bg-red-500/10 dark:bg-red-950/20 border border-red-500/20 dark:border-red-900/30 rounded-xl p-3.5 flex items-center justify-between transition-all duration-300">
+            <div className="flex items-center space-x-2.5 text-red-600 dark:text-red-400">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="text-xs font-bold uppercase tracking-wide">
+                Couldn't load database counts
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={fetchCounts}
+              className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-700 dark:text-red-300 hover:text-white dark:hover:text-white transition-all duration-300 text-[10px] font-bold uppercase tracking-wider active:scale-95 shadow-sm"
+            >
+              Retry
+            </button>
           </div>
-          <span className="text-xl font-extrabold mt-1.5 text-neutral-850 dark:text-neutral-100 tracking-tight">
-            {counts ? counts.accounts.toLocaleString() : "0"}
-          </span>
-        </div>
-        <div className="relative overflow-hidden bg-white/40 dark:bg-neutral-900/20 border border-neutral-100 dark:border-neutral-800/50 rounded-xl p-3.5 flex flex-col transition-all duration-300 hover:border-indigo-500/30 hover:bg-indigo-500/[0.01] hover:shadow-[0_2px_8px_rgba(99,102,241,0.04)] group">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
-              Transactions
-            </span>
-            <svg className="w-4 h-4 text-neutral-400/70 group-hover:text-indigo-500/70 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </div>
-          <span className="text-xl font-extrabold mt-1.5 text-neutral-850 dark:text-neutral-100 tracking-tight">
-            {counts ? counts.transactions.toLocaleString() : "0"}
-          </span>
-        </div>
+        ) : (
+          <>
+            <div className="relative overflow-hidden bg-white/40 dark:bg-neutral-900/20 border border-neutral-100 dark:border-neutral-800/50 rounded-xl p-3.5 flex flex-col transition-all duration-300 hover:border-blue-500/30 hover:bg-blue-500/[0.01] hover:shadow-[0_2px_8px_rgba(59,130,246,0.04)] group">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                  Accounts
+                </span>
+                <svg className="w-4 h-4 text-neutral-400/70 group-hover:text-blue-500/70 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <span className="text-xl font-extrabold mt-1.5 text-neutral-850 dark:text-neutral-100 tracking-tight">
+                {counts ? counts.accounts.toLocaleString() : "0"}
+              </span>
+            </div>
+            <div className="relative overflow-hidden bg-white/40 dark:bg-neutral-900/20 border border-neutral-100 dark:border-neutral-800/50 rounded-xl p-3.5 flex flex-col transition-all duration-300 hover:border-indigo-500/30 hover:bg-indigo-500/[0.01] hover:shadow-[0_2px_8px_rgba(99,102,241,0.04)] group">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider">
+                  Transactions
+                </span>
+                <svg className="w-4 h-4 text-neutral-400/70 group-hover:text-indigo-500/70 transition-colors duration-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </div>
+              <span className="text-xl font-extrabold mt-1.5 text-neutral-850 dark:text-neutral-100 tracking-tight">
+                {counts ? counts.transactions.toLocaleString() : "0"}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">

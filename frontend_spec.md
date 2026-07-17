@@ -23,7 +23,7 @@ Status: 🔵 to implement · 🟡 in progress · ✅ done
 
 ## 6. `GET /tabular/counts` — don't swallow fetch errors as "no data"
 
-**Status**: 🔵 to implement (backend unaffected, frontend-only fix).
+**Status**: ✅ Done (implemented retry state and manual retry button).
 
 ### Why
 `UploadTabular.tsx`'s `fetchCounts()` (mount + post-ingest) currently does
@@ -44,7 +44,7 @@ retriggers are page load and a successful ingest.
 
 ## 5. SSE Progress for Tabular + PDF Ingestion — replaces `/ws`
 
-**Status**: 🔵 to implement (backend ready). Backend-only change already shipped; this
+**Status**: ✅ Done (implemented SSE progress listener in api.ts, updated components to use SSE and deleted WebSocket hook).
 section is the frontend follow-up. Supersedes the `/ws`-based progress description
 previously implied by §2/§3/§4 below (those still describe the request/response *shapes*
 correctly except for the transport itself, which is now SSE per this section).
