@@ -20,13 +20,15 @@ from app.ingestion.tabular import TabularSystem, build_tabular_system
 # section-aware chunking + parent-context prefix + bge-small-en-v1.5 (aml_sections_c)
 # with hybrid BM25+vector search raises context_precision/recall over both the plain-vector
 # aml_corpus baseline and the prior MiniLM/aml_sections_b config, with no cost to
-# faithfulness/answer_relevancy. Each field is independently env-overridable (matching
+# faithfulness/answer_relevancy. bm25_weight=0.4 chosen from the sweep's 0.2-0.4 band (the
+# two were statistically indistinguishable on context_precision; 0.4 has the edge on
+# context_recall, 0.787 vs 0.769). Each field is independently env-overridable (matching
 # RagConfig.embedding_model's own RAG_EMBEDDING_MODEL convention) so the deployed config can
 # be tuned without a code change; the literals below are the sweep-recommended defaults.
 _RAG_CONFIG = RagConfig(
     collection_name=os.getenv("RAG_COLLECTION_NAME", "aml_sections_c"),
     embedding_model=os.getenv("RAG_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
-    bm25_weight=float(os.getenv("RAG_BM25_WEIGHT", "0.2")),
+    bm25_weight=float(os.getenv("RAG_BM25_WEIGHT", "0.4")),
 )
 
 

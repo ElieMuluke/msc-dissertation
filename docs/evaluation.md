@@ -190,11 +190,12 @@ BM25+vector fusion. **Defaults are the baseline** (`aml_corpus`, weight `0.0`): 
 no flags evaluates the unchanged pipeline, not the new chunking/hybrid work.
 
 **Production config** (`backend/.env`, consumed by `app.deps`): `aml_sections_c` +
-`bge-small-en-v1.5` + `bm25_weight=0.2`, adopted 2026-07-17 from a 24-run sweep across all
+`bge-small-en-v1.5` + `bm25_weight=0.4`, adopted 2026-07-17 from a 24-run sweep across all
 four collections x six bm25 weights (`0.0`–`1.0`). At that weight, `aml_sections_c` beat
 every other collection/weight combination on `context_precision`/`context_recall` with no
-faithfulness/answer_relevancy cost; `0.2` and `0.4` were statistically indistinguishable from
-each other and both clearly ahead of pure-vector (`bm25_weight=0.0`). `SCOPE_GATE_THRESHOLD`
+faithfulness/answer_relevancy cost; `0.2` and `0.4` were statistically indistinguishable on
+context_precision (`0.735` vs `0.734`), with `0.4` ahead on context_recall (`0.787` vs
+`0.769`) — both clearly ahead of pure-vector (`bm25_weight=0.0`, `0.731`). `SCOPE_GATE_THRESHOLD`
 auto-resolves to `0.638` for this embedder (`resolve_scope_gate_threshold`) and was not
 touched by this sweep. Each of `RAG_COLLECTION_NAME`/`RAG_EMBEDDING_MODEL`/`RAG_BM25_WEIGHT`
 is independently env-overridable without a code change.
