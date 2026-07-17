@@ -42,6 +42,11 @@ class TabularSystem:
     def __init__(self, session_factory: sessionmaker, batch_size: int) -> None:
         self._session_factory = session_factory
         self._batch_size = batch_size
+        # Lazily-populated, kept in sync by ingest/clear below. `counts()` is polled by the
+        # frontend on every page load; at dataset scale (100M+ transaction rows) a fresh
+        # `SELECT COUNT(*)` every time is slow enough to occasionally look like a failure.
+        # One scan per process lifetime instead of one per request.
+        self._counts_cache: Optional[dict[str, int]] = None
 
     def ingest_accounts(
         self,
@@ -130,12 +135,18 @@ class TabularSystem:
         return self._insert(Transaction, tagged_rows)
 
     def counts(self) -> dict[str, int]:
-        """Cheap ``SELECT COUNT(*)`` per table, e.g. for a frontend ingested-volumes display."""
-        with self._session_factory() as session:
-            return {
-                "accounts": session.scalar(select(func.count()).select_from(Account)) or 0,
-                "transactions": session.scalar(select(func.count()).select_from(Transaction)) or 0,
-            }
+        """Row counts per table, e.g. for a frontend ingested-volumes display.
+
+        Cached after the first call (see ``__init__``) and kept in sync by ingest/``clear``,
+        rather than re-running ``SELECT COUNT(*)`` on every call.
+        """
+        if self._counts_cache is None:
+            with self._session_factory() as session:
+                self._counts_cache = {
+                    "accounts": session.scalar(select(func.count()).select_from(Account)) or 0,
+                    "transactions": session.scalar(select(func.count()).select_from(Transaction)) or 0,
+                }
+        return dict(self._counts_cache)
 
     def clear(self) -> None:
         """Delete all rows from both tables (transactions first, then accounts)."""
@@ -143,6 +154,7 @@ class TabularSystem:
             session.execute(delete(Transaction))
             session.execute(delete(Account))
             session.commit()
+        self._counts_cache = {"accounts": 0, "transactions": 0}
 
     def _insert(self, model: type, rows: Iterable[dict], on_batch: Optional[Callable[[int], None]] = None) -> int:
         inserted = 0
@@ -155,6 +167,7 @@ class TabularSystem:
                 if on_batch is not None:
                     on_batch(inserted)
             session.commit()  # flush whatever remains since the last periodic commit
+        self._bump_counts_cache(model, inserted)
         return inserted
 
     def _insert_ignore_duplicates(
@@ -180,7 +193,14 @@ class TabularSystem:
                     on_batch(processed)
             session.commit()  # flush whatever remains since the last periodic commit
             after = session.scalar(count_stmt) or 0
-        return after - before
+        delta = after - before
+        self._bump_counts_cache(model, delta)
+        return delta
+
+    def _bump_counts_cache(self, model: type, delta: int) -> None:
+        if self._counts_cache is not None:
+            key = model.__tablename__
+            self._counts_cache[key] = self._counts_cache.get(key, 0) + delta
 
 
 def build_tabular_system(config: Optional[TabularConfig] = None) -> TabularSystem:
