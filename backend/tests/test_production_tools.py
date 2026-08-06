@@ -1,0 +1,120 @@
+"""Tests for the production agent tools (tabular queries + sanctions + country risk)."""
+
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from app.agents.production_tools import (
+    build_country_risk_tool,
+    build_production_tools,
+    build_query_accounts_tool,
+    build_query_transactions_tool,
+    build_sanctions_check_tool,
+)
+from app.ingestion.tabular import TabularConfig, TabularDataType, build_tabular_system
+from app.ingestion.watchlists import WatchlistSystem
+from app.ingestion.watchlists.loaders import WatchlistEntry
+
+ACCOUNTS_CSV = (
+    "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\n"
+    "Bank A,070,100428660,E1,Corporation #4482\n"
+    "Bank B,214,900332145,E2,Nevada Spirit Company Limited\n"
+)
+
+TRANSACTIONS_CSV = (
+    "Timestamp,From Bank,Account,To Bank,Account,Amount Received,Receiving Currency,"
+    "Amount Paid,Payment Currency,Payment Format,Is Laundering\n"
+    "2022/09/01 10:12,070,100428660,214,900332145,9400.00,US Dollar,9400.00,US Dollar,Wire,1\n"
+    "2022/09/02 08:20,214,900332145,070,100428660,150.00,US Dollar,150.00,US Dollar,ACH,0\n"
+    "2022/09/03 09:00,070,100428660,214,900332145,50.00,US Dollar,50.00,US Dollar,Cheque,0\n"
+)
+
+
+@pytest.fixture
+def tabular():
+    system = build_tabular_system(TabularConfig(db_url="sqlite:///:memory:"))
+    system.ingest_text(TabularDataType.ACCOUNTS, ACCOUNTS_CSV)
+    system.ingest_text(TabularDataType.TRANSACTIONS, TRANSACTIONS_CSV)
+    return system
+
+
+@pytest.fixture
+def watchlists():
+    entries = [
+        WatchlistEntry("OFAC SDN", "306", "BANCO NACIONAL DE CUBA", "entity", ("CUBA",), "a.k.a. BNC"),
+        WatchlistEntry("UN", "6907993", "ERIC BADEGE", "individual", ("DRC",), ""),
+    ]
+    fatf = {"as_of": "2026-06-19", "call_for_action": ["Iran"], "increased_monitoring": ["Monaco"], "aliases": {}}
+    return WatchlistSystem(entries, fatf, match_threshold=0.85)
+
+
+def test_query_accounts_tool_by_entity_name(tabular):
+    tool = build_query_accounts_tool(tabular)
+    payload = json.loads(tool.invoke({"entity_name": "nevada spirit"}))
+    assert len(payload["accounts"]) == 1
+    assert payload["accounts"][0]["account_number"] == "900332145"
+    assert payload["row_ids"] == [payload["accounts"][0]["id"]]
+
+
+def test_query_accounts_tool_requires_a_filter(tabular):
+    tool = build_query_accounts_tool(tabular)
+    assert "at least one filter" in tool.invoke({})
+
+
+def test_query_transactions_tool_filters_direction_amount_dates(tabular):
+    tool = build_query_transactions_tool(tabular)
+    payload = json.loads(
+        tool.invoke(
+            {
+                "account_number": "100428660",
+                "direction": "out",
+                "min_amount": 1000,
+                "since": "2022-09-01",
+                "until": "2022-09-02",
+            }
+        )
+    )
+    assert len(payload["transactions"]) == 1
+    txn = payload["transactions"][0]
+    assert txn["to_account"] == "900332145"
+    assert txn["amount_paid"] == 9400.0
+    # Ground-truth label must never be exposed to the agent (data leakage).
+    assert "is_laundering" not in txn
+
+
+def test_query_transactions_tool_rejects_bad_direction(tabular):
+    tool = build_query_transactions_tool(tabular)
+    with pytest.raises(Exception, match="direction"):
+        tool.invoke({"account_number": "100428660", "direction": "sideways"})
+
+
+def test_sanctions_check_tool_hit_and_miss(watchlists):
+    tool = build_sanctions_check_tool(watchlists)
+    payload = json.loads(tool.invoke({"name": "Banco Nacional de Cuba"}))
+    assert payload["matches"][0]["list"] == "OFAC SDN"
+    assert payload["matches"][0]["score"] == 1.0
+    assert "No sanctions-list matches" in tool.invoke({"name": "Squeaky Clean Ltd"})
+
+
+def test_country_risk_tool(watchlists):
+    tool = build_country_risk_tool(watchlists)
+    assert json.loads(tool.invoke({"country": "Iran"}))["status"] == "call_for_action"
+    assert json.loads(tool.invoke({"country": "Monaco"}))["status"] == "increased_monitoring"
+    assert json.loads(tool.invoke({"country": "Germany"}))["status"] == "not_listed"
+
+
+def test_build_production_tools_names_and_order(tabular, watchlists):
+    class FakeRag:
+        def search(self, query, k=4):
+            return []
+
+    tools = build_production_tools(FakeRag(), tabular, watchlists)
+    assert [t.name for t in tools] == [
+        "query_accounts",
+        "query_transactions",
+        "sanctions_check",
+        "country_risk",
+        "search_aml_corpus",
+    ]
