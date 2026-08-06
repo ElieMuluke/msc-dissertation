@@ -3,6 +3,16 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-07 (00:50) — qwen2.5 replication restarted from zero at owner request
+
+The qwen2.5:7b-instruct sweep had been paused at 135/2300 (to gate mistral-small) and
+resumed to 410/2300. Owner requested a fully uninterrupted run instead; the partial
+journals (591 runs incl. the resumed segment) were archived untouched to
+`results-qwen2.5-7b/partial-run-aborted-2026-08-07/` (never mixed with the fresh run)
+and the sweep relaunched from run 1 on the same manifest (identical seed schedule).
+Note: resume-vs-restart yields identical planned runs by design; the restart is a
+conservatism choice, not a correctness requirement.
+
 ## 2026-08-07 (00:30) — llama3.1:8b provisional gate FAIL; audit of headline analysis CONFIRMED
 
 - llama3.1:8b (candidate third model) failed the pilot gate in the same way as both
