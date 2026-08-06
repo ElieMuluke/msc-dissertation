@@ -73,6 +73,29 @@ def test_trajectory_metrics() -> None:
     assert metrics.trajectory_nlcs([[], ["t1"]]) == 0.0
 
 
+def test_lexical_consistency_rouge_l_hand_computed() -> None:
+    """3 short synthetic outputs, pairwise ROUGE-L F1 worked by hand.
+
+    Tokens (lowercased, whitespace): o1 = o2 = [final, decision:, escalate];
+    o3 = [final, verdict, escalate]. Pairs: (o1,o2) F1 = 1.0;
+    (o1,o3) and (o2,o3): LCS = 2 -> P = R = 2/3 -> F1 = 2/3.
+    Mean = (1 + 2/3 + 2/3) / 3 = 7/9.
+    """
+    outputs = [
+        "FINAL DECISION: escalate",
+        "final decision: escalate",  # identical after lowercasing
+        "FINAL verdict escalate",
+    ]
+    assert metrics.lexical_consistency(outputs) == pytest.approx(7 / 9)
+
+
+def test_lexical_consistency_edges() -> None:
+    assert metrics.lexical_consistency(["same text", "same text"]) == 1.0
+    assert metrics.lexical_consistency(["", ""]) == 1.0  # both empty: identical
+    assert metrics.lexical_consistency(["", "something"]) == 0.0
+    assert metrics.lexical_consistency(["aa bb", "cc dd"]) == 0.0  # no overlap
+
+
 def _journal(arm: str, condition: str, case_decisions: dict[str, list[str]]) -> list[dict]:
     records = []
     for case_id, decisions in case_decisions.items():
@@ -85,6 +108,7 @@ def _journal(arm: str, condition: str, case_decisions: dict[str, list[str]]) -> 
                     "repeat_idx": idx,
                     "decision": decision,
                     "tool_calls": ["check_sanctions_list"],
+                    "raw_output": f"case {case_id}\nFINAL DECISION: {decision}",
                     "prompt_tokens": 100,
                     "completion_tokens": 50,
                     "wall_clock_s": 2.0,
@@ -121,6 +145,10 @@ def test_condition_summary_on_synthetic_journal() -> None:
     assert summary["tokens_per_pass^5"] == pytest.approx(150.0 / 0.5)
     assert "pass^15" not in summary and "tokens_per_pass^15" not in summary
     assert summary["TAR"] == 1.0
+    # rouge_l_f1: C1 outputs identical -> 1.0. C2 outputs are 5 tokens each,
+    # differing only in the decision token: 6 identical pairs (4 dismiss) +
+    # 4 cross pairs with LCS=4 -> F1=0.8; case mean (6*1 + 4*0.8)/10 = 0.92.
+    assert summary["rouge_l_f1"] == pytest.approx((1.0 + 0.92) / 2)
     assert summary["worst_entropy_cases"][0] == "C2"
     # grouping excludes other arms/conditions
     assert metrics.group_case_runs(journal, "mas", "t07-varied") == {}

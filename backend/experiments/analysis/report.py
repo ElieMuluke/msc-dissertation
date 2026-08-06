@@ -196,6 +196,15 @@ def build_report(results_dir: Path = DEFAULT_CONFIG.results_dir) -> Path:
     section("Cost (Tier 3)", COST_KEYS, primary_conds)
     section("Perturbation block (instrument check)", TIER1_KEYS + ("mean_entropy",),
             list(PERT_CONDITIONS))
+    section("Appendix: lexical consistency (ROUGE-L)", ("rouge_l_f1",),
+            primary_conds + list(PERT_CONDITIONS))
+    lines.append(
+        "rouge_l_f1 is the mean pairwise ROUGE-L F1 of the FULL raw output "
+        "text across repeats (lowercased, whitespace tokens): surface-form "
+        "overlap only, distinct from the decision-level and trajectory-level "
+        "metrics above, and never part of the Tier 1 winner criterion."
+    )
+    lines.append("")
 
     lines.append("## Arm difference (single − mas), t07-varied, per-case paired")
     lines.append("")

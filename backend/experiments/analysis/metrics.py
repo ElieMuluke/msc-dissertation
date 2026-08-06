@@ -24,6 +24,7 @@ class CaseRuns:
     case_id: str
     decisions: list[str] = field(default_factory=list)
     trajectories: list[list[str]] = field(default_factory=list)
+    raw_outputs: list[str] = field(default_factory=list)
     prompt_tokens: list[int] = field(default_factory=list)
     completion_tokens: list[int] = field(default_factory=list)
     wall_clock_s: list[float] = field(default_factory=list)
@@ -40,6 +41,7 @@ def group_case_runs(records: Iterable[dict[str, Any]], arm: str, condition: str)
         g = groups.setdefault(r["case_id"], CaseRuns(r["case_id"]))
         g.decisions.append(r["decision"])
         g.trajectories.append(list(r.get("tool_calls", [])))
+        g.raw_outputs.append(str(r.get("raw_output", "") or ""))
         g.prompt_tokens.append(int(r.get("prompt_tokens", 0)))
         g.completion_tokens.append(int(r.get("completion_tokens", 0)))
         g.wall_clock_s.append(float(r.get("wall_clock_s", 0.0)))
@@ -172,6 +174,54 @@ def trajectory_nlcs(trajectories: Sequence[Sequence[str]]) -> float:
     return _pairwise_mean(trajectories, nlcs)
 
 
+# --- Appendix tier -----------------------------------------------------------
+
+def _rouge_l_f1(a: Sequence[str], b: Sequence[str]) -> float:
+    """ROUGE-L F1 between two token sequences (token-level LCS based).
+
+    ``P = LCS/|a|``, ``R = LCS/|b|``, ``F1 = 2PR/(P+R)`` — symmetric in the
+    pair, so no designated reference is needed. Two empty sequences score
+    1.0 (identical); empty vs non-empty scores 0.0.
+    """
+    if not a and not b:
+        return 1.0
+    if not a or not b:
+        return 0.0
+    lcs = _lcs_len(a, b)
+    if lcs == 0:
+        return 0.0
+    precision = lcs / len(a)
+    recall = lcs / len(b)
+    return 2 * precision * recall / (precision + recall)
+
+
+def _tokenize(text: str) -> list[str]:
+    """Normalization for lexical consistency: lowercase, whitespace tokens.
+
+    Deliberately minimal and dependency-free; punctuation stays attached to
+    its word, so this measures surface-form overlap, nothing smarter.
+    """
+    return text.lower().split()
+
+
+def lexical_consistency(raw_outputs: Sequence[str]) -> float:
+    """Mean pairwise ROUGE-L F1 of the FULL raw output text across repeats.
+
+    Appendix-tier surface-form metric (pre-registered 2026-08-06, before any
+    results): measures how similar the complete prose outputs are across
+    repeats of one case — distinct from the decision-level (DAR, flip rate)
+    and trajectory-level (TAR/Jaccard/nLCS) metrics, which this never
+    influences. BLEU was deliberately NOT used: BLEU is precision- and
+    reference-oriented (it scores a candidate against a designated
+    reference), while repeats of one case have no privileged reference;
+    pairwise ROUGE-L F1 is symmetric and reference-free.
+    """
+    return _pairwise_mean(
+        [_tokenize(o) for o in raw_outputs],
+        _rouge_l_f1,
+    )
+
+
 # --- Aggregation -------------------------------------------------------------
 
 def condition_summary(
@@ -214,6 +264,11 @@ def condition_summary(
     summary["TAR"] = _mean([trajectory_agreement_rate(groups[c].trajectories) for c in cases])
     summary["jaccard"] = _mean([trajectory_jaccard(groups[c].trajectories) for c in cases])
     summary["nLCS"] = _mean([trajectory_nlcs(groups[c].trajectories) for c in cases])
+    # Appendix tier: surface-form overlap of the full output text (never part
+    # of the Tier 1 winner criterion).
+    summary["rouge_l_f1"] = _mean(
+        [lexical_consistency(groups[c].raw_outputs) for c in cases]
+    )
     total_tokens = [
         pt + ct
         for c in cases
