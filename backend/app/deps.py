@@ -6,6 +6,9 @@ import os
 from collections.abc import Callable
 from functools import lru_cache
 
+from pathlib import Path
+
+from app.api.session_memory import SessionMemory
 from app.generation import (
     AnswerGenerator,
     GenerationConfig,
@@ -15,6 +18,8 @@ from app.generation import (
 )
 from app.ingestion.rag import RagConfig, RagSystem, build_rag
 from app.ingestion.tabular import TabularSystem, build_tabular_system
+from app.ingestion.watchlists import WatchlistSystem, build_watchlist_system
+from app.reports import ReportSystem, build_report_system
 
 # Validated retrieval config (see docs/evaluation.md and the 2026-07-17 24-run sweep):
 # section-aware chunking + parent-context prefix + bge-small-en-v1.5 (aml_sections_c)
@@ -62,3 +67,39 @@ def get_generator() -> AnswerGenerator:
 def get_llm_ping() -> Callable[[], bool]:
     """Single shared LLM-connectivity probe (Ollama reachability)."""
     return build_llm_ping()
+
+
+@lru_cache
+def get_watchlists() -> WatchlistSystem:
+    """Single shared WatchlistSystem (sanctions + FATF lists indexed once per process)."""
+    return build_watchlist_system()
+
+
+@lru_cache
+def get_reports() -> ReportSystem:
+    """Single shared ReportSystem (analysis-report index + files, PRD-B §4)."""
+    return build_report_system()
+
+
+@lru_cache
+def get_session_memory() -> SessionMemory:
+    """Single shared API-layer session memory (PRD-B §5 — never inside the agents)."""
+    return SessionMemory()
+
+
+def get_default_pipeline() -> str:
+    """Configured default analysis pipeline (per-request overridable, PRD-B §3).
+
+    Env-overridable like the RAG settings above; the literal default flips to the
+    experiment winner after the Tue 11 Aug analysis (PRD-B §7).
+    """
+    return os.getenv("ANALYSIS_PIPELINE", "single")
+
+
+_RULEBOOK_PATH = Path(__file__).resolve().parent.parent / "data" / "rulebook.md"
+
+
+@lru_cache
+def get_rulebook() -> str:
+    """The production AML rulebook text (``backend/data/rulebook.md``), read once."""
+    return _RULEBOOK_PATH.read_text(encoding="utf-8")

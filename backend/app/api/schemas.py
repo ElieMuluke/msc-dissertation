@@ -70,3 +70,19 @@ class TabularTextIngestRequest(BaseModel):
 class TabularCounts(BaseModel):
     accounts: int
     transactions: int
+
+
+class AnalysisRequest(BaseModel):
+    account_id: str
+    bank: Optional[str] = None
+    pipeline: Optional[str] = None  # "single" | "mas"; default from settings
+    session_id: Optional[str] = None  # session-memory key; defaults to the account
+
+
+class ReportMeta(BaseModel):
+    id: str
+    created_at: str
+    account_id: str
+    bank: Optional[str] = None
+    pipeline: str
+    decision: str
