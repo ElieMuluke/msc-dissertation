@@ -1,0 +1,222 @@
+{
+  "pass": true,
+  "n": 8,
+  "records": [
+    {
+      "call": 0,
+      "prompt": "Reply with exactly one word: which is larger, 17 or 71?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "71",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.83,
+      "clean": true
+    },
+    {
+      "call": 1,
+      "prompt": "A wire transfer of $9,999 from a cash-intensive business was flagged. In two sentences, is this suspicious and why?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "Yes, this transaction is highly suspicious because the amount of $9,999 sits just below common regulatory reporting thresholds like the Bank Secrecy Act's $10,000 limit for Currency Transaction Reports (CTRs), suggesting a deliberate attempt to avoid detection known as \"structuring.\" Additionally, flagging it indicates that the business's cash-intensive nature makes such large wire transfers incon",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 1.64,
+      "clean": true
+    },
+    {
+      "call": 2,
+      "prompt": "List three red flags for money laundering in trade finance.",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "Here are three significant red flags for money launderers operating within the realm of trade finance:\n\n1.  **Mismatched Trade Documentation (Over/Under-Invoicing)**\n    A primary indicator is a discrepancy between the value declared on shipping documents, invoices, and payment terms versus market reality. This often manifests as significant over-invoicing by exporters or under-invoicing by import",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 4.28,
+      "clean": true
+    },
+    {
+      "call": 3,
+      "prompt": "What is 23 * 17? Answer with the number only.",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "391",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.61,
+      "clean": true
+    },
+    {
+      "call": 4,
+      "prompt": "In one sentence, what does KYC stand for and why does it matter?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "KYC stands for \"Know Your Customer,\" a critical verification process that matters because it enables financial institutions to prevent money laundering, terrorist financing, and fraud while ensuring regulatory compliance.",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.95,
+      "clean": true
+    },
+    {
+      "call": 5,
+      "prompt": "Reply with exactly one word: which is larger, 17 or 71?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "71",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.65,
+      "clean": true
+    },
+    {
+      "call": 6,
+      "prompt": "A wire transfer of $9,999 from a cash-intensive business was flagged. In two sentences, is this suspicious and why?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "Yes, this transaction is highly suspicious because it falls significantly below the standard reporting threshold of $10,000, suggesting an intentional attempt to evade Currency Transaction Report (CTR) requirements through a technique known as \"structuring.\" The combination of such a high value being deliberately kept just under the limit and originating from a cash-intensive business raises red f",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 1.33,
+      "clean": true
+    },
+    {
+      "call": 7,
+      "prompt": "List three red flags for money laundering in trade finance.",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "In the context of trade finance, identifying money laundering requires vigilance regarding specific transactional patterns that deviate from normal commercial behavior. Here are three significant red flags:\n\n1.  **Over-invoicing or Under-invoicing to Facilitate Fund Transfers**\n    A primary method used by launderers is altering the value of goods on invoices to move illicit funds across borders w",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 4.78,
+      "clean": true
+    }
+  ]
+}

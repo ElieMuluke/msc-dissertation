@@ -1,0 +1,23 @@
+[
+  {
+    "think_param": null,
+    "status": 200,
+    "has_thinking_field": true,
+    "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking \"Which is larger, 17 or 71?\" and specifies the constr",
+    "content_head": "71"
+  },
+  {
+    "think_param": true,
+    "status": 200,
+    "has_thinking_field": true,
+    "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking \"Which is larger, 17 or 71?\" and specifies the constr",
+    "content_head": "71"
+  },
+  {
+    "think_param": false,
+    "status": 200,
+    "has_thinking_field": false,
+    "thinking_head": "",
+    "content_head": "71"
+  }
+]
