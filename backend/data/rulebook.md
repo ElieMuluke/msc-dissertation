@@ -84,9 +84,11 @@ Part I, 5.5.11 (high-risk third countries).
 country-risk signal to feed into the risk-based assessment — it raises the band by one
 level, but is not by itself grounds for `escalate`. Source: FATF "Jurisdictions under
 Increased Monitoring" statement (19 June 2026); FATF R.19 proportionality language
-(verified). The "not automatic EDD as a class" framing is from the FATF statement text
-**[citation unverified]** (fatf-gafi.org blocked automated retrieval; transcribed from
-secondary trackers — see `data/watchlists/fatf_high_risk.json`).
+(verified). The "not automatic EDD as a class" framing **(verified 2026-08-06 against
+the official statement page, owner-provided saved HTML)** — exact text: "The FATF does
+not call for the application of enhanced due diligence measures to be applied to these
+jurisdictions. The FATF Standards do not envisage derisking, or cutting-off entire
+classes of customers, but call for the application of a risk-based approach."
 
 **EDD-3 — Politically exposed persons.** For foreign PEPs (customer or beneficial
 owner): risk-management systems to identify PEP status, senior management approval for
@@ -130,14 +132,16 @@ equivalent identification/reporting threshold), to or from the same counterparty
 structuring red flag: band HIGH → `escalate` when combined with any jurisdiction or
 counterparty flag, otherwise `investigate`. Basis: unusual-pattern monitoring duty in
 JMLSG Part I, 5.7 and the suspicion standard in FATF R.20. The specific numeric
-threshold is platform-authored **[citation unverified]** (not stated in the guidance).
+threshold is **platform-authored (no citation exists by design — a derived operational
+threshold, not stated in the guidance)**.
 
 **MON-3 — Rapid pass-through / layering (platform operational rule).** Funds received
 and forwarded within 72 hours at ≥80% of the received amount, especially across
 multiple institutions or currencies, is a layering red flag: minimum band MEDIUM →
 `investigate`; HIGH → `escalate` if a high-risk jurisdiction, PEP or sanctions
 near-match is also present. Basis: JMLSG Part I, 5.7 (unusual patterns); FATF R.1
-risk-based approach. Numeric thresholds are platform-authored **[citation unverified]**.
+risk-based approach. Numeric thresholds are **platform-authored (no citation exists by
+design — derived operational thresholds, not stated in the guidance)**.
 
 **MON-4 — High-risk jurisdiction counterparty.** Any transaction whose counterparty,
 counterparty bank or payment route involves a FATF call-for-action jurisdiction →
@@ -199,10 +203,13 @@ from RB-2; contract per PRD-A/PRD-B shared agent modules.
 
 ### Verification summary
 
-- 22 rules total: 12 with citations verified against the source PDF text (FATF
-  Recommendations 2012 PDF; JMLSG Part I/II PDFs, paragraph anchors checked), 5 tagged
-  **[citation unverified]** in whole or part, 5 platform operational rules (derived
-  thresholds, so cited as "basis" rather than verbatim).
+- 22 rules total: 13 with citations verified against source text (FATF Recommendations
+  2012 PDF; JMLSG Part I/II PDFs, paragraph anchors checked; EDD-2's FATF-statement
+  framing verified 2026-08-06 against the owner-provided official statement page), 1
+  tagged **[citation unverified]** (SAN-1's JMLSG Part III reference — Part III not in
+  the provided PDFs), 5 platform operational rules with by-design derived thresholds
+  (cited as "basis" rather than verbatim; MON-2/MON-3 threshold values likewise
+  platform-authored by design).
 - PDF sources consulted: `/mnt/c/Users/u5749933/Downloads/data/FATF/FATF Recommendations
   2012.pdf.coredownload.inline.pdf`, `/mnt/c/Users/u5749933/Downloads/data/JMLSG/
   JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025.pdf`, `.../JMLSG-Guidance-Part-II_
