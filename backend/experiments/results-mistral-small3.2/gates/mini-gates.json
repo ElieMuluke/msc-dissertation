@@ -1,0 +1,87 @@
+{
+  "model": "mistral-small3.2:24b",
+  "date": "2026-08-06T22:16:43Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"mistral-small3.2:24b\\\" does not support thinking\"}"
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "sha256": [
+      "3feaf801494a79fae56800f8b5786881e7d01c32996215c91f9ca8c918e110b5"
+    ],
+    "output_len": 431
+  },
+  "pilot": {
+    "pass": false,
+    "valid_total": "4/8",
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 0,
+        "decisions": [
+          "malformed",
+          "malformed",
+          "malformed",
+          "malformed"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 1.33
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "investigate",
+          "investigate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 13.43
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-mistral-small3.2-24b-itti3zbb"
+  }
+}

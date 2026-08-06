@@ -3,6 +3,27 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-07 (00:30) — llama3.1:8b provisional gate FAIL; audit of headline analysis CONFIRMED
+
+- llama3.1:8b (candidate third model) failed the pilot gate in the same way as both
+  mistrals: single arm 0/4 (all malformed, ~1.5 s), MAS 4/4 valid. Probe evidence: with
+  the experiment system prompt + bound tools, the model emits its tool call as raw JSON
+  in text content which Ollama 0.31.1 fails to parse into a structured call
+  (short-system control parses fine). Same class of failure as the mistral family →
+  root cause is Ollama-version tool-template robustness, not any single model. Probes
+  ran on the dev server (:11434) because the pinned servers were mid-sweep; any future
+  launch requires pinned re-gating. Replication set for now: qwen2.5:7b-instruct only.
+  Possible path for a third family: Ollama upgrade AFTER all current sweeps, as a
+  documented separate infra context, then re-gate.
+- Independent audit (fresh-context agent, own code:
+  `analysis/independent_check_qwen35.py`) of the sealed qwen3.5:9b analysis:
+  ANALYSIS CONFIRMED — integrity clean, all metrics reproduced to 3 d.p., stats match.
+  One convention note: single/t07 majority_vote_accuracy 0.360 rests on first-observed
+  tie-breaking for two 7–7 tied cases (TXN-2025-017, TXN-2025-048); strict-majority
+  rule gives 0.340. Footnote in the dissertation; not corruption.
+- Malformed-count clarification: 4 total in the headline sweep = 3 in single/t07-varied
+  + 1 in single/pert-t10 (PERT-005 repeat 2). MAS: zero.
+
 ## 2026-08-06 (late) — mistral-nemo excluded on failed mini-gate; mistral-small3.2:24b substituted
 
 mistral-nemo:latest failed its mini-gate: single-arm pilot 0/4 valid extractions.

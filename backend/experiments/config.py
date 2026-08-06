@@ -123,6 +123,8 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
     "mistral-nemo:latest": ("results-mistral-nemo", None),
     # substituted for gate-failed mistral-nemo (see CHANGELOG 2026-08-06 late)
     "mistral-small3.2:24b": ("results-mistral-small3.2", None),
+    # candidate third model after both mistrals gate-failed (Ollama template bug)
+    "llama3.1:8b": ("results-llama3.1-8b", None),
 }
 
 
