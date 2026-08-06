@@ -30,7 +30,10 @@ def make_model_factory(config: ExperimentConfig, arm: str) -> ModelFactory:
             base_url=base_url,
             temperature=context.temperature,
             seed=context.seed,
-            reasoning=False if not config.think else None,
+            # Tri-state: False sends "think": false (thinking models);
+            # None omits the parameter (models without a thinking mode —
+            # the ollama client serializes with exclude_none).
+            reasoning=config.think,
             num_ctx=config.num_ctx,
             num_predict=config.num_predict,
         )

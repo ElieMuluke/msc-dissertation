@@ -31,6 +31,7 @@ from experiments.config import (
     MASTER_SEED,
     REPO_ROOT,
     ExperimentConfig,
+    config_for_model,
 )
 from experiments.harness import journal
 from experiments.harness.dfah_data import load_perturbation_cases, load_primary_cases
@@ -145,8 +146,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--force", action="store_true",
                         help="overwrite an existing manifest (pre-launch only)")
+    parser.add_argument(
+        "--model", default=DEFAULT_CONFIG.model,
+        help="replication model tag (must be in config.REPLICATION_MODELS); "
+             "selects that model's own results dir",
+    )
     args = parser.parse_args()
-    results_dir = DEFAULT_CONFIG.results_dir
+    config = config_for_model(args.model)
+    results_dir = config.results_dir
     target = results_dir / "manifest.json"
     journals = [journal.journal_path(results_dir, arm) for arm in ARMS]
     if target.exists() and any(p.exists() for p in journals) and not args.force:
@@ -154,11 +161,11 @@ def main() -> int:
             "manifest exists and journals are non-empty; regenerating now would "
             "invalidate the pre-registration (use --force only pre-launch)."
         )
-    manifest = build_manifest()
+    manifest = build_manifest(config)
     results_dir.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(manifest, indent=2))
     print(f"wrote {target}: {len(manifest['runs'])} planned runs, "
-          f"config_hash={manifest['config_hash'][:12]}, "
+          f"model={config.model}, config_hash={manifest['config_hash'][:12]}, "
           f"digest={manifest['model_digest'][:20]}")
     return 0
 

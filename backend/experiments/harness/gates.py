@@ -48,10 +48,11 @@ def _chat(
     think: bool | None,
     num_predict: int = 512,
     timeout: float = 300.0,
+    model: str = DEFAULT_CONFIG.model,
 ) -> dict[str, Any]:
     """One non-streaming /api/chat call, returning the parsed response body."""
     payload: dict[str, Any] = {
-        "model": DEFAULT_CONFIG.model,
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
         "options": {"temperature": temperature, "seed": seed},

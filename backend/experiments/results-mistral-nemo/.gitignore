@@ -1,0 +1,4 @@
+# Operational noise excluded from the 25-run results commits.
+runner-*.log
+.git-sync.lock
+.progress-*.tmp

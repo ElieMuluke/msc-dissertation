@@ -3,6 +3,37 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-06 (evening) — replication extension: two additional models
+
+Owner-approved, recorded BEFORE any replication run. After the qwen3.5:9b
+sweep is verified and sealed, the ENTIRE pre-registered design is
+replicated on two further models:
+
+- `qwen2.5:7b-instruct` (anchor model of arXiv:2511.07585; pulled
+  2026-08-06, digest `845dbda0ea48ed749caa…`)
+- `mistral-nemo:latest` (already local, digest `e7e06d107c6c86ed0cf4…`)
+
+Identical design: same 50 + 10 cases, same conditions and repeat counts,
+same metrics tier table, and the **same planned seed schedule** —
+`planned_runs()` derives seeds from `MASTER_SEED` only, independent of
+model, so per-(condition, case, repeat) seeds are identical across models
+for cross-model comparability (asserted by test).
+
+Each model gets its own sibling results dir (`results-qwen2.5-7b/`,
+`results-mistral-nemo/`) with its own manifest (own digest, own
+config_hash — the hash pins model identity), journals, progress and gates
+evidence; no cross-dir contamination (asserted by test).
+
+Think handling per model: qwen3.5:9b keeps `think: false` on the wire;
+the two replication models have no documented thinking mode, so the
+parameter is **omitted** (`think=None`; the ollama client serializes with
+`exclude_none`) — exact behaviour captured per model by the new
+mini-gates (`experiments.harness.mini_gates`) before their launch.
+
+**`qwen3.5:9b` remains the headline pre-registered result; the
+replications are analysed as robustness checks** (per-model reports via
+`analysis.report --model`, side-by-side Tier 1 via `analysis.compare`).
+
 ## 2026-08-06 — gate day: arm-A server port :11434 → :11437 (pre-launch)
 
 Environment constraint found during launch-gate prep: the machine's

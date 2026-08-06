@@ -235,4 +235,22 @@ def build_report(results_dir: Path = DEFAULT_CONFIG.results_dir) -> Path:
 
 
 if __name__ == "__main__":
-    print(f"wrote {build_report()}")
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--model", default=None,
+        help="replication model tag — analyse that model's results dir",
+    )
+    parser.add_argument("--results-dir", type=Path, default=None,
+                        help="explicit results dir (overrides --model)")
+    cli = parser.parse_args()
+    if cli.results_dir is not None:
+        target_dir = cli.results_dir
+    elif cli.model is not None:
+        from experiments.config import config_for_model
+
+        target_dir = config_for_model(cli.model).results_dir
+    else:
+        target_dir = DEFAULT_CONFIG.results_dir
+    print(f"wrote {build_report(target_dir)}")

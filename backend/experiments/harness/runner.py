@@ -34,7 +34,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage
 
 from app.agents.contract import RunContext
-from experiments.config import DEFAULT_CONFIG, ExperimentConfig
+from experiments.config import DEFAULT_CONFIG, ExperimentConfig, config_for_model
 from experiments.harness import git_sync
 from experiments.harness.adapter import ArmAdapter
 from experiments.harness.dfah_data import load_perturbation_cases, load_primary_cases
@@ -232,10 +232,15 @@ def main() -> int:
     )
     parser.add_argument(
         "--results-dir", type=Path, default=None,
-        help="alternate results dir (pilots/G4 only; the sweep uses the default)",
+        help="alternate results dir (pilots/G4 only; sweeps use the model's default)",
+    )
+    parser.add_argument(
+        "--model", default=None,
+        help="replication model tag (config.REPLICATION_MODELS); selects that "
+             "model's own results dir and think handling",
     )
     args = parser.parse_args()
-    config = DEFAULT_CONFIG
+    config = config_for_model(args.model) if args.model else DEFAULT_CONFIG
     if args.results_dir is not None:
         config = dataclasses.replace(config, results_dir=args.results_dir)
     return asyncio.run(run_sweep(args, config))

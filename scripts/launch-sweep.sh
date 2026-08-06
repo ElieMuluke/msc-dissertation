@@ -1,28 +1,48 @@
 #!/usr/bin/env bash
-# Launch the full sweep: two Ollama servers (one per arm) + two runners,
+# Launch a full sweep: two Ollama servers (one per arm) + two runners,
 # each in its own tmux session. Arms run in parallel; each arm is
 # internally sequential (PRD-A execution constant).
 #
-# Usage: launch-sweep.sh [--recreate]
-#   --recreate  kill pre-existing ollama-armA/ollama-armB tmux sessions and
-#               start fresh pinned servers. Without it, an existing session
-#               is a hard error: we cannot verify a stale server was started
-#               with the pinned env (OLLAMA_NUM_PARALLEL=1 etc.).
+# Usage: launch-sweep.sh [--recreate] [--model TAG]
+#   --recreate   kill pre-existing ollama-armA/ollama-armB tmux sessions and
+#                start fresh pinned servers. Without it, an existing session
+#                is a hard error: we cannot verify a stale server was started
+#                with the pinned env (OLLAMA_NUM_PARALLEL=1 etc.).
+#   --model TAG  replication model (config.REPLICATION_MODELS); selects that
+#                model's results dir + manifest. Default: the headline
+#                pre-registered model (qwen3.5:9b -> results/). The runners'
+#                first warm-up call loads the model; OLLAMA_MAX_LOADED_MODELS=1
+#                evicts a previously loaded model automatically, so switching
+#                models between sweeps needs no unload step.
 #
-# Prereqs: backend/experiments/results/manifest.json generated
-#          (cd backend && python -m experiments.harness.manifest)
-#          and all gates G0-G4 green.
+# Prereqs: the model's manifest generated
+#          (cd backend && python -m experiments.harness.manifest --model TAG)
+#          and the model's gates green (G0-G4, or mini-gates for replications).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND="$REPO/backend"
 PY="$BACKEND/.venv/bin/python"
-MANIFEST="$BACKEND/experiments/results/manifest.json"
-RECREATE="${1:-}"
+
+RECREATE=""
+MODEL=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --recreate) RECREATE="--recreate"; shift ;;
+    --model) MODEL="$2"; shift 2 ;;
+    *) echo "ERROR: unknown argument '$1'" >&2; exit 1 ;;
+  esac
+done
+if [[ -z "$MODEL" ]]; then
+  MODEL="$(cd "$BACKEND" && $PY -c 'from experiments.config import DEFAULT_CONFIG; print(DEFAULT_CONFIG.model)')"
+fi
+RESULTS_DIR="$(cd "$BACKEND" && $PY -c "from experiments.config import config_for_model; print(config_for_model('$MODEL').results_dir)")"
+MANIFEST="$RESULTS_DIR/manifest.json"
+echo "sweep model: $MODEL  (results: $RESULTS_DIR)"
 
 if [[ ! -f "$MANIFEST" ]]; then
   echo "ERROR: $MANIFEST missing — generate it first:" >&2
-  echo "  (cd $BACKEND && $PY -m experiments.harness.manifest)" >&2
+  echo "  (cd $BACKEND && $PY -m experiments.harness.manifest --model '$MODEL')" >&2
   exit 1
 fi
 
@@ -61,17 +81,16 @@ for port in 11437 11435; do
   echo "  :$port up"
 done
 
-# Verify the digest on each server against the manifest (F3). The servers
-# read the system model store (read-only for this user), so pull is a
-# fallback for a missing/mismatched model only — and a drifted digest after
-# pulling means the tag moved since pre-registration: never launch on it.
-MODEL="$(cd "$BACKEND" && $PY -c 'from experiments.config import DEFAULT_CONFIG; print(DEFAULT_CONFIG.model)')"
+# Verify the digest on each server against the model's manifest (F3). The
+# servers read the system model store (read-only for this user), so pull is
+# a fallback for a missing/mismatched model only — and a drifted digest
+# after pulling means the tag moved since pre-registration: never launch.
 EXPECTED="$($PY -c "import json; print(json.load(open('$MANIFEST'))['model_digest'])")"
 digest_on() {
   curl -s "http://127.0.0.1:$1/api/tags" | $PY -c "
 import json, sys
 tags = json.load(sys.stdin).get('models', [])
-print(next((m['digest'] for m in tags if m['name'] in ('$MODEL', '$MODEL:latest')), ''))
+print(next((m['digest'] for m in tags if m['name'] in ('$MODEL', '$MODEL'.removesuffix(':latest'), '$MODEL:latest')), ''))
 "
 }
 for port in 11437 11435; do
@@ -92,9 +111,9 @@ for port in 11437 11435; do
 done
 
 tmux new-session -d -s runner-armA \
-  "cd $BACKEND && $PY -m experiments.harness.runner --arm single 2>&1 | tee -a experiments/results/runner-single.log"
+  "cd $BACKEND && $PY -m experiments.harness.runner --arm single --model '$MODEL' 2>&1 | tee -a '$RESULTS_DIR/runner-single.log'"
 tmux new-session -d -s runner-armB \
-  "cd $BACKEND && $PY -m experiments.harness.runner --arm mas 2>&1 | tee -a experiments/results/runner-mas.log"
+  "cd $BACKEND && $PY -m experiments.harness.runner --arm mas --model '$MODEL' 2>&1 | tee -a '$RESULTS_DIR/runner-mas.log'"
 
-echo "sweep launched. Watch: tmux attach -t runner-armA | runner-armB"
-echo "progress: watch cat $BACKEND/experiments/results/progress.json"
+echo "sweep launched ($MODEL). Watch: tmux attach -t runner-armA | runner-armB"
+echo "progress: watch cat $RESULTS_DIR/progress.json"

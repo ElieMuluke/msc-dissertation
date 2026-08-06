@@ -65,7 +65,12 @@ class ExperimentConfig:
     """Everything the runner and manifest need, in one injectable object."""
 
     model: str = "qwen3.5:9b"
-    think: bool = False
+    #: Wire ``think`` parameter: ``False`` sends ``think: false`` (required
+    #: for thinking models — qwen3.5 thinks by default, see G0); ``None``
+    #: omits the parameter entirely (for models without a thinking mode,
+    #: where sending it could be rejected — captured per-model by the
+    #: replication mini-gate).
+    think: bool | None = False
     #: One Ollama server per arm (PRD-A execution constant).
     #: Arm A moved :11434 -> :11437 on 2026-08-06 (gate day): the machine's
     #: systemd Ollama (unpinned env) owns :11434 and cannot be stopped
@@ -104,3 +109,37 @@ MAS_TOOL_PARTITION: dict[str, tuple[str, ...]] = {
 }
 
 DEFAULT_CONFIG = ExperimentConfig()
+
+# --- Replication extension (2026-08-06, owner-approved) ----------------------
+#: model tag -> (results dirname, wire think parameter). qwen3.5:9b is the
+#: headline pre-registered sweep; the other two replicate the identical
+#: design as robustness checks (same conditions, cases, metrics, and the
+#: SAME planned seed schedule — planned_runs() derives seeds from
+#: MASTER_SEED only, independent of model, so per-(condition, case, repeat)
+#: seeds are identical across models for cross-model comparability).
+REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
+    "qwen3.5:9b": ("results", False),
+    "qwen2.5:7b-instruct": ("results-qwen2.5-7b", None),
+    "mistral-nemo:latest": ("results-mistral-nemo", None),
+}
+
+
+def config_for_model(model: str) -> ExperimentConfig:
+    """The full experiment configuration for one replication model.
+
+    Each model gets its own sibling results dir (own manifest, journals,
+    progress, gates evidence) so sweeps can never contaminate each other.
+    """
+    import dataclasses
+
+    if model not in REPLICATION_MODELS:
+        raise KeyError(
+            f"unknown replication model {model!r}; add it to REPLICATION_MODELS"
+        )
+    dirname, think = REPLICATION_MODELS[model]
+    return dataclasses.replace(
+        DEFAULT_CONFIG,
+        model=model,
+        think=think,
+        results_dir=EXPERIMENTS_DIR / dirname,
+    )
