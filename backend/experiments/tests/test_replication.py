@@ -38,20 +38,21 @@ def test_seed_schedule_identical_across_models() -> None:
     plans = [
         manifest_mod.planned_runs(config_for_model(m)) for m in REPLICATION_MODELS
     ]
-    assert plans[0] == plans[1] == plans[2]
+    assert all(p == plans[0] for p in plans)
     assert len(plans[0]) == 2300
 
 
 def test_config_record_flows_model_and_think() -> None:
     records = {m: manifest_mod.config_record(config_for_model(m)) for m in REPLICATION_MODELS}
     hashes = {m: manifest_mod._sha256(r) for m, r in records.items()}
-    assert len(set(hashes.values())) == 3  # model identity is hashed
+    assert len(set(hashes.values())) == len(REPLICATION_MODELS)  # model identity is hashed
     for m, r in records.items():
         assert r["model"] == m
     # everything except model identity is the identical design
     for r in records.values():
         r.pop("model"), r.pop("think")
-    assert list(records.values())[0] == list(records.values())[1] == list(records.values())[2]
+    stripped = list(records.values())
+    assert all(r == stripped[0] for r in stripped)
 
 
 def test_build_manifest_uses_model_config(monkeypatch, tmp_path) -> None:
