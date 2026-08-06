@@ -512,5 +512,119 @@ export async function clearTabularData(): Promise<void> {
   if (!res.ok) throw new Error(await res.text());
 }
 
+// ---------------------------------------------------------------------------
+// Case analysis (POST /api/analysis, SSE) + reports + experiment progress
+// ---------------------------------------------------------------------------
+
+export type Pipeline = "single" | "mas";
+
+export interface AnalysisStep {
+  stage: string;
+  [key: string]: unknown;
+}
+
+export interface AnalysisDone {
+  decision: string;
+  rationale: string;
+  report_id: string;
+  pipeline: Pipeline;
+}
+
+export interface AnalysisHandlers {
+  /** Fired for every step frame (coarse route stages + agent-reported steps). */
+  onStep: (step: AnalysisStep) => void;
+  /** Fired once with the decision, rationale and report id. */
+  onDone: (result: AnalysisDone) => void;
+  /** Fired if the request, pipeline resolution or agent run fails. */
+  onError: (message: string) => void;
+}
+
+/** Run one case analysis, streaming agent steps over SSE. */
+export async function runAnalysis(
+  body: { account_id: string; bank?: string; pipeline?: Pipeline; session_id?: string },
+  handlers: AnalysisHandlers,
+  signal?: AbortSignal
+): Promise<void> {
+  try {
+    const res = await fetch(`${API_URL}/api/analysis`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+    if (!res.ok || !res.body) {
+      handlers.onError((await res.text()) || `Analysis failed with status ${res.status}`);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+      for (const frame of frames) {
+        if (!frame.trim()) continue;
+        let event = "message";
+        let data = "";
+        for (const line of frame.split("\n")) {
+          if (line.startsWith("event:")) event = line.slice(6).trim();
+          else if (line.startsWith("data:")) data += line.slice(5).trim();
+        }
+        if (!data) continue;
+        const payload = JSON.parse(data);
+        if (event === "step") handlers.onStep(payload as AnalysisStep);
+        else if (event === "done") handlers.onDone(payload as AnalysisDone);
+        else if (event === "error") {
+          handlers.onError(payload.message ?? "Analysis failed");
+          return;
+        }
+      }
+    }
+  } catch (error) {
+    if (signal?.aborted) return;
+    handlers.onError(error instanceof Error ? error.message : String(error));
+  }
+}
+
+export interface ReportMeta {
+  id: string;
+  created_at: string;
+  account_id: string;
+  bank?: string | null;
+  pipeline: Pipeline;
+  decision: string;
+}
+
+export async function getReports(): Promise<ReportMeta[]> {
+  const res = await fetch(`${API_URL}/api/reports`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+/** Direct download URL for one analysis report (markdown with the audit trace appendix). */
+export function reportDownloadUrl(reportId: string): string {
+  return `${API_URL}/api/reports/${encodeURIComponent(reportId)}`;
+}
+
+export interface ExperimentProgress {
+  available: boolean;
+  [key: string]: unknown;
+}
+
+export async function getExperimentProgress(): Promise<ExperimentProgress> {
+  try {
+    const res = await fetch(`${API_URL}/api/experiment/progress`);
+    if (!res.ok) return { available: false };
+    return res.json();
+  } catch {
+    return { available: false };
+  }
+}
+
 
 

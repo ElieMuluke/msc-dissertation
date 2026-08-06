@@ -5,6 +5,8 @@ import { SearchDocs } from "./components/SearchDocs";
 import { ChatDocs } from "./components/ChatDocs";
 import { ManageDatabase } from "./components/ManageDatabase";
 import { FileManager, type IngestedFile } from "./components/FileManager";
+import { CaseAnalysis } from "./components/CaseAnalysis";
+import { ExperimentProgress } from "./components/ExperimentProgress";
 import { getIngestedFiles, deleteIngestedFile, checkSystemHealth } from "./api";
 
 export default function App() {
@@ -21,7 +23,7 @@ export default function App() {
 
   const [filesList, setFilesList] = useState<IngestedFile[]>([]);
   const [isBackendDbSupported, setIsBackendDbSupported] = useState(true);
-  const [activeTab, setActiveTab] = useState<"search" | "chat">("search");
+  const [activeTab, setActiveTab] = useState<"search" | "chat" | "analysis">("search");
 
   const [dbStatus, setDbStatus] = useState<"connected" | "disconnected">("connected");
   const [llmStatus, setLlmStatus] = useState<"connected" | "disconnected">("connected");
@@ -234,6 +236,7 @@ export default function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-col md:col-span-4 xl:col-span-3 gap-6 md:gap-8 items-stretch md:sticky md:top-20 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto pr-3 pb-4 animate-fade-in min-w-0 order-2 md:order-1">
             <UploadDocs onUploadSuccess={handleUploadSuccess} dbStatus={dbStatus} />
             <UploadTabular />
+            <ExperimentProgress />
             <FileManager files={filesList} onDelete={handleDeleteFile} />
             <ManageDatabase onClearSuccess={handleClearDatabase} />
           </div>
@@ -241,7 +244,7 @@ export default function App() {
           {/* Right panel: Search and Chat Workspace */}
           <div className="md:col-span-8 xl:col-span-9 space-y-6 order-1 md:order-2">
             {/* Modern Tab Selector */}
-            <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 max-w-xs">
+            <div className="flex p-0.5 rounded-lg bg-neutral-200/50 dark:bg-neutral-800/60 max-w-md">
               <button
                 type="button"
                 onClick={() => setActiveTab("search")}
@@ -264,12 +267,25 @@ export default function App() {
               >
                 Compliance Chat
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("analysis")}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 uppercase tracking-wider ${
+                  activeTab === "analysis"
+                    ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-white"
+                    : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
+                }`}
+              >
+                Case Analysis
+              </button>
             </div>
 
             {activeTab === "search" ? (
               <SearchDocs dbStatus={dbStatus} />
-            ) : (
+            ) : activeTab === "chat" ? (
               <ChatDocs dbStatus={dbStatus} llmStatus={llmStatus} />
+            ) : (
+              <CaseAnalysis />
             )}
           </div>
         </div>
