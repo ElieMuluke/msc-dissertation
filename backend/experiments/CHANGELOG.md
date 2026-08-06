@@ -3,6 +3,19 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-06 (late) — mistral-nemo excluded on failed mini-gate; mistral-small3.2:24b substituted
+
+mistral-nemo:latest failed its mini-gate: single-arm pilot 0/4 valid extractions.
+Diagnosis (reproduced; evidence `results-mistral-nemo/gates/mini-gates.json`): with the
+experiment's system prompt (~1.7k chars) AND tools bound, the model returns empty
+content and no tool calls; short-prompt+tools works, real-prompt-without-tools works.
+Accommodating it would require per-model prompt changes — a design fork breaking
+cross-model comparability — so the model is excluded, not accommodated. Substitute
+third model: `mistral-small3.2:24b` (same family, native function calling; mini-gates
+to run before its launch). Decision made after the headline sweep was sealed and before
+any nemo sweep run. qwen2.5:7b-instruct replication launched first (mini-gates ALL
+PASS: think-probe clean, determinism 5/5 byte-identical, pilot 8/8).
+
 ## 2026-08-06 (evening) — replication extension: two additional models
 
 Owner-approved, recorded BEFORE any replication run. After the qwen3.5:9b

@@ -1,0 +1,87 @@
+{
+  "model": "qwen2.5:7b-instruct",
+  "date": "2026-08-06T22:02:32Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"qwen2.5:7b-instruct\\\" does not support thinking\"}"
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "sha256": [
+      "458d02aa7340c6518c476b09ca4d52308eb49afb5bf0dc8cf81f28d507d92a6b"
+    ],
+    "output_len": 335
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "investigate",
+          "investigate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 2.18
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "investigate",
+          "investigate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 8.96
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-qwen2.5-7b-instruct-aezpqgyy"
+  }
+}

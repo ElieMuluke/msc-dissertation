@@ -1,0 +1,87 @@
+{
+  "model": "mistral-nemo:latest",
+  "date": "2026-08-06T22:04:40Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventyone"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventyone"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventyone"
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventyone"
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"mistral-nemo:latest\\\" does not support thinking\"}"
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "sha256": [
+      "4e805c1651aea4852c80cbb033b9b440ec023ab10bc8ef850f591cdf86cbfbca"
+    ],
+    "output_len": 408
+  },
+  "pilot": {
+    "pass": false,
+    "valid_total": "3/8",
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 0,
+        "decisions": [
+          "malformed",
+          "malformed",
+          "malformed",
+          "malformed"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 1.19
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 3,
+        "decisions": [
+          "escalate",
+          "investigate",
+          "malformed",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 10.29
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-mistral-nemo-latest-h_mmuvgb"
+  }
+}
