@@ -13,9 +13,21 @@ objects suitable for native tool calling (e.g. Ollama qwen models via ``bind_too
 
 from __future__ import annotations
 
+from .production_tools import (
+    build_country_risk_tool,
+    build_production_tools,
+    build_query_accounts_tool,
+    build_query_transactions_tool,
+    build_sanctions_check_tool,
+)
 from .tools import build_rag_tool, build_rag_tools
 
 __all__ = [
     "build_rag_tool",
     "build_rag_tools",
+    "build_production_tools",
+    "build_query_accounts_tool",
+    "build_query_transactions_tool",
+    "build_sanctions_check_tool",
+    "build_country_risk_tool",
 ]

@@ -11,7 +11,13 @@ langchain-text-splitters
 # still has it while supporting langchain-core 1.x (needed by langchain-chroma/
 # -huggingface/-ollama). See app/evaluation/ragas_eval.py.
 langchain-community==0.3.30
-langchain-ollama
+# langchain-ollama/langchain-core/ollama/langgraph pinned to the exact reviewed
+# versions: the PRD-A wire-payload tests mock the ollama client boundary, so an
+# unpinned reinstall could silently change wire serialization (think/options
+# placement) without any test noticing.
+langchain-ollama==1.1.0
+langchain-core==1.4.9
+ollama==0.6.2
 sentence-transformers
 rank_bm25
 pypdf
@@ -20,3 +26,6 @@ ragas==0.2.15
 json-repair
 python-dotenv
 pytest
+# PRD-A experiment harness (shared agent modules in app/agents + experiments/)
+langgraph==1.2.9
+dfah-bench==0.1.1
