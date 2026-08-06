@@ -1,0 +1,36 @@
+{
+  "generated": "2026-08-05",
+  "note": "Sanctions / country-risk list files consumed by app.ingestion.watchlists. Refreshed manually; re-download from source_url and update downloaded/list_date when refreshing.",
+  "files": {
+    "sdn.csv": {
+      "list": "OFAC Specially Designated Nationals and Blocked Persons (SDN) List",
+      "source_url": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+      "status": "real download",
+      "downloaded": "2026-08-05",
+      "format": "headerless CSV: ent_num, SDN_Name, SDN_Type, Program, Title, Call_Sign, Vess_type, Tonnage, GRT, Vess_flag, Vess_owner, Remarks; '-0-' denotes null"
+    },
+    "ConList.csv": {
+      "list": "HM Treasury / OFSI Consolidated List of Financial Sanctions Targets (UK)",
+      "source_url": "https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv",
+      "status": "real download",
+      "downloaded": "2026-08-05",
+      "list_date": "2026-06-03 ('Last Updated' line inside the file)",
+      "format": "line 1 = 'Last Updated,<date>', line 2 = header, name split across 'Name 6' (surname) + 'Name 1..5'"
+    },
+    "un_consolidated.xml": {
+      "list": "UN Security Council Consolidated List",
+      "source_url": "https://scsanctions.un.org/resources/xml/en/consolidated.xml",
+      "status": "real download",
+      "downloaded": "2026-08-05",
+      "list_date": "2026-08-04 (dateGenerated attribute inside the file)",
+      "format": "XML, INDIVIDUALS/INDIVIDUAL + ENTITIES/ENTITY; requires a browser User-Agent to download (plain curl gets 404)"
+    },
+    "fatf_high_risk.json": {
+      "list": "FATF High-Risk Jurisdictions (call for action) + Jurisdictions under Increased Monitoring",
+      "source_url": "https://www.fatf-gafi.org/en/countries/black-and-grey-lists.html",
+      "status": "authored from the June 2026 FATF statements (fatf-gafi.org blocks automated download; contents cross-checked against multiple secondary trackers on 2026-08-05 - see the note inside the file)",
+      "downloaded": "2026-08-05",
+      "list_date": "2026-06-19"
+    }
+  }
+}

@@ -8,10 +8,11 @@ commits — keeping a pure-core/thin-shell split.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator
+from datetime import datetime
 from itertools import islice
 from typing import IO, Optional, Union
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import sessionmaker
 
@@ -147,6 +148,94 @@ class TabularSystem:
                     "transactions": session.scalar(select(func.count()).select_from(Transaction)) or 0,
                 }
         return dict(self._counts_cache)
+
+    def query_accounts(
+        self,
+        account_number: Optional[str] = None,
+        bank_id: Optional[str] = None,
+        entity_name: Optional[str] = None,
+        limit: int = 20,
+    ) -> list[dict]:
+        """Parameterised read over ``accounts`` (no labels involved).
+
+        Filters are ANDed; ``account_number``/``bank_id`` match exactly (they carry
+        leading zeros — never cast to int), ``entity_name`` matches case-insensitively
+        as a substring. Returns plain row dicts including the primary-key ``id`` so an
+        audit trail can reference the exact rows read.
+        """
+        stmt = select(Account)
+        if account_number is not None:
+            stmt = stmt.where(Account.account_number == account_number)
+        if bank_id is not None:
+            stmt = stmt.where(Account.bank_id == bank_id)
+        if entity_name is not None:
+            stmt = stmt.where(Account.entity_name.ilike(f"%{entity_name}%"))
+        stmt = stmt.limit(limit)
+        with self._session_factory() as session:
+            return [
+                {
+                    "id": row.id,
+                    "bank_name": row.bank_name,
+                    "bank_id": row.bank_id,
+                    "account_number": row.account_number,
+                    "entity_id": row.entity_id,
+                    "entity_name": row.entity_name,
+                }
+                for row in session.scalars(stmt)
+            ]
+
+    def query_transactions(
+        self,
+        account_number: str,
+        bank_id: Optional[str] = None,
+        direction: str = "both",
+        min_amount: Optional[float] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+        limit: int = 50,
+    ) -> list[dict]:
+        """Parameterised read over ``transactions`` for one account, newest first.
+
+        ``direction`` is ``"in"`` (account is receiver), ``"out"`` (account is sender)
+        or ``"both"``. ``min_amount`` filters on the paid amount. The ground-truth
+        ``is_laundering`` label is deliberately NOT returned — it must never reach a
+        detection agent as an input feature (see :class:`~.models.Transaction`).
+        Returns plain row dicts including the primary-key ``id`` so an audit trail can
+        reference the exact rows read.
+        """
+        outgoing = Transaction.from_account == account_number
+        incoming = Transaction.to_account == account_number
+        if bank_id is not None:
+            outgoing = outgoing & (Transaction.from_bank == bank_id)
+            incoming = incoming & (Transaction.to_bank == bank_id)
+        clauses = {"in": incoming, "out": outgoing, "both": or_(incoming, outgoing)}
+        if direction not in clauses:
+            raise ValueError(f"direction must be one of {sorted(clauses)}, got {direction!r}")
+        stmt = select(Transaction).where(clauses[direction])
+        if min_amount is not None:
+            stmt = stmt.where(Transaction.amount_paid >= min_amount)
+        if since is not None:
+            stmt = stmt.where(Transaction.timestamp >= since)
+        if until is not None:
+            stmt = stmt.where(Transaction.timestamp <= until)
+        stmt = stmt.order_by(Transaction.timestamp.desc()).limit(limit)
+        with self._session_factory() as session:
+            return [
+                {
+                    "id": row.id,
+                    "timestamp": row.timestamp.isoformat(),
+                    "from_bank": row.from_bank,
+                    "from_account": row.from_account,
+                    "to_bank": row.to_bank,
+                    "to_account": row.to_account,
+                    "amount_paid": row.amount_paid,
+                    "payment_currency": row.payment_currency,
+                    "amount_received": row.amount_received,
+                    "receiving_currency": row.receiving_currency,
+                    "payment_format": row.payment_format,
+                }
+                for row in session.scalars(stmt)
+            ]
 
     def clear(self) -> None:
         """Delete all rows from both tables (transactions first, then accounts)."""
