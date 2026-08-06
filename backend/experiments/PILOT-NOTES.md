@@ -74,6 +74,13 @@ One case completed through DFAH's own `Replay` orchestrator (1 case × 2
 replays, its minimum design), arm A behind the DFAH agent protocol; episode
 store in `results/gates/g2-dfah-replay/`.
 
+Note: `results/gates/g2-report.json` self-reports `"status": "partial"` — that
+label comes from DFAH's own replay protocol (its strict decision-parse
+eligibility rules for computing its published metrics), not from a failure of
+this gate; the gate's criterion (case completes through DFAH's runner with
+tools responding) is met, and the sweep uses the PRD-A runner, not DFAH's
+eligibility pipeline.
+
 ## Arms smoke test (G3 direction): both arms end-to-end, 4/4 extraction
 
 2 cases × both arms via `ArmAdapter`, T=0, seed=42, against `:11434` (arm B
