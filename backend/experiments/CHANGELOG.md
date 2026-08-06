@@ -3,6 +3,27 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-06 — manifest re-stamp + ROUGE-L appendix metric (pre-launch)
+
+- **Manifest re-stamped** post pre-registration commit, pre-run-1: the
+  recorded `git_sha` (`a1aec5c`) predated the commits that contain the
+  reviewed harness; regenerated so it points at the committed code
+  (`944b0bd`). Verified: `config_hash` unchanged (`76337b11ca1c…`) and the
+  2,300-run plan (seeds, order, totals) plus model digest/show/version are
+  byte-identical — only `git_sha` and `created_at` differ. No journals
+  existed at re-stamp time.
+- **ROUGE-L lexical consistency added** (lecturer-requested, appendix tier,
+  pre-registered 2026-08-06 while journals are empty): per-case mean
+  pairwise ROUGE-L F1 over the FULL `raw_output` across repeats
+  (token-level LCS, lowercase, whitespace tokenization; implemented
+  in-repo, no new dependency). Reported per arm × condition in its own
+  "Appendix: lexical consistency (ROUGE-L)" report section, labelled as
+  surface-form overlap, distinct from decision- and trajectory-level
+  metrics. **Does not alter the pre-registered Tier 1 winner criterion.**
+  BLEU was rejected: BLEU is precision/reference-oriented and needs a
+  designated reference; repeats of one case have none, while pairwise
+  ROUGE-L F1 is symmetric and reference-free.
+
 ## 2026-08-06 — final pre-launch fix batch (port reviews + goals audit)
 
 - **tokens ÷ pass^k at all k**: `analysis/metrics.py` previously reported a
