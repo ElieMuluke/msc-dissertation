@@ -1,6 +1,6 @@
 {
   "pass": true,
-  "n": 8,
+  "n": 10,
   "records": [
     {
       "call": 0,
@@ -26,7 +26,7 @@
         "content",
         "role"
       ],
-      "wall_s": 0.83,
+      "wall_s": 83.06,
       "clean": true
     },
     {
@@ -53,7 +53,7 @@
         "content",
         "role"
       ],
-      "wall_s": 1.64,
+      "wall_s": 1.38,
       "clean": true
     },
     {
@@ -80,7 +80,7 @@
         "content",
         "role"
       ],
-      "wall_s": 4.28,
+      "wall_s": 3.62,
       "clean": true
     },
     {
@@ -107,7 +107,7 @@
         "content",
         "role"
       ],
-      "wall_s": 0.61,
+      "wall_s": 0.62,
       "clean": true
     },
     {
@@ -134,7 +134,7 @@
         "content",
         "role"
       ],
-      "wall_s": 0.95,
+      "wall_s": 0.87,
       "clean": true
     },
     {
@@ -161,7 +161,7 @@
         "content",
         "role"
       ],
-      "wall_s": 0.65,
+      "wall_s": 0.59,
       "clean": true
     },
     {
@@ -188,7 +188,7 @@
         "content",
         "role"
       ],
-      "wall_s": 1.33,
+      "wall_s": 1.18,
       "clean": true
     },
     {
@@ -215,7 +215,61 @@
         "content",
         "role"
       ],
-      "wall_s": 4.78,
+      "wall_s": 4.54,
+      "clean": true
+    },
+    {
+      "call": 8,
+      "prompt": "What is 23 * 17? Answer with the number only.",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "391",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.63,
+      "clean": true
+    },
+    {
+      "call": 9,
+      "prompt": "In one sentence, what does KYC stand for and why does it matter?",
+      "http_ok": true,
+      "thinking_field": null,
+      "inline_think_tags": false,
+      "content_head": "KYC stands for \"Know Your Customer,\" a vital regulatory process that verifies customer identities to prevent financial crimes such as money laundering, fraud, and terrorist financing while ensuring compliance with legal standards.",
+      "response_keys": [
+        "created_at",
+        "done",
+        "done_reason",
+        "eval_count",
+        "eval_duration",
+        "load_duration",
+        "message",
+        "model",
+        "prompt_eval_count",
+        "prompt_eval_duration",
+        "total_duration"
+      ],
+      "message_keys": [
+        "content",
+        "role"
+      ],
+      "wall_s": 0.84,
       "clean": true
     }
   ]

@@ -3,6 +3,28 @@
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 
+## 2026-08-06 — gate day: arm-A server port :11434 → :11437 (pre-launch)
+
+Environment constraint found during launch-gate prep: the machine's
+systemd Ollama service (runs as user `ollama`, unpinned env, default
+KEEP_ALIVE/NUM_PARALLEL) permanently owns :11434 and cannot be stopped
+without interactive sudo, which the gate session does not have. Rather
+than run arm A on an unpinned server, arm A's dedicated pinned server
+moved to **:11437** (`scripts/serve-armA.sh`, `experiments/config.py`,
+`scripts/launch-sweep.sh`); arm B stays on :11435 as pre-registered.
+The systemd server on :11434 becomes the dev/analysis server (taking the
+role PRD-A assigned to :11436) and must receive no sweep traffic.
+
+Both pinned servers read the world-readable system model store
+(`OLLAMA_MODELS=/usr/share/ollama/.ollama/models`) — user `el` has no
+local store, and the system store holds the exact digest-pinned weights
+(verified against the manifest on both servers at gate time).
+
+Port numbers are execution infrastructure, not a locked design row (the
+locked constant is "two Ollama servers, one arm each, pinned env"), and
+no journalled runs exist; recorded here pre-launch per the
+pre-registration discipline.
+
 ## 2026-08-06 — manifest re-stamp + ROUGE-L appendix metric (pre-launch)
 
 - **Manifest re-stamped** post pre-registration commit, pre-run-1: the

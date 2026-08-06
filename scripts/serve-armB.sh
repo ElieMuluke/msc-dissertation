@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Dedicated Ollama server for arm B (mas) on :11435, PRD-A env pinning.
 # Run under tmux: scripts/launch-sweep.sh does this for you.
+#
+# Model store: user `el` has no local store; the world-readable system
+# store already holds the digest-pinned weights. Serving reads only.
 set -euo pipefail
 
 export OLLAMA_HOST=127.0.0.1:11435
 export OLLAMA_NUM_PARALLEL=1
 export OLLAMA_MAX_LOADED_MODELS=1
 export OLLAMA_KEEP_ALIVE=-1
+export OLLAMA_MODELS=/usr/share/ollama/.ollama/models
 
 exec ollama serve

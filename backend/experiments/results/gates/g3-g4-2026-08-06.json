@@ -1,0 +1,88 @@
+{
+  "date": "2026-08-06",
+  "servers": {
+    "single": "http://localhost:11437 (pinned)",
+    "mas": "http://localhost:11435 (pinned)"
+  },
+  "concurrent": true,
+  "arms": {
+    "single": {
+      "runs": 15,
+      "valid_extractions": 15,
+      "wall_clock_s": [
+        8.925,
+        6.733,
+        7.711,
+        4.306,
+        4.208,
+        3.893,
+        8.472,
+        6.629,
+        6.663,
+        5.39,
+        4.735,
+        4.281,
+        6.751,
+        6.65,
+        3.612
+      ],
+      "mean_s": 5.93,
+      "median_s": 6.63,
+      "mean_tokens": 3875
+    },
+    "mas": {
+      "runs": 15,
+      "valid_extractions": 15,
+      "wall_clock_s": [
+        21.39,
+        19.859,
+        23.791,
+        18.626,
+        15.213,
+        12.83,
+        14.073,
+        15.782,
+        13.527,
+        12.727,
+        14.004,
+        11.037,
+        13.848,
+        14.34,
+        13.867
+      ],
+      "mean_s": 15.66,
+      "median_s": 14.07,
+      "mean_tokens": 7612
+    }
+  },
+  "g4_drill": {
+    "killed_after_runs": 1,
+    "resume_log": "planned=4 completed=16 todo=3",
+    "t0_runs": [
+      {
+        "run_id": "single:TXN-2025-001:t0-fixed:0",
+        "seed": 42,
+        "decision": "investigate",
+        "sha256_raw_output": "d68d7754e3f4ff08e47e2bc25435e3b3d09ceb65b68fdd4dfec0851e68c355a4"
+      },
+      {
+        "run_id": "single:TXN-2025-001:t0-fixed:1",
+        "seed": 42,
+        "decision": "investigate",
+        "sha256_raw_output": "d68d7754e3f4ff08e47e2bc25435e3b3d09ceb65b68fdd4dfec0851e68c355a4"
+      },
+      {
+        "run_id": "single:TXN-2025-002:t0-fixed:0",
+        "seed": 42,
+        "decision": "escalate",
+        "sha256_raw_output": "dee40d0f0e450e478774354a0a738b3ceba19a803f3ff70abcdc12330b083791"
+      },
+      {
+        "run_id": "single:TXN-2025-002:t0-fixed:1",
+        "seed": 42,
+        "decision": "escalate",
+        "sha256_raw_output": "dee40d0f0e450e478774354a0a738b3ceba19a803f3ff70abcdc12330b083791"
+      }
+    ]
+  }
+}

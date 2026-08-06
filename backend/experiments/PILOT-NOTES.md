@@ -129,3 +129,68 @@ repeats — determinism holds end-to-end, not just for single calls.
    (`owner_reviewed` still `false`) — required before launch.
 5. Decide whether `results/gates/` artifacts stay in the repo when the
    25-run git sync starts committing `results/` (they will be included).
+
+---
+
+# Launch gates 2026-08-06 (pinned servers) — ALL GREEN
+
+Environment: systemd Ollama (user `ollama`, **unpinned**) permanently owns
+`:11434` and could not be stopped (interactive sudo unavailable) → arm A's
+pinned server moved to **:11437** (CHANGELOG entry; `config_hash`
+verified unchanged — base URLs are not hashed). Arm B on `:11435` as
+planned. No stale tmux sessions existed (no tmux server was running).
+Both pinned servers read the world-readable system model store
+(`OLLAMA_MODELS=/usr/share/ollama/.ollama/models`; user `el` has no local
+store). GPU: RTX PRO 5000, 48 GB — both models resident concurrently
+(~15 GB each incl. 16k KV).
+
+Pinning verified via `/proc/<pid>/environ` of both `ollama serve`
+processes: `OLLAMA_NUM_PARALLEL=1`, `OLLAMA_MAX_LOADED_MODELS=1`,
+`OLLAMA_KEEP_ALIVE=-1`, `OLLAMA_MODELS=…` present on both. Digest on both
+servers equals the manifest pin
+(`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`).
+
+| Gate | Verdict | Evidence |
+|---|---|---|
+| G0 think-off, n=10, :11437 | **PASS 10/10** (no `thinking` field, no inline tags) | `results/gates/g0-think-off.json` |
+| G1 determinism, :11437 | **PASS 5/5** byte-identical after 1 discarded warm-up | `results/gates/g1-determinism.json` |
+| G2 DFAH runner | PASS 2026-08-05 (unchanged) | `results/gates/g2-report.json` |
+| G3 both arms, 5 cases × 3 repeats, **concurrent** | **PASS 15/15 valid per arm** (bar ≥13/15), 0 malformed | `results/gates/g3-2026-08-06/journal-*.jsonl`, `g3-g4-2026-08-06.json` |
+| G4 kill/resume on pinned setup | **PASS** (SIGKILL mid-run-2; restart: `planned=4 completed=16 todo=3`, planned seed 42 continued) | `results/gates/g3-g4-2026-08-06.json` |
+
+Byte-equivalence hashes (port + server-move evidence):
+
+- G1 probe output sha256
+  `fbdcf4c7fee5d26c6012c8e025d4f1ef0869506f4074b7974229e3fb339894b4`
+  (len 895) — **identical** to the committed 2026-08-05 pre-port,
+  dev-server G1 evidence (verified against `git show c10dca9`).
+- Agent-level anchor `single:TXN-2025-001:t0-fixed:0` on the pinned
+  server: sha256(raw_output)
+  `d68d7754e3f4ff08e47e2bc25435e3b3d09ceb65b68fdd4dfec0851e68c355a4`;
+  decision/trajectory/agent_messages/tokens (3587+441) **exactly match**
+  the 2026-08-05 dev-server run that was byte-identical pre- vs post-port.
+  T=0 repeats byte-identical for both drilled cases today.
+
+G3 wall clocks (both arms running concurrently — real GPU contention):
+
+| Arm | runs | mean | median | min–max | mean tokens |
+|---|---|---|---|---|---|
+| single (:11437) | 15 | 5.9 s | 6.6 s | 3.6–8.9 s | 3,875 |
+| mas (:11435) | 15 | 15.7 s | 14.1 s | 11.0–23.8 s | 7,612 |
+
+Sweep ETA (1,150 runs/arm, arms concurrent, MAS is the bottleneck):
+
+| Launch (BST) | arm A done (~1.9 h) | arm B done (~5.0 h) |
+|---|---|---|
+| Thu 19:00 | Thu ~20:53 | **Fri ~00:00** |
+| Thu 20:00 | Thu ~21:53 | **Fri ~01:00** |
+
+Add ~20–30 % buffer for longer perturbation/t07 outliers and checkpoint
+overhead → worst case ~02:30. Far inside the "done by Sun" plan.
+
+Server state at hand-off: tmux sessions `ollama-armA` (:11437) and
+`ollama-armB` (:11435) RUNNING, pinned, digest-verified, models loaded.
+Ready for `scripts/launch-sweep.sh`. Sweep NOT launched. Reminder: the
+systemd server on `:11434` is now the dev/analysis server — no sweep
+traffic; keep `ANALYSIS_OLLAMA_URL` pointed at `:11434` (not the sweep
+ports) during the sweep.

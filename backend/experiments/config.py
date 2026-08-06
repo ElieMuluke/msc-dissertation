@@ -67,9 +67,13 @@ class ExperimentConfig:
     model: str = "qwen3.5:9b"
     think: bool = False
     #: One Ollama server per arm (PRD-A execution constant).
+    #: Arm A moved :11434 -> :11437 on 2026-08-06 (gate day): the machine's
+    #: systemd Ollama (unpinned env) owns :11434 and cannot be stopped
+    #: without interactive sudo — see CHANGELOG. :11434 is now the
+    #: dev/analysis server and must receive no sweep traffic.
     arm_base_urls: dict[str, str] = field(
         default_factory=lambda: {
-            "single": "http://localhost:11434",
+            "single": "http://localhost:11437",
             "mas": "http://localhost:11435",
         }
     )

@@ -54,28 +54,38 @@ tmux new-session -d -s ollama-armA "bash $REPO/scripts/serve-armA.sh"
 tmux new-session -d -s ollama-armB "bash $REPO/scripts/serve-armB.sh"
 
 echo "waiting for both servers..."
-for port in 11434 11435; do
+# Arm A on :11437 (see serve-armA.sh: :11434 is owned by the unpinned
+# systemd Ollama, which serves dev/analysis traffic only).
+for port in 11437 11435; do
   until curl -sf "http://127.0.0.1:$port/api/version" >/dev/null; do sleep 1; done
   echo "  :$port up"
 done
 
-# Make sure the model is present on both servers, then verify the digest on
-# each against the manifest (F3): a pull can silently move the tag; a drifted
-# digest means the weights are not the pre-registered ones.
+# Verify the digest on each server against the manifest (F3). The servers
+# read the system model store (read-only for this user), so pull is a
+# fallback for a missing/mismatched model only — and a drifted digest after
+# pulling means the tag moved since pre-registration: never launch on it.
 MODEL="$(cd "$BACKEND" && $PY -c 'from experiments.config import DEFAULT_CONFIG; print(DEFAULT_CONFIG.model)')"
 EXPECTED="$($PY -c "import json; print(json.load(open('$MANIFEST'))['model_digest'])")"
-OLLAMA_HOST=127.0.0.1:11434 ollama pull "$MODEL"
-OLLAMA_HOST=127.0.0.1:11435 ollama pull "$MODEL"
-for port in 11434 11435; do
-  ACTUAL="$(curl -s "http://127.0.0.1:$port/api/tags" | $PY -c "
+digest_on() {
+  curl -s "http://127.0.0.1:$1/api/tags" | $PY -c "
 import json, sys
-tags = json.load(sys.stdin)['models']
-print(next(m['digest'] for m in tags if m['name'] in ('$MODEL', '$MODEL:latest')))
-")"
+tags = json.load(sys.stdin).get('models', [])
+print(next((m['digest'] for m in tags if m['name'] in ('$MODEL', '$MODEL:latest')), ''))
+"
+}
+for port in 11437 11435; do
+  ACTUAL="$(digest_on "$port")"
   if [[ "$ACTUAL" != "$EXPECTED" ]]; then
-    echo "ERROR: model digest on :$port is $ACTUAL but manifest pins $EXPECTED." >&2
-    echo "The tag has moved since pre-registration. Do NOT launch; investigate" >&2
-    echo "(the runner would refuse too, unless --allow-digest-mismatch)." >&2
+    echo "  :$port model missing or digest drift — pulling $MODEL"
+    OLLAMA_HOST=127.0.0.1:$port ollama pull "$MODEL" || true
+    ACTUAL="$(digest_on "$port")"
+  fi
+  if [[ "$ACTUAL" != "$EXPECTED" ]]; then
+    echo "ERROR: model digest on :$port is '$ACTUAL' but manifest pins $EXPECTED." >&2
+    echo "The tag has moved since pre-registration (or the pull failed on the" >&2
+    echo "read-only store). Do NOT launch; investigate (the runner would" >&2
+    echo "refuse too, unless --allow-digest-mismatch)." >&2
     exit 1
   fi
   echo "  :$port digest OK ($ACTUAL)"
