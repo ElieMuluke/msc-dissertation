@@ -121,6 +121,8 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
     "qwen3.5:9b": ("results", False),
     "qwen2.5:7b-instruct": ("results-qwen2.5-7b", None),
     "mistral-nemo:latest": ("results-mistral-nemo", None),
+    # substituted for gate-failed mistral-nemo (see CHANGELOG 2026-08-06 late)
+    "mistral-small3.2:24b": ("results-mistral-small3.2", None),
 }
 
 
