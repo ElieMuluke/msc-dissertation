@@ -7,7 +7,7 @@ Relationship to PRD-A: the agents deployed here are the **same Python modules** 
 
 `backend/app/`: FastAPI (`main.py`), RAG over AML corpus (chroma, `ingestion/rag`, `agents/tools.py` → `search_aml_corpus` StructuredTool), tabular ingestion + sqlite (`ingestion/tabular`, `tabular_data_db.sqlite`), routes `api/routes/{rag,tabular}`, SSE (`api/sse.py`), ragas evaluation module, React/Vite frontend (`frontend/`).
 
-RAG corpus already ingested (2026-08-05): FATF Recommendations 2012, FATF Universal Procedures 2023, FATF ICRG Assessment/Follow-Up Procedures 2022, FATF 5th-Round Methodology handout, JMLSG Guidance Part I (June 2023, updated Aug 2025), JMLSG Guidance Part II (June 2023, updated Dec 2025).
+RAG corpus already ingested (2026-08-05): FATF Recommendations 2012, FATF Universal Procedures 2023, FATF ICRG Assessment/Follow-Up Procedures 2022, FATF 5th-Round Methodology handout, JMLSG Guidance Part I (June 2023, updated Aug 2025), JMLSG Guidance Part II (June 2023, updated Dec 2025). Added 2026-08-06: OFSI *UK financial sanctions: general guidance* (Jan 2026, 99 sections) — cited by rulebook SAN-1 in place of JMLSG Part III, which is "currently under review" per jmlsg.org.uk with no downloadable edition.
 
 Pending, in scope below: IBM AML Kaggle tabular dataset (structure exists, data not yet ingested); production rulebook (does not exist yet).
 

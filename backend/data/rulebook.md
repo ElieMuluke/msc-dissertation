@@ -165,8 +165,23 @@ its Interpretive Note (USD/EUR 1,000 threshold verified).
 significant counterparties against the OFAC SDN, HM Treasury/OFSI consolidated and UN
 Security Council consolidated lists (the `sanctions_check` tool) in every analysis.
 Source: FATF R.6 ("Targeted financial sanctions related to terrorism and terrorist
-financing", verified heading) and R.7; UK OFSI obligations per JMLSG Part III, Section 4
-(financial sanctions) **[citation unverified — Part III is not in the ingested corpus]**.
+financing", verified heading) and R.7; OFSI, *UK financial sanctions: general guidance*
+(HM Treasury/OFSI, updated Jan 2026) — §1 asset-freeze prohibitions on dealing with
+funds of designated persons, §2 "Who is subject to financial sanctions" (the UK
+Sanctions List), and §5.1.1 reporting obligations for relevant firms, verified verbatim:
+"Reporting obligations apply to relevant firms … who are required to inform OFSI as soon
+as practicable if they know or reasonably suspect a person is a designated person" —
+the duty that customer/counterparty screening implements. Screening is performed against
+the OFSI Consolidated List of Financial Sanctions Targets (see
+`data/watchlists/manifest.json`), the operational asset-freeze extract of the UK
+Sanctions List. **Citation decision (2026-08-06):** JMLSG Part III would be the natural
+sectoral citation, but jmlsg.org.uk lists Part III as "currently under review" with no
+downloadable edition (amendments per SI 2026/621 in progress), so the OFSI primary
+guidance is cited instead; source copy saved at
+`Downloads/data/OFSI/UK-financial-sanctions-general-guidance-Jan-2026.html`
+(machine-readable, used for verification and RAG ingestion), with an owner-made
+print-to-PDF of the same page alongside it (`UK financial sanctions general guidance -
+GOV.pdf`, image-only archival copy).
 
 **SAN-2 — Match handling (platform operational rule).** An exact or exact-alias match
 (score = 1.0) → CRITICAL, `escalate` immediately; do not execute further transactions.
@@ -203,13 +218,14 @@ from RB-2; contract per PRD-A/PRD-B shared agent modules.
 
 ### Verification summary
 
-- 22 rules total: 13 with citations verified against source text (FATF Recommendations
+- 22 rules total: 14 with citations verified against source text (FATF Recommendations
   2012 PDF; JMLSG Part I/II PDFs, paragraph anchors checked; EDD-2's FATF-statement
-  framing verified 2026-08-06 against the owner-provided official statement page), 1
-  tagged **[citation unverified]** (SAN-1's JMLSG Part III reference — Part III not in
-  the provided PDFs), 5 platform operational rules with by-design derived thresholds
-  (cited as "basis" rather than verbatim; MON-2/MON-3 threshold values likewise
-  platform-authored by design).
+  framing verified 2026-08-06 against the owner-provided official statement page;
+  SAN-1 re-cited 2026-08-06 to OFSI's *UK financial sanctions: general guidance* and
+  verified against the saved copy — JMLSG Part III unavailable, "currently under
+  review" per jmlsg.org.uk), 0 unverified, 5 platform operational rules with by-design
+  derived thresholds (cited as "basis" rather than verbatim; MON-2/MON-3 threshold
+  values likewise platform-authored by design).
 - PDF sources consulted: `/mnt/c/Users/u5749933/Downloads/data/FATF/FATF Recommendations
   2012.pdf.coredownload.inline.pdf`, `/mnt/c/Users/u5749933/Downloads/data/JMLSG/
   JMLSG-Guidance-Part-I_June-2023-updated-Aug-2025.pdf`, `.../JMLSG-Guidance-Part-II_
