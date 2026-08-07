@@ -1,0 +1,97 @@
+{
+  "model": "gemma3:27b",
+  "date": "2026-08-07T02:00:34Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventy-one.\n\n\n\n"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventy-one.\n\n\n\n"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventy-one.\n\n\n\n"
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventy-one.\n\n\n\n"
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"gemma3:27b\\\" does not support thinking\"}"
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "sha256": [
+      "49d614ed17a716264734198a18a8d7995a64a6321d6de9b7c846bd20541d7296"
+    ],
+    "output_len": 720
+  },
+  "pilot": {
+    "pass": false,
+    "valid_total": "0/8",
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 0,
+        "decisions": [
+          "malformed",
+          "malformed",
+          "malformed",
+          "malformed"
+        ],
+        "errors": [
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)"
+        ],
+        "mean_wall_clock_s": 0.45
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 0,
+        "decisions": [
+          "malformed",
+          "malformed",
+          "malformed",
+          "malformed"
+        ],
+        "errors": [
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)",
+          "ResponseError: registry.ollama.ai/library/gemma3:27b does not support tools (status code: 400)"
+        ],
+        "mean_wall_clock_s": 7.26
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-gemma3-27b-pmbxe_dj"
+  }
+}

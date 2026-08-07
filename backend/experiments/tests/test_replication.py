@@ -29,7 +29,7 @@ def test_config_for_model_think_handling() -> None:
     assert config_for_model("qwen2.5:7b-instruct").think is None  # omit param
     assert config_for_model("mistral-nemo:latest").think is None
     with pytest.raises(KeyError, match="unknown replication model"):
-        config_for_model("gpt-oss:20b")
+        config_for_model("never-registered-model:1b")
 
 
 def test_seed_schedule_identical_across_models() -> None:

@@ -168,7 +168,11 @@ def build_report(results_dir: Path = DEFAULT_CONFIG.results_dir) -> Path:
         + f"; planned total {sum(manifest['totals'].values())}.",
         "",
         "pass^k is agreement with the benchmark authors' labels, not"
-        " 'correctness'. Malformed outputs are included in every metric.",
+        " 'correctness'. Malformed outputs are included in every metric as an"
+        " outcome category: they never match a label (pass^k, majority vote)"
+        " and never match a real decision, but two malformed outputs count as"
+        " agreeing with each other in DAR/alpha/entropy (category equality)."
+        " Majority-vote ties break by first-observed decision.",
         "",
     ]
 

@@ -3,7 +3,7 @@
 Model `qwen2.5:7b-instruct` (845dbda0ea48ed749ca…), Ollama 0.31.1, config hash `cdda53552e06`.
 Journal lines: single=1150, mas=1150; planned total 2300.
 
-pass^k is agreement with the benchmark authors' labels, not 'correctness'. Malformed outputs are included in every metric.
+pass^k is agreement with the benchmark authors' labels, not 'correctness'. Malformed outputs are included in every metric as an outcome category: they never match a label (pass^k, majority vote) and never match a real decision, but two malformed outputs count as agreeing with each other in DAR/alpha/entropy (category equality). Majority-vote ties break by first-observed decision.
 
 ## Headline: Tier 1 (primary conditions)
 
