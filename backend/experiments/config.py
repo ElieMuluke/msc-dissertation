@@ -125,6 +125,7 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
     "mistral-small3.2:24b": ("results-mistral-small3.2", None),
     # candidate third model after both mistrals gate-failed (Ollama template bug)
     "llama3.1:8b": ("results-llama3.1-8b", None),
+    "qwen2.5:14b-instruct": ("results-qwen2.5-14b", None),
     "gemma3:27b": ("results-gemma3-27b", None),
     "granite4:latest": ("results-granite4", None),
     "gpt-oss:20b": ("results-gpt-oss-20b", None),

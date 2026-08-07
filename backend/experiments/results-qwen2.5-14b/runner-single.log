@@ -1,0 +1,7 @@
+2026-08-07 03:28:48,816 INFO HTTP Request: GET http://localhost:11437/api/tags "HTTP/1.1 200 OK"
+2026-08-07 03:28:48,822 INFO HTTP Request: GET http://localhost:11437/api/version "HTTP/1.1 200 OK"
+2026-08-07 03:28:48,823 INFO arm=single planned=1150 completed=0 todo=1150
+2026-08-07 03:28:53,863 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:28:53,890 INFO warm-up call discarded
+2026-08-07 03:28:54,858 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:28:57,073 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
