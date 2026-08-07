@@ -184,3 +184,7 @@
 2026-08-07 17:08:17,763 INFO HTTP Request: POST http://localhost:11435/api/chat "HTTP/1.1 200 OK"
 2026-08-07 17:08:32,203 INFO HTTP Request: POST http://localhost:11435/api/chat "HTTP/1.1 200 OK"
 2026-08-07 17:08:40,080 INFO [25/1150] mas:TXN-2025-005:t0-fixed:4 -> escalate (57.3s)
+2026-08-07 17:08:41,595 INFO results synced: results: mas checkpoint after 25 runs this session
+2026-08-07 17:08:42,324 INFO HTTP Request: POST http://localhost:11435/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:08:52,817 INFO HTTP Request: POST http://localhost:11435/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:09:01,200 INFO HTTP Request: POST http://localhost:11435/api/chat "HTTP/1.1 200 OK"

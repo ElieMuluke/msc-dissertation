@@ -302,3 +302,8 @@
 2026-08-07 17:08:22,314 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-07 17:08:26,221 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-07 17:08:34,348 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:08:41,503 INFO [74/1150] single:TXN-2025-015:t0-fixed:3 -> escalate (19.8s)
+2026-08-07 17:08:42,195 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:08:46,034 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:08:54,157 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 17:09:04,273 INFO [75/1150] single:TXN-2025-015:t0-fixed:4 -> escalate (22.8s)
