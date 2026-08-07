@@ -5,9 +5,11 @@ Four tools over real data stores, plus the existing ``search_aml_corpus`` RAG to
 
 - ``query_accounts`` / ``query_transactions`` — parameterised reads over the tabular
   SQLite (IBM AML Kaggle data; ground-truth labels never exposed).
-- ``sanctions_check`` — name screening against the downloaded OFAC SDN, HM Treasury/OFSI
-  and UN Security Council consolidated lists.
-- ``country_risk`` — FATF call-for-action / increased-monitoring jurisdiction lookup.
+- ``sanctions_check`` — name screening against the OFAC SDN, HM Treasury/OFSI and UN
+  Security Council consolidated lists (served from the SQLite watchlist store).
+- ``country_risk`` — FATF call-for-action / increased-monitoring jurisdiction lookup
+  (same store). If the watchlist store has not been ingested, both return an explicit
+  "watchlist store not ingested" message instead of crashing.
 
 Every builder closes over an injected system (dependency inversion, mirroring
 :func:`app.agents.tools.build_rag_tool`) and formats results as plain strings, since LLM
@@ -28,7 +30,12 @@ from pydantic import BaseModel, Field
 
 from app.ingestion.rag import RagSystem
 from app.ingestion.tabular import TabularSystem
-from app.ingestion.watchlists import SanctionsMatch, WatchlistSystem, normalize_name
+from app.ingestion.watchlists import (
+    SanctionsMatch,
+    WatchlistStoreNotIngestedError,
+    WatchlistSystem,
+    normalize_name,
+)
 
 from .tools import build_rag_tool
 
@@ -243,7 +250,10 @@ def build_sanctions_check_tool(watchlists: WatchlistSystem) -> StructuredTool:
     """Build ``sanctions_check``, closing over the injected :class:`WatchlistSystem`."""
 
     def sanctions_check(name: str, max_results: int = 5) -> str:
-        matches = watchlists.screen_name(name, max_results=max_results)
+        try:
+            matches = watchlists.screen_name(name, max_results=max_results)
+        except WatchlistStoreNotIngestedError as exc:
+            return str(exc)
         if not matches:
             return f"No sanctions-list matches for '{name}' (OFAC SDN, HM Treasury, UN consolidated lists)."
         return json.dumps(
@@ -267,7 +277,10 @@ def build_country_risk_tool(watchlists: WatchlistSystem) -> StructuredTool:
     """Build ``country_risk``, closing over the injected :class:`WatchlistSystem`."""
 
     def country_risk(country: str) -> str:
-        risk = watchlists.country_risk(country)
+        try:
+            risk = watchlists.country_risk(country)
+        except WatchlistStoreNotIngestedError as exc:
+            return str(exc)
         # Misuse guard: a not_listed answer for input that is not a jurisdiction at
         # all (e.g. a bank name) reads as a falsely clean screen. FATF hits are
         # checked first above, so this guard can never mask a listed jurisdiction.

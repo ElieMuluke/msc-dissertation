@@ -22,3 +22,8 @@ backend/tabular_data_db.backup-*.sqlite
 backend/data/HI-Large_*.csv
 backend/data/HI-Large_*.txt
 backend/data/reports/
+
+# Watchlist store: small SQLite rebuilt from backend/data/watchlists/ by
+# `python -m app.ingestion.watchlists.ingest` — derived data, not source.
+backend/watchlists_db.sqlite
+backend/watchlists_db.sqlite.building

@@ -1,6 +1,6 @@
 {
   "generated": "2026-08-05",
-  "note": "Sanctions / country-risk list files consumed by app.ingestion.watchlists. Refreshed manually; re-download from source_url and update downloaded/list_date when refreshing.",
+  "note": "Sanctions / country-risk source files for app.ingestion.watchlists. These are ingest-time inputs only: the app reads backend/watchlists_db.sqlite, rebuilt from these files (and this manifest, copied into the provenance table) by `python -m app.ingestion.watchlists.ingest`. Refresh = re-download from source_url, update downloaded/list_date here, then re-run the ingest.",
   "files": {
     "sdn.csv": {
       "list": "OFAC Specially Designated Nationals and Blocked Persons (SDN) List",

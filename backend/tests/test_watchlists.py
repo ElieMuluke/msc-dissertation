@@ -1,19 +1,22 @@
-"""Tests for the sanctions/FATF watchlist loaders and lookup service (small fixtures)."""
+"""Tests for the sanctions/FATF watchlist loaders, SQLite ingest and lookup service."""
 
 from __future__ import annotations
 
 import json
+import sqlite3
 
 import pytest
 
 from app.ingestion.watchlists import (
     WatchlistConfig,
+    WatchlistStoreNotIngestedError,
     build_watchlist_system,
     iter_hmt_conlist,
     iter_ofac_sdn,
     iter_un_consolidated,
     normalize_name,
 )
+from app.ingestion.watchlists.ingest import ingest_watchlists
 
 OFAC_CSV = (
     '306,"BANCO NACIONAL DE CUBA",-0- ,"CUBA",-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,-0- ,"a.k.a. \'BNC\'."\n'
@@ -62,13 +65,32 @@ FATF_JSON = {
 }
 
 
+MANIFEST_JSON = {
+    "generated": "2026-08-05",
+    "files": {
+        "sdn.csv": {
+            "list": "OFAC SDN",
+            "source_url": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+            "downloaded": "2026-08-05",
+        }
+    },
+}
+
+
+def _config(tmp_path) -> WatchlistConfig:
+    return WatchlistConfig(directory=tmp_path, db_path=tmp_path / "watchlists_db.sqlite")
+
+
 @pytest.fixture
 def watchlists(tmp_path):
     (tmp_path / "sdn.csv").write_text(OFAC_CSV, encoding="latin-1")
     (tmp_path / "ConList.csv").write_text(HMT_CSV, encoding="utf-8")
     (tmp_path / "un_consolidated.xml").write_text(UN_XML, encoding="utf-8")
     (tmp_path / "fatf_high_risk.json").write_text(json.dumps(FATF_JSON), encoding="utf-8")
-    return build_watchlist_system(WatchlistConfig(directory=tmp_path))
+    (tmp_path / "manifest.json").write_text(json.dumps(MANIFEST_JSON), encoding="utf-8")
+    config = _config(tmp_path)
+    ingest_watchlists(config)
+    return build_watchlist_system(config)
 
 
 def test_normalize_name_strips_accents_case_punctuation():
@@ -132,8 +154,47 @@ def test_counts_per_list(watchlists):
     assert counts == {"OFAC SDN": 2, "HMT": 1, "UN": 3}
 
 
-def test_missing_files_are_skipped(tmp_path):
-    system = build_watchlist_system(WatchlistConfig(directory=tmp_path / "empty"))
+def test_missing_source_files_are_skipped_by_ingest(tmp_path):
+    """Ingesting an empty directory still builds a (empty) store that answers cleanly."""
+    config = _config(tmp_path)
+    summary = ingest_watchlists(config)
+    assert summary["sanctions_total"] == 0
+    system = build_watchlist_system(config)
     assert system.counts() == {}
     assert system.screen_name("anyone") == []
     assert system.country_risk("Iran").status == "not_listed"
+
+
+def test_unbuilt_store_raises_not_ingested(tmp_path):
+    """Without the SQLite store, lookups raise the explicit not-ingested error."""
+    system = build_watchlist_system(_config(tmp_path))  # never ingested
+    with pytest.raises(WatchlistStoreNotIngestedError, match="watchlist store not ingested"):
+        system.screen_name("anyone")
+    with pytest.raises(WatchlistStoreNotIngestedError, match="watchlist store not ingested"):
+        system.country_risk("Iran")
+
+
+def test_ingest_summary_and_provenance(watchlists, tmp_path):
+    """Ingest records manifest provenance (source URLs, retrieved dates) in the store."""
+    with sqlite3.connect(tmp_path / "watchlists_db.sqlite") as conn:
+        rows = conn.execute(
+            "SELECT filename, list_name, source_url, downloaded FROM provenance"
+        ).fetchall()
+        meta = dict(conn.execute("SELECT key, value FROM meta"))
+    assert rows == [
+        ("sdn.csv", "OFAC SDN", "https://www.treasury.gov/ofac/downloads/sdn.csv", "2026-08-05")
+    ]
+    assert meta["fatf_as_of"] == "2026-06-19"
+    assert meta["manifest_generated"] == "2026-08-05"
+    assert meta["ingested_at"]
+
+
+def test_real_store_reproduces_expected_counts():
+    """The production store (built by `python -m app.ingestion.watchlists.ingest` from the
+    real downloaded lists) must reproduce the pre-refactor 42,705-entry load count."""
+    config = WatchlistConfig()
+    if not config.db_path.is_file():
+        pytest.skip("production watchlist store not ingested")
+    counts = build_watchlist_system(config).counts()
+    assert counts == {"OFAC SDN": 19178, "HMT": 19761, "UN": 3766}
+    assert sum(counts.values()) == 42705

@@ -1,6 +1,6 @@
-"""Sanctions + country-risk watchlists — screen names against the downloaded OFAC SDN,
-HM Treasury/OFSI and UN Security Council consolidated lists, and countries against the
-FATF black/grey lists.
+"""Sanctions + country-risk watchlists — screen names against the OFAC SDN, HM
+Treasury/OFSI and UN Security Council consolidated lists, and countries against the
+FATF black/grey lists, all served from the SQLite watchlist store.
 
     >>> from app.ingestion.watchlists import build_watchlist_system
     >>> watchlists = build_watchlist_system()
@@ -9,8 +9,11 @@ FATF black/grey lists.
     >>> watchlists.country_risk("Iran").status
     'call_for_action'
 
-List files live under ``backend/data/watchlists/`` with download provenance recorded in
-``manifest.json`` there. Refreshing is manual: re-download and update the manifest.
+Runtime reads go through ``backend/watchlists_db.sqlite`` only; the downloaded list
+files under ``backend/data/watchlists/`` (provenance in ``manifest.json`` there) are
+ingest-time inputs. Refreshing is manual: re-download the files, update the manifest,
+then rebuild the store with ``python -m app.ingestion.watchlists.ingest``. If the store
+has not been built, lookups raise :class:`WatchlistStoreNotIngestedError`.
 """
 
 from __future__ import annotations
@@ -23,15 +26,25 @@ from .loaders import (
     iter_un_consolidated,
     load_fatf_lists,
 )
-from .service import CountryRisk, SanctionsMatch, WatchlistSystem, build_watchlist_system, normalize_name
+from .service import (
+    CountryRisk,
+    SanctionsMatch,
+    WatchlistStoreNotIngestedError,
+    WatchlistSystem,
+    build_watchlist_system,
+    normalize_name,
+)
+from .store import write_store
 
 __all__ = [
     "WatchlistConfig",
     "WatchlistEntry",
     "WatchlistSystem",
+    "WatchlistStoreNotIngestedError",
     "SanctionsMatch",
     "CountryRisk",
     "build_watchlist_system",
+    "write_store",
     "normalize_name",
     "iter_ofac_sdn",
     "iter_hmt_conlist",

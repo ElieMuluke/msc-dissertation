@@ -14,7 +14,7 @@ from app.agents.production_tools import (
     build_sanctions_check_tool,
 )
 from app.ingestion.tabular import TabularConfig, TabularDataType, build_tabular_system
-from app.ingestion.watchlists import WatchlistSystem
+from app.ingestion.watchlists import WatchlistSystem, write_store
 from app.ingestion.watchlists.loaders import WatchlistEntry
 
 ACCOUNTS_CSV = (
@@ -41,13 +41,15 @@ def tabular():
 
 
 @pytest.fixture
-def watchlists():
+def watchlists(tmp_path):
     entries = [
         WatchlistEntry("OFAC SDN", "306", "BANCO NACIONAL DE CUBA", "entity", ("CUBA",), "a.k.a. BNC"),
         WatchlistEntry("UN", "6907993", "ERIC BADEGE", "individual", ("DRC",), ""),
     ]
     fatf = {"as_of": "2026-06-19", "call_for_action": ["Iran"], "increased_monitoring": ["Monaco"], "aliases": {}}
-    return WatchlistSystem(entries, fatf, match_threshold=0.85)
+    db_path = tmp_path / "watchlists_db.sqlite"
+    write_store(db_path, entries, fatf, manifest={})
+    return WatchlistSystem(db_path, match_threshold=0.85)
 
 
 def test_query_accounts_tool_by_entity_name(tabular):
@@ -125,6 +127,17 @@ def test_country_risk_tool_flags_non_jurisdiction_input(watchlists):
     assert json.loads(tool.invoke({"country": "Iran"}))["status"] == "call_for_action"
     # The description must warn that the dataset carries no country column.
     assert "no country column" in tool.description
+
+
+def test_watchlist_tools_report_missing_store_without_crashing(tmp_path):
+    """If the SQLite watchlist store was never ingested, both watchlist tools must
+    return an explicit 'watchlist store not ingested' message, not raise."""
+    system = WatchlistSystem(tmp_path / "never_built.sqlite", match_threshold=0.85)
+    sanctions_msg = build_sanctions_check_tool(system).invoke({"name": "anyone"})
+    country_msg = build_country_risk_tool(system).invoke({"country": "Iran"})
+    for message in (sanctions_msg, country_msg):
+        assert "watchlist store not ingested" in message
+        assert "app.ingestion.watchlists.ingest" in message
 
 
 def test_build_production_tools_names_and_order(tabular, watchlists):
