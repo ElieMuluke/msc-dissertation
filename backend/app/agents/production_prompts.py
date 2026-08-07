@@ -20,7 +20,21 @@ _DECISION_CONTRACT = (
     "When your investigation is complete, give a concise, audit-ready rationale that "
     "cites the rulebook rules (by rule id, e.g. MON-2) and regulatory sources (JMLSG/FATF "
     "sections) you relied on, then end your answer with exactly one final line:\n"
-    "FINAL DECISION: <escalate|dismiss|investigate>"
+    "FINAL DECISION: <escalate|dismiss|investigate>\n"
+    "If the data needed to decide is missing, empty or ambiguous (e.g. no transaction "
+    "history where activity was expected, or an unresolved data gap), do NOT treat the "
+    "absence of evidence as evidence of low risk: decide investigate and cite the data "
+    "gap in your rationale."
+)
+
+#: Tool-use budget guidance shared by the tool-calling prompts (single arm + MAS data
+#: node): bound the investigation and keep the last step for prose, so runs stop
+#: exhausting the iteration cap mid-tool-call and returning no final text.
+_BUDGET_GUIDANCE = (
+    "Work within a strict budget: you have a limited number of tool-use steps. Do not "
+    "try to screen every counterparty — screen at most the 2-3 largest counterparties "
+    "by transaction value. Always reserve your final step for writing your answer "
+    "instead of calling another tool."
 )
 
 
@@ -34,6 +48,8 @@ def single_system_prompt(rulebook: str) -> str:
         "(sanctions_check), check jurisdictions against the FATF lists (country_risk), "
         "and retrieve regulatory grounding where needed (search_aml_corpus). Never rely "
         "on memory for specific rules or thresholds.\n\n"
+        f"{_BUDGET_GUIDANCE} That final step must be your rationale ending with the "
+        "FINAL DECISION line.\n\n"
         "Apply the following decision rulebook:\n\n"
         f"{rulebook}\n\n"
         f"{_DECISION_CONTRACT}"
@@ -55,7 +71,10 @@ def mas_prompts(rulebook: str) -> dict[str, str]:
             "query_transactions, sanctions_check and country_risk. Report the factual "
             "findings (accounts, transaction patterns, screening results, jurisdiction "
             "statuses) with row ids where available. Report facts only — no risk "
-            "conclusions."
+            f"conclusions.\n\n{_BUDGET_GUIDANCE} That final step must be your written "
+            "findings. If a data step returns nothing or the data is ambiguous, state "
+            "the gap explicitly in your findings (e.g. 'no transactions returned for "
+            "this filter') rather than silently omitting it."
         ),
         "policy_risk": (
             "You are the Policy & Risk Agent of an AML investigation pipeline. Assess the "

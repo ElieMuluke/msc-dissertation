@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 import pytest
@@ -12,10 +13,13 @@ from app.agents import mas as mas_module
 from app.agents import single as single_module
 from app.agents.contract import RunContext
 from app.agents.runner import (
+    FORCED_FINAL_STEP,
     PipelineUnavailableError,
     build_model_factory,
     build_production_agent,
     extract_citations,
+    force_final_answer,
+    needs_forced_final_answer,
     normalize_result,
     parse_decision,
     wrap_tools_with_trace,
@@ -85,6 +89,79 @@ def test_build_production_agent_uses_shared_modules():
     assert isinstance(mas_agent, mas_module.MasAgent)
     with pytest.raises(ValueError, match="pipeline"):
         build_production_agent("triple", tools, "RULEBOOK", model_factory=factory)
+
+
+class FakeChatModel:
+    """Tools-disabled stand-in for ChatOllama: records messages, returns fixed text."""
+
+    def __init__(self, reply: str):
+        self.reply = reply
+        self.seen_messages = None
+
+    async def ainvoke(self, messages):
+        from langchain_core.messages import AIMessage
+
+        self.seen_messages = messages
+        return AIMessage(content=self.reply)
+
+
+def test_needs_forced_final_answer_only_on_pending_tool_call_signature():
+    pending = AgentResult(output_text="", tool_calls=(ToolCallRecord(name="echo"),))
+    assert needs_forced_final_answer(pending)
+    # Prose without the FINAL DECISION line is malformed but NOT retried (not a
+    # pending tool call), and a parsable decision is never retried.
+    assert not needs_forced_final_answer(
+        AgentResult(output_text="some rationale", tool_calls=(ToolCallRecord(name="echo"),))
+    )
+    assert not needs_forced_final_answer(
+        AgentResult(output_text="FINAL DECISION: dismiss", tool_calls=(ToolCallRecord(name="echo"),))
+    )
+    # No tool calls at all → an empty run, not a cut-off investigation.
+    assert not needs_forced_final_answer(AgentResult(output_text=""))
+
+
+def test_force_final_answer_retries_without_tools_and_records_trace_step():
+    result = AgentResult(output_text="", tool_calls=(ToolCallRecord(name="echo"),), agent_messages=8)
+    trace = [{"name": "echo", "args": {"query": "x"}, "result": "echo:" + "x" * 5000}]
+    llm = FakeChatModel("Gap in data.\nFINAL DECISION: investigate")
+    context = RunContext(run_id="r", case_id="c", seed=None, temperature=0.0)
+
+    fixed = asyncio.run(
+        force_final_answer(
+            result, "single", "RULEBOOK", {"account_id": "80171BEE0"}, context, trace,
+            model_factory=lambda _context: llm,
+        )
+    )
+
+    assert parse_decision(fixed.output_text) == "investigate"
+    assert fixed.agent_messages == 9
+    # Recorded in the report trace as a distinct step, after the real tool calls.
+    assert trace[-1]["name"] == FORCED_FINAL_STEP
+    assert "FINAL DECISION: investigate" in trace[-1]["result"]
+    # The retry prompt replays case + (truncated) evidence and demands the final line.
+    rendered = "".join(str(m.content) for m in llm.seen_messages)
+    assert "80171BEE0" in rendered
+    assert "echo" in rendered and "x" * 5000 not in rendered  # evidence truncated
+    assert "Provide your final rationale and FINAL DECISION line now." in rendered
+
+
+def test_force_final_answer_model_failure_keeps_original_result():
+    result = AgentResult(output_text="", tool_calls=(ToolCallRecord(name="echo"),))
+    trace: list[dict] = []
+
+    def broken_factory(_context):
+        raise RuntimeError("model server down")
+
+    context = RunContext(run_id="r", case_id="c", seed=None, temperature=0.0)
+    fixed = asyncio.run(
+        force_final_answer(
+            result, "mas", "RULEBOOK", {"account_id": "A1"}, context, trace, model_factory=broken_factory
+        )
+    )
+
+    assert fixed is result  # analysis proceeds; decision stays malformed
+    assert trace[-1]["name"] == FORCED_FINAL_STEP
+    assert trace[-1]["result"].startswith("error:")
 
 
 def test_normalize_result_prefers_trace_and_parses_decision():

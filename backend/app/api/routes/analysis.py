@@ -37,7 +37,9 @@ from app.agents.runner import (
     PipelineUnavailableError,
     build_production_agent,
     default_model_name,
+    force_final_answer,
     get_model_digest,
+    needs_forced_final_answer,
     normalize_result,
     wrap_tools_with_trace,
 )
@@ -142,11 +144,24 @@ async def run_analysis(
                 break
             yield sse_frame("step", item)
         try:
+            raw_result = await task
+        except Exception as exc:  # noqa: BLE001 - surfaced to the client as an error frame
+            yield sse_frame("error", {"message": f"Analysis failed: {exc}"})
+            return
+        # Production hardening (adapter layer, app.agents.runner): a run that exhausts
+        # its tool budget mid-tool-call returns no final text → one tools-disabled
+        # retry for the FINAL DECISION line, recorded in the trace as its own step.
+        if needs_forced_final_answer(raw_result):
+            yield sse_frame("step", {"stage": "forced_final_answer", "pipeline": pipeline})
+            raw_result = await force_final_answer(
+                raw_result, pipeline, rulebook, case, run_context, trace
+            )
+        try:
             # Digest from the analysis server (cached per process): the audit
             # report must pin the exact weights, not just the model tag.
             digest = await asyncio.to_thread(get_model_digest)
             result = normalize_result(
-                await task, trace, model=default_model_name(), model_digest=digest
+                raw_result, trace, model=default_model_name(), model_digest=digest
             )
         except Exception as exc:  # noqa: BLE001 - surfaced to the client as an error frame
             yield sse_frame("error", {"message": f"Analysis failed: {exc}"})

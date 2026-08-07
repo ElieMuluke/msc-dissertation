@@ -28,12 +28,81 @@ from pydantic import BaseModel, Field
 
 from app.ingestion.rag import RagSystem
 from app.ingestion.tabular import TabularSystem
-from app.ingestion.watchlists import SanctionsMatch, WatchlistSystem
+from app.ingestion.watchlists import SanctionsMatch, WatchlistSystem, normalize_name
 
 from .tools import build_rag_tool
 
 # Cap remark/free-text fields so a single hit can't blow up the agent context window.
 _REMARKS_MAX_CHARS = 300
+
+# Known country/jurisdiction names + common aliases, used by ``country_risk`` to tell a
+# plausible-but-unlisted jurisdiction ("Germany" → not_listed) apart from input that is
+# not a jurisdiction at all (agents were observed passing bank names like
+# "Oasis Bancorp" and reading the resulting not_listed as a clean screen). Compared via
+# the same ``normalize_name`` as the FATF lookup itself. Not exhaustive of every
+# historical spelling — FATF-listed jurisdictions match the FATF lists before this
+# guard is consulted, so a gap here can only turn a true not_listed into an explicit
+# "unrecognised input" message, never mask a real FATF hit.
+_KNOWN_COUNTRIES_AND_ALIASES: frozenset[str] = frozenset(
+    normalize_name(name)
+    for name in (
+        # UN member/observer states and commonly screened territories
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
+        "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas",
+        "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin",
+        "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei",
+        "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon",
+        "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia",
+        "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+        "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica",
+        "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+        "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France",
+        "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada",
+        "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras",
+        "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+        "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya",
+        "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
+        "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar",
+        "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands",
+        "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco",
+        "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
+        "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+        "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan",
+        "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru",
+        "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda",
+        "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+        "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal",
+        "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia",
+        "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan",
+        "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+        "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+        "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+        "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+        "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City",
+        "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
+        # Dependent territories / financial centres commonly seen in AML casework
+        "Anguilla", "Aruba", "Bermuda", "British Virgin Islands", "Cayman Islands",
+        "Curacao", "Gibraltar", "Greenland", "Guernsey", "Hong Kong", "Isle of Man",
+        "Jersey", "Kosovo", "Macau", "Montserrat", "New Caledonia", "Puerto Rico",
+        "Sint Maarten", "Taiwan", "Turks and Caicos Islands",
+        # Common aliases, abbreviations and alternative spellings
+        "America", "Bosnia", "Britain", "Brunei Darussalam", "Burma", "Cape Verde",
+        "Cote d'Ivoire", "Czechia", "DPRK", "DR Congo", "DRC", "East Timor",
+        "Great Britain", "Holland", "Ivory Coast", "Korea", "Lao PDR", "Macao",
+        "Macedonia", "Republic of Korea", "Russian Federation", "Slovak Republic",
+        "Swaziland", "Turkiye", "UAE", "UK", "US", "USA", "United States of America",
+        "Vatican", "Viet Nam",
+    )
+)
+
+_COUNTRY_RISK_UNRECOGNISED_MSG = (
+    "Input {value!r} does not look like a country/jurisdiction (no match in the "
+    "known-country aliases), so no FATF-list status can be given. Note that the IBM "
+    "AML dataset carries no jurisdiction/country column — bank names, entity names "
+    "and account/bank ids are NOT jurisdictions and must not be passed to this tool. "
+    "If you cannot establish a jurisdiction from the available data, treat it as a "
+    "data gap rather than as a clean ('not_listed') screening result."
+)
 
 
 class QueryAccountsArgs(BaseModel):
@@ -199,6 +268,11 @@ def build_country_risk_tool(watchlists: WatchlistSystem) -> StructuredTool:
 
     def country_risk(country: str) -> str:
         risk = watchlists.country_risk(country)
+        # Misuse guard: a not_listed answer for input that is not a jurisdiction at
+        # all (e.g. a bank name) reads as a falsely clean screen. FATF hits are
+        # checked first above, so this guard can never mask a listed jurisdiction.
+        if risk.status == "not_listed" and normalize_name(country) not in _KNOWN_COUNTRIES_AND_ALIASES:
+            return _COUNTRY_RISK_UNRECOGNISED_MSG.format(value=country)
         return json.dumps(
             {
                 "country": risk.country,
@@ -217,7 +291,10 @@ def build_country_risk_tool(watchlists: WatchlistSystem) -> StructuredTool:
             "Look up a country/jurisdiction on the FATF lists. Returns status "
             "'call_for_action' (FATF black list — apply counter-measures / enhanced due diligence), "
             "'increased_monitoring' (FATF grey list — factor into risk-based assessment) or "
-            "'not_listed'. Use for the jurisdictions of the account, its bank and its counterparties."
+            "'not_listed'. Pass ONLY country/jurisdiction names (e.g. 'Iran', 'United Kingdom') — "
+            "never bank or entity names; unrecognised input returns an explicit warning instead of "
+            "a status. Note: the IBM AML dataset has no country column, so jurisdictions cannot be "
+            "derived from account or bank ids."
         ),
         args_schema=CountryRiskArgs,
     )

@@ -15,6 +15,12 @@ module is the production call site around them:
   only) and optionally reported live via a callback.
 - :func:`parse_decision` applies the shared ``FINAL DECISION:`` output contract —
   per ``contract.py``, decision parsing is the caller's job.
+- :func:`needs_forced_final_answer` / :func:`force_final_answer` are the production
+  hardening for runs that exhaust the tool loop mid-tool-call and return no final
+  text: one additional tools-disabled model call ("provide your FINAL DECISION now"),
+  recorded in the report trace as a distinct ``forced-final-answer round`` step. This
+  lives here in the adapter — the shared ``single.py``/``mas.py`` modules are the
+  pre-registered measured system and must not change.
 - :func:`normalize_result` flattens everything into the shape report persistence needs.
 """
 
@@ -226,6 +232,95 @@ def build_production_agent(
         raise PipelineUnavailableError(
             f"Agent modules for pipeline '{pipeline}' are not available: {exc}"
         ) from exc
+
+
+#: Trace-step name for the forced-final-answer retry (distinct from real tool names,
+#: so audit reports show the retry as its own step in the tool-call trace).
+FORCED_FINAL_STEP = "forced-final-answer round"
+
+# Per-tool-result cap when replaying the evidence trace into the forced final call —
+# keeps the one-shot prompt comfortably inside the model's num_ctx.
+_FORCED_FINAL_RESULT_MAX_CHARS = 1200
+
+
+def needs_forced_final_answer(result: "AgentResult") -> bool:
+    """True when the episode ended on a pending tool call with no parsable decision.
+
+    The shared contract's :class:`AgentResult` does not expose the raw transcript, so
+    the adapter infers "last message was a pending tool call" from its observable
+    signature: under the shared tool loop, a run that hits the iteration cap while
+    requesting another tool call returns that tool-call message's (empty) text as
+    ``output_text``. A run whose final message is prose — even prose missing the
+    FINAL DECISION line — is deliberately NOT retried here.
+    """
+    return (
+        parse_decision(result.output_text) == "malformed"
+        and bool(result.tool_calls)
+        and not (result.output_text or "").strip()
+    )
+
+
+async def force_final_answer(
+    result: "AgentResult",
+    pipeline: str,
+    rulebook: str,
+    case: Any,
+    context: "RunContext",
+    trace: list[dict],
+    model_factory: Optional[Callable[["RunContext"], Any]] = None,
+) -> "AgentResult":
+    """One additional tools-disabled model call to obtain the missing final answer.
+
+    Production-only hardening (PRD-B adapter layer): replays the case and the
+    already-gathered evidence (the production tool trace, results truncated) to a
+    fresh model with NO tools bound, instructing it to produce the rationale and
+    ``FINAL DECISION`` line now. The retry is appended to ``trace`` as a distinct
+    ``forced-final-answer round`` step so the audit report shows exactly what
+    happened. Returns a copy of ``result`` carrying the retry's text; on model
+    failure the original result is returned unchanged (decision stays ``malformed``
+    rather than the whole analysis failing).
+    """
+    from dataclasses import replace
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    from app.agents import production_prompts as prompts
+
+    factory = model_factory or build_model_factory()
+    if pipeline == "mas":
+        system_prompt = prompts.mas_prompts(rulebook)["reporting"]
+    else:
+        system_prompt = prompts.single_system_prompt(rulebook)
+
+    evidence_lines = []
+    for call in trace:
+        text = str(call.get("result", ""))
+        if len(text) > _FORCED_FINAL_RESULT_MAX_CHARS:
+            text = text[: _FORCED_FINAL_RESULT_MAX_CHARS - 1] + "…"
+        evidence_lines.append(f"- {call.get('name')}({call.get('args')}) -> {text}")
+    evidence = "\n".join(evidence_lines) or "(no tool results were captured)"
+
+    user_prompt = (
+        f"{prompts.render_case(case)}\n\n"
+        "Your investigation budget is exhausted; the tools are no longer available. "
+        "Evidence already gathered (tool calls and results, in order):\n"
+        f"{evidence}\n\n"
+        "Provide your final rationale and FINAL DECISION line now."
+    )
+    try:
+        llm = factory(context)  # tools deliberately NOT bound: this call cannot recurse
+        response = await llm.ainvoke(
+            [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
+        )
+        text = getattr(response, "text", None)
+        output_text = text if isinstance(text, str) else str(response.content)
+    except Exception as exc:  # noqa: BLE001 - the retry must never sink the analysis
+        trace.append(
+            {"name": FORCED_FINAL_STEP, "args": {"pipeline": pipeline}, "result": f"error: {exc}"}
+        )
+        return result
+    trace.append({"name": FORCED_FINAL_STEP, "args": {"pipeline": pipeline}, "result": output_text})
+    return replace(result, output_text=output_text, agent_messages=result.agent_messages + 1)
 
 
 def normalize_result(

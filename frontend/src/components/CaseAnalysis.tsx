@@ -90,23 +90,33 @@ export function CaseAnalysis() {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3">
-        <input
-          type="text"
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-          placeholder="Account number (e.g. 100428660)"
-          className="px-4 py-2.5 rounded-xl text-sm bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-w-0"
-          disabled={running}
-        />
-        <input
-          type="text"
-          value={bank}
-          onChange={(e) => setBank(e.target.value)}
-          placeholder="Bank id (optional)"
-          className="px-4 py-2.5 rounded-xl text-sm bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-w-0"
-          disabled={running}
-        />
+      <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 sm:items-start">
+        <div className="min-w-0 space-y-1">
+          <input
+            type="text"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+            placeholder="Account number (e.g. 80171BEE0)"
+            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-w-0"
+            disabled={running}
+          />
+          <p className="px-1 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
+            IBM account ids are alphanumeric (e.g. 80171BEE0) and effectively unique.
+          </p>
+        </div>
+        <div className="min-w-0 space-y-1">
+          <input
+            type="text"
+            value={bank}
+            onChange={(e) => setBank(e.target.value)}
+            placeholder="Bank id (optional)"
+            className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/60 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-w-0"
+            disabled={running}
+          />
+          <p className="px-1 text-[11px] leading-snug text-neutral-400 dark:text-neutral-500">
+            Bank ids are numeric with no leading zeros (e.g. 2597) — rarely needed.
+          </p>
+        </div>
         {running ? (
           <button
             type="button"

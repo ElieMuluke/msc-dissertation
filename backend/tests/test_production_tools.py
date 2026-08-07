@@ -105,6 +105,28 @@ def test_country_risk_tool(watchlists):
     assert json.loads(tool.invoke({"country": "Germany"}))["status"] == "not_listed"
 
 
+def test_country_risk_tool_flags_non_jurisdiction_input(watchlists):
+    """Regression: agents passed bank names ('Oasis Bancorp') and read the resulting
+    not_listed as a clean jurisdiction screen. Unrecognised input must return an
+    explicit warning instead of a status."""
+    tool = build_country_risk_tool(watchlists)
+
+    message = tool.invoke({"country": "Oasis Bancorp"})
+    assert "does not look like a country/jurisdiction" in message
+    assert "no jurisdiction/country column" in message
+    # It must not be parseable as a normal status payload.
+    with pytest.raises(json.JSONDecodeError):
+        json.loads(message)
+
+    # Known countries and their aliases still get a real status...
+    assert json.loads(tool.invoke({"country": "USA"}))["status"] == "not_listed"
+    assert json.loads(tool.invoke({"country": "United Kingdom"}))["status"] == "not_listed"
+    # ...and FATF-listed jurisdictions are unaffected by the guard.
+    assert json.loads(tool.invoke({"country": "Iran"}))["status"] == "call_for_action"
+    # The description must warn that the dataset carries no country column.
+    assert "no country column" in tool.description
+
+
 def test_build_production_tools_names_and_order(tabular, watchlists):
     class FakeRag:
         def search(self, query, k=4):

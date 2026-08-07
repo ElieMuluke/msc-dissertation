@@ -13,6 +13,7 @@ from itertools import islice
 from typing import IO, Optional, Union
 
 from sqlalchemy import delete, func, or_, select
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import sessionmaker
 
@@ -35,6 +36,35 @@ def _batched(rows: Iterable[dict], size: int) -> Iterator[list[dict]]:
 # means tens of thousands of fsyncs. Committing every 25 batches (~50k rows at the default
 # batch_size) cuts that by ~25x while still keeping crash-recovery granularity reasonable.
 _COMMIT_EVERY_N_BATCHES = 25
+
+
+# Bank ids are numeric-looking strings whose zero-padding is INCONSISTENT across the
+# IBM HI-Large source files: the accounts file stores e.g. '2597' while the
+# transactions file stores '02597' for the same bank. They must still never be cast
+# to int (account numbers genuinely carry meaningful leading zeros, and bank ids stay
+# strings for schema symmetry), so bank-id comparisons normalize leading zeros away
+# on BOTH sides at query time instead of at ingest time (ingested rows stay verbatim
+# copies of the source files for auditability).
+
+
+def _strip_leading_zeros(bank_id: str) -> str:
+    """'02597' -> '2597'; all-zero ids ('0', '000') normalize to '0'."""
+    return bank_id.lstrip("0") or "0"
+
+
+def _bank_id_matches(column: ColumnElement, bank_id: str) -> ColumnElement:
+    """Zero-padding-insensitive bank-id predicate: LTRIM(column,'0') == LTRIM(param,'0').
+
+    Wrapping ``column`` in LTRIM makes this predicate non-sargable (SQLite cannot use
+    the bank-id index for it). That is a deliberate tradeoff: everywhere this is used
+    the query is already driven by an exact, indexed account-number predicate
+    (``from_account``/``to_account``/``account_number``), so the bank-id clause only
+    post-filters a handful of rows and correctness beats index use. The alternative —
+    ``IN (raw, zfill variants)`` — would stay sargable but requires guessing the pad
+    width, which varies across the source files ('020', '00952', '0111632').
+    """
+    # str.lstrip("0") mirrors SQL LTRIM(x, '0') exactly (both yield '' for all-zero ids).
+    return func.ltrim(column, "0") == bank_id.lstrip("0")
 
 
 class TabularSystem:
@@ -158,16 +188,24 @@ class TabularSystem:
     ) -> list[dict]:
         """Parameterised read over ``accounts`` (no labels involved).
 
-        Filters are ANDed; ``account_number``/``bank_id`` match exactly (they carry
-        leading zeros — never cast to int), ``entity_name`` matches case-insensitively
-        as a substring. Returns plain row dicts including the primary-key ``id`` so an
-        audit trail can reference the exact rows read.
+        Filters are ANDed; ``account_number`` matches exactly (it carries meaningful
+        leading zeros — never cast to int), ``bank_id`` matches ignoring leading
+        zeros (padding is inconsistent across source files — see ``_bank_id_matches``),
+        ``entity_name`` matches case-insensitively as a substring. Returns plain row
+        dicts including the primary-key ``id`` so an audit trail can reference the
+        exact rows read.
         """
         stmt = select(Account)
         if account_number is not None:
             stmt = stmt.where(Account.account_number == account_number)
         if bank_id is not None:
-            stmt = stmt.where(Account.bank_id == bank_id)
+            # IN over literal candidates (raw + zero-stripped) stays sargable, so a
+            # bank-only lookup (no account_number filter) can still use the
+            # accounts.bank_id index. The accounts file stores unpadded bank ids, so
+            # the stripped candidate covers padded input like '02597'; a LTRIM-based
+            # match (see _bank_id_matches) would also cover padded *stored* ids but
+            # would force a full table scan on this table's only selective filter.
+            stmt = stmt.where(Account.bank_id.in_(sorted({bank_id, _strip_leading_zeros(bank_id)})))
         if entity_name is not None:
             stmt = stmt.where(Account.entity_name.ilike(f"%{entity_name}%"))
         stmt = stmt.limit(limit)
@@ -206,8 +244,13 @@ class TabularSystem:
         outgoing = Transaction.from_account == account_number
         incoming = Transaction.to_account == account_number
         if bank_id is not None:
-            outgoing = outgoing & (Transaction.from_bank == bank_id)
-            incoming = incoming & (Transaction.to_bank == bank_id)
+            # Zero-padding-insensitive: the transactions file pads bank ids ('02597')
+            # while the accounts file does not ('2597'), so an exact string match here
+            # silently returned no rows for bank-filtered queries. The indexed, exact
+            # from_account/to_account predicates above still drive the query; the
+            # non-sargable LTRIM clause only post-filters (see _bank_id_matches).
+            outgoing = outgoing & _bank_id_matches(Transaction.from_bank, bank_id)
+            incoming = incoming & _bank_id_matches(Transaction.to_bank, bank_id)
         clauses = {"in": incoming, "out": outgoing, "both": or_(incoming, outgoing)}
         if direction not in clauses:
             raise ValueError(f"direction must be one of {sorted(clauses)}, got {direction!r}")

@@ -140,6 +140,44 @@ def test_counts_stay_correct_across_repeated_calls_without_rescanning(tmp_path, 
     assert tabular.counts() == {"accounts": 2, "transactions": 0}
 
 
+def test_bank_id_zero_padding_mismatch_between_accounts_and_transactions():
+    """Regression: accounts store bank id '2597' but transactions store '02597'.
+
+    An exact string match on the bank columns silently returned zero rows for
+    bank-filtered transaction queries (agents then decided on falsely empty data).
+    Bank-id comparison must ignore leading zeros on both sides.
+    """
+    tabular = _system()
+    tabular.ingest_text(
+        TabularDataType.ACCOUNTS,
+        "Bank Name,Bank ID,Account Number,Entity ID,Entity Name\n"
+        "Oasis Bancorp,2597,80171BEE0,2AA02F11760,Corporation #4705\n",
+    )
+    tabular.ingest_text(
+        TabularDataType.TRANSACTIONS,
+        "Timestamp,From Bank,Account,To Bank,Account,Amount Received,Receiving Currency,"
+        "Amount Paid,Payment Currency,Payment Format,Is Laundering\n"
+        "2022/09/01 10:12,02597,80171BEE0,0999,900332145,9400.00,US Dollar,9400.00,US Dollar,Wire,0\n"
+        "2022/09/02 08:20,0999,900332145,02597,80171BEE0,150.00,US Dollar,150.00,US Dollar,ACH,0\n",
+    )
+
+    # The agent takes bank_id '2597' from query_accounts and passes it to
+    # query_transactions, whose rows store '02597': both paddings must match.
+    for queried_bank_id in ("2597", "02597"):
+        rows = tabular.query_transactions("80171BEE0", bank_id=queried_bank_id)
+        assert len(rows) == 2, f"bank_id={queried_bank_id!r} should match both paddings"
+    assert [r["to_account"] for r in tabular.query_transactions("80171BEE0", bank_id="2597", direction="in")] == [
+        "80171BEE0"
+    ]
+    assert tabular.query_transactions("80171BEE0", bank_id="7777") == []
+
+    # And the reverse direction on accounts: padded input, unpadded stored id.
+    for queried_bank_id in ("2597", "02597"):
+        accounts = tabular.query_accounts(account_number="80171BEE0", bank_id=queried_bank_id)
+        assert [a["bank_id"] for a in accounts] == ["2597"]
+    assert tabular.query_accounts(bank_id="02597")[0]["entity_name"] == "Corporation #4705"
+
+
 def test_on_batch_reports_cumulative_row_count(tmp_path):
     tabular = build_tabular_system(TabularConfig(db_url="sqlite:///:memory:", batch_size=1))
     path = tmp_path / "accounts.csv"
