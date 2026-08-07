@@ -1,5 +1,20 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-07 (evening) — infra context 2: Ollama 0.31.1 → 0.32.6; re-gate results; gemma4 admitted
+
+Owner upgraded Ollama to 0.32.6 (all three qwen sweeps were completed and sealed under
+0.31.1; per-run `ollama_version` in every journal keeps contexts separable). Prior
+0.31.1 gate evidence archived per model as `gates/mini-gates-ollama-0.31.1.json`.
+Re-gate under 0.32.6: mistral-nemo FAIL (identical signature, empty output eval=42),
+mistral-small3.2 FAIL (identical), llama3.1 FAIL (identical raw-JSON-in-content),
+gemma3:27b FAIL (0/8 both arms), granite4 FAIL 6/8 (improved from 5/8, below bar),
+gpt-oss:20b FAIL (structural thinking + 4/8). Conclusion: the tool-call parser gap is
+version-stable for these models (upstream #17274/#16932 open) — the before/after pair
+is recorded as a methodology finding. NEW: gemma4:latest (the model the 0.32.x notes
+explicitly fixed) gates ALL PASS 8/8 → admitted as the fourth sweep model, first and
+only model of infra context 2. Its results are analyzed within-model (single vs MAS)
+and cross-model comparisons note the version difference explicitly.
+
 Any edit to a locked design constant before launch gets a dated note here.
 After run 1, changes invalidate the pre-registration (PRD-A).
 

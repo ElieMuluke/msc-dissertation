@@ -1,6 +1,6 @@
 {
   "model": "mistral-nemo:latest",
-  "date": "2026-08-06T22:04:40Z",
+  "date": "2026-08-07T14:12:02Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -49,9 +49,9 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "4e805c1651aea4852c80cbb033b9b440ec023ab10bc8ef850f591cdf86cbfbca"
+      "6eead7e40e29fb04b264e3405385e603305e48bb5c894848e03e332effa712de"
     ],
-    "output_len": 408
+    "output_len": 275
   },
   "pilot": {
     "pass": false,
@@ -67,7 +67,7 @@
           "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 1.19
+        "mean_wall_clock_s": 1.3
       },
       "mas": {
         "runs": 4,
@@ -79,9 +79,9 @@
           "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.29
+        "mean_wall_clock_s": 11.51
       }
     },
-    "scratch_dir": "/tmp/mini-gate-mistral-nemo-latest-h_mmuvgb"
+    "scratch_dir": "/tmp/mini-gate-mistral-nemo-latest-8t1au3dx"
   }
 }

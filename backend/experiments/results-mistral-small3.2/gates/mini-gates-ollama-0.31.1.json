@@ -1,6 +1,6 @@
 {
-  "model": "granite4:latest",
-  "date": "2026-08-07T14:22:09Z",
+  "model": "mistral-small3.2:24b",
+  "date": "2026-08-06T22:16:43Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -41,7 +41,7 @@
         "think_param": true,
         "http_ok": false,
         "status": 400,
-        "error_body": "{\"error\":\"\\\"granite4:latest\\\" does not support thinking\"}"
+        "error_body": "{\"error\":\"\\\"mistral-small3.2:24b\\\" does not support thinking\"}"
       }
     ]
   },
@@ -49,25 +49,25 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "6f9ff1fb93e82c9597ebcc5f700dd14249e310db0e26ea5722af5170d9cca931"
+      "3feaf801494a79fae56800f8b5786881e7d01c32996215c91f9ca8c918e110b5"
     ],
-    "output_len": 785
+    "output_len": 431
   },
   "pilot": {
     "pass": false,
-    "valid_total": "6/8",
+    "valid_total": "4/8",
     "arms": {
       "single": {
         "runs": 4,
-        "valid": 2,
+        "valid": 0,
         "decisions": [
           "malformed",
           "malformed",
-          "escalate",
-          "escalate"
+          "malformed",
+          "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.2
+        "mean_wall_clock_s": 1.33
       },
       "mas": {
         "runs": 4,
@@ -75,13 +75,13 @@
         "decisions": [
           "dismiss",
           "dismiss",
-          "dismiss",
+          "investigate",
           "investigate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.41
+        "mean_wall_clock_s": 13.43
       }
     },
-    "scratch_dir": "/tmp/mini-gate-granite4-latest-wjesgcre"
+    "scratch_dir": "/tmp/mini-gate-mistral-small3.2-24b-itti3zbb"
   }
 }

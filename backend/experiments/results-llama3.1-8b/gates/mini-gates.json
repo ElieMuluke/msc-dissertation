@@ -1,6 +1,6 @@
 {
-  "model": "granite4:latest",
-  "date": "2026-08-07T14:22:09Z",
+  "model": "llama3.1:8b",
+  "date": "2026-08-07T14:17:04Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -14,34 +14,34 @@
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventy-one."
       },
       {
         "think_param": false,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventy-one."
       },
       {
         "think_param": false,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventy-one."
       },
       {
         "think_param": null,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventy-one."
       },
       {
         "think_param": true,
         "http_ok": false,
         "status": 400,
-        "error_body": "{\"error\":\"\\\"granite4:latest\\\" does not support thinking\"}"
+        "error_body": "{\"error\":\"\\\"llama3.1:8b\\\" does not support thinking\"}"
       }
     ]
   },
@@ -49,39 +49,39 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "6f9ff1fb93e82c9597ebcc5f700dd14249e310db0e26ea5722af5170d9cca931"
+      "901ddb4dd4ba1ac96172d0ac2c138c58044d59257edb42a90cc8f7641101ba2e"
     ],
-    "output_len": 785
+    "output_len": 513
   },
   "pilot": {
     "pass": false,
-    "valid_total": "6/8",
+    "valid_total": "4/8",
     "arms": {
       "single": {
         "runs": 4,
-        "valid": 2,
+        "valid": 0,
         "decisions": [
           "malformed",
           "malformed",
-          "escalate",
-          "escalate"
+          "malformed",
+          "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.2
+        "mean_wall_clock_s": 1.06
       },
       "mas": {
         "runs": 4,
         "valid": 4,
         "decisions": [
-          "dismiss",
-          "dismiss",
-          "dismiss",
+          "investigate",
+          "investigate",
+          "investigate",
           "investigate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.41
+        "mean_wall_clock_s": 10.67
       }
     },
-    "scratch_dir": "/tmp/mini-gate-granite4-latest-wjesgcre"
+    "scratch_dir": "/tmp/mini-gate-llama3.1-8b-geyk9kuh"
   }
 }

@@ -1,6 +1,6 @@
 {
   "model": "gpt-oss:20b",
-  "date": "2026-08-07T02:04:09Z",
+  "date": "2026-08-07T14:23:51Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -50,13 +50,13 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "ecab3a57ee21e12b9783e5d317adcb14252e88855ba8ddb04ae2e1526cdbcfee"
+      "0266def7c6dd6b9a92faf62e3d3defb6607af02855594dcedf6ddcfcec353c7a"
     ],
-    "output_len": 835
+    "output_len": 892
   },
   "pilot": {
     "pass": false,
-    "valid_total": "5/8",
+    "valid_total": "4/8",
     "arms": {
       "single": {
         "runs": 4,
@@ -68,21 +68,21 @@
           "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.51
+        "mean_wall_clock_s": 5.22
       },
       "mas": {
         "runs": 4,
-        "valid": 3,
+        "valid": 2,
         "decisions": [
-          "investigate",
-          "investigate",
           "malformed",
-          "investigate"
+          "escalate",
+          "escalate",
+          "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 26.13
+        "mean_wall_clock_s": 33.82
       }
     },
-    "scratch_dir": "/tmp/mini-gate-gpt-oss-20b-0h421hx6"
+    "scratch_dir": "/tmp/mini-gate-gpt-oss-20b-xfqjl78k"
   }
 }

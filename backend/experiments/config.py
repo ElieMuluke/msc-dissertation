@@ -127,6 +127,7 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
     "llama3.1:8b": ("results-llama3.1-8b", None),
     "qwen2.5:14b-instruct": ("results-qwen2.5-14b", None),
     "gemma3:27b": ("results-gemma3-27b", None),
+    "gemma4:latest": ("results-gemma4", None),
     "granite4:latest": ("results-granite4", None),
     "gpt-oss:20b": ("results-gpt-oss-20b", None),
 }

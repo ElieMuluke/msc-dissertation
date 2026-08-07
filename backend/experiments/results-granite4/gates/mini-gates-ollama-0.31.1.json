@@ -1,6 +1,6 @@
 {
   "model": "granite4:latest",
-  "date": "2026-08-07T14:22:09Z",
+  "date": "2026-08-07T02:02:44Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -55,19 +55,19 @@
   },
   "pilot": {
     "pass": false,
-    "valid_total": "6/8",
+    "valid_total": "5/8",
     "arms": {
       "single": {
         "runs": 4,
-        "valid": 2,
+        "valid": 1,
         "decisions": [
           "malformed",
           "malformed",
           "escalate",
-          "escalate"
+          "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.2
+        "mean_wall_clock_s": 3.36
       },
       "mas": {
         "runs": 4,
@@ -79,9 +79,9 @@
           "investigate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.41
+        "mean_wall_clock_s": 7.8
       }
     },
-    "scratch_dir": "/tmp/mini-gate-granite4-latest-wjesgcre"
+    "scratch_dir": "/tmp/mini-gate-granite4-latest-yijjjjeq"
   }
 }

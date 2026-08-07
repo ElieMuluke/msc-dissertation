@@ -1,6 +1,6 @@
 {
-  "model": "granite4:latest",
-  "date": "2026-08-07T14:22:09Z",
+  "model": "gemma4:latest",
+  "date": "2026-08-07T14:29:00Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -14,34 +14,35 @@
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventyone"
       },
       {
         "think_param": false,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventyone"
       },
       {
         "think_param": false,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventyone"
       },
       {
         "think_param": null,
         "http_ok": true,
         "thinking_field_present": false,
         "inline_think_tags": false,
-        "content_head": "71"
+        "content_head": "Seventy-one"
       },
       {
         "think_param": true,
-        "http_ok": false,
-        "status": 400,
-        "error_body": "{\"error\":\"\\\"granite4:latest\\\" does not support thinking\"}"
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "Seventy-one"
       }
     ]
   },
@@ -49,39 +50,39 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "6f9ff1fb93e82c9597ebcc5f700dd14249e310db0e26ea5722af5170d9cca931"
+      "86ac761867d1e244d6c9a367f4100e2ff83adfed9f4708a46be69f9154ae8911"
     ],
-    "output_len": 785
+    "output_len": 771
   },
   "pilot": {
-    "pass": false,
-    "valid_total": "6/8",
+    "pass": true,
+    "valid_total": "8/8",
     "arms": {
       "single": {
         "runs": 4,
-        "valid": 2,
+        "valid": 4,
         "decisions": [
-          "malformed",
-          "malformed",
+          "investigate",
+          "investigate",
           "escalate",
           "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.2
+        "mean_wall_clock_s": 17.31
       },
       "mas": {
         "runs": 4,
         "valid": 4,
         "decisions": [
-          "dismiss",
-          "dismiss",
-          "dismiss",
-          "investigate"
+          "investigate",
+          "investigate",
+          "escalate",
+          "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.41
+        "mean_wall_clock_s": 34.76
       }
     },
-    "scratch_dir": "/tmp/mini-gate-granite4-latest-wjesgcre"
+    "scratch_dir": "/tmp/mini-gate-gemma4-latest-xd8d3iyh"
   }
 }

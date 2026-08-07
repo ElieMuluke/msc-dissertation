@@ -1,47 +1,48 @@
 {
-  "model": "granite4:latest",
-  "date": "2026-08-07T14:22:09Z",
+  "model": "gpt-oss:20b",
+  "date": "2026-08-07T02:04:09Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
   },
   "think_behavior": {
-    "pass": true,
+    "pass": false,
     "configured_think": null,
     "records": [
       {
         "think_param": false,
         "http_ok": true,
-        "thinking_field_present": false,
+        "thinking_field_present": true,
         "inline_think_tags": false,
         "content_head": "71"
       },
       {
         "think_param": false,
         "http_ok": true,
-        "thinking_field_present": false,
+        "thinking_field_present": true,
         "inline_think_tags": false,
         "content_head": "71"
       },
       {
         "think_param": false,
         "http_ok": true,
-        "thinking_field_present": false,
+        "thinking_field_present": true,
         "inline_think_tags": false,
         "content_head": "71"
       },
       {
         "think_param": null,
         "http_ok": true,
-        "thinking_field_present": false,
+        "thinking_field_present": true,
         "inline_think_tags": false,
         "content_head": "71"
       },
       {
         "think_param": true,
-        "http_ok": false,
-        "status": 400,
-        "error_body": "{\"error\":\"\\\"granite4:latest\\\" does not support thinking\"}"
+        "http_ok": true,
+        "thinking_field_present": true,
+        "inline_think_tags": false,
+        "content_head": "71"
       }
     ]
   },
@@ -49,39 +50,39 @@
     "pass": true,
     "n": 5,
     "sha256": [
-      "6f9ff1fb93e82c9597ebcc5f700dd14249e310db0e26ea5722af5170d9cca931"
+      "ecab3a57ee21e12b9783e5d317adcb14252e88855ba8ddb04ae2e1526cdbcfee"
     ],
-    "output_len": 785
+    "output_len": 835
   },
   "pilot": {
     "pass": false,
-    "valid_total": "6/8",
+    "valid_total": "5/8",
     "arms": {
       "single": {
         "runs": 4,
         "valid": 2,
         "decisions": [
+          "dismiss",
+          "dismiss",
           "malformed",
-          "malformed",
-          "escalate",
-          "escalate"
+          "malformed"
         ],
         "errors": [],
-        "mean_wall_clock_s": 10.2
+        "mean_wall_clock_s": 7.51
       },
       "mas": {
         "runs": 4,
-        "valid": 4,
+        "valid": 3,
         "decisions": [
-          "dismiss",
-          "dismiss",
-          "dismiss",
+          "investigate",
+          "investigate",
+          "malformed",
           "investigate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 7.41
+        "mean_wall_clock_s": 26.13
       }
     },
-    "scratch_dir": "/tmp/mini-gate-granite4-latest-wjesgcre"
+    "scratch_dir": "/tmp/mini-gate-gpt-oss-20b-0h421hx6"
   }
 }
