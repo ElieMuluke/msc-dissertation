@@ -941,3 +941,36 @@
 2026-08-07 04:02:51,805 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-07 04:02:54,331 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-07 04:02:56,901 INFO [300/1150] single:TXN-2025-004:t07-varied:4 -> investigate (5.7s)
+2026-08-07 04:02:58,141 INFO results synced: results: single checkpoint after 300 runs this session
+2026-08-07 04:02:58,884 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:01,615 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:04,268 INFO [301/1150] single:TXN-2025-004:t07-varied:5 -> investigate (6.1s)
+2026-08-07 04:03:05,032 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:09,883 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:13,681 INFO [302/1150] single:TXN-2025-004:t07-varied:6 -> investigate (9.4s)
+2026-08-07 04:03:14,404 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:16,804 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:19,082 INFO [303/1150] single:TXN-2025-004:t07-varied:7 -> investigate (5.4s)
+2026-08-07 04:03:19,794 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:22,421 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:25,365 INFO [304/1150] single:TXN-2025-004:t07-varied:8 -> escalate (6.3s)
+2026-08-07 04:03:26,106 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:28,257 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:32,355 INFO [305/1150] single:TXN-2025-004:t07-varied:9 -> investigate (7.0s)
+2026-08-07 04:03:33,122 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:35,054 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:37,684 INFO [306/1150] single:TXN-2025-004:t07-varied:10 -> investigate (5.3s)
+2026-08-07 04:03:38,177 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:40,048 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:41,583 INFO [307/1150] single:TXN-2025-004:t07-varied:11 -> investigate (3.9s)
+2026-08-07 04:03:42,395 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:44,648 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:47,776 INFO [308/1150] single:TXN-2025-004:t07-varied:12 -> investigate (6.2s)
+2026-08-07 04:03:48,443 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:50,691 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:54,590 INFO [309/1150] single:TXN-2025-004:t07-varied:13 -> investigate (6.8s)
+2026-08-07 04:03:55,303 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:03:59,428 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:04:03,571 INFO [310/1150] single:TXN-2025-004:t07-varied:14 -> investigate (9.0s)
+2026-08-07 04:04:04,346 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 04:04:06,522 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
