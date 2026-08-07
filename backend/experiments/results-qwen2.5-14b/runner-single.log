@@ -271,3 +271,43 @@
 2026-08-07 03:38:53,081 INFO [86/1150] single:TXN-2025-018:t0-fixed:0 -> investigate (10.3s)
 2026-08-07 03:38:53,586 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-07 03:39:00,380 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:02,897 INFO [87/1150] single:TXN-2025-018:t0-fixed:1 -> investigate (9.8s)
+2026-08-07 03:39:03,401 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:09,485 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:12,046 INFO [88/1150] single:TXN-2025-018:t0-fixed:2 -> investigate (9.1s)
+2026-08-07 03:39:12,603 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:19,359 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:22,347 INFO [89/1150] single:TXN-2025-018:t0-fixed:3 -> investigate (10.3s)
+2026-08-07 03:39:22,942 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:29,419 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:31,795 INFO [90/1150] single:TXN-2025-018:t0-fixed:4 -> investigate (9.4s)
+2026-08-07 03:39:32,602 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:35,259 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:37,719 INFO [91/1150] single:TXN-2025-019:t0-fixed:0 -> investigate (5.9s)
+2026-08-07 03:39:38,424 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:40,952 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:42,908 INFO [92/1150] single:TXN-2025-019:t0-fixed:1 -> investigate (5.2s)
+2026-08-07 03:39:43,597 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:46,171 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:48,304 INFO [93/1150] single:TXN-2025-019:t0-fixed:2 -> investigate (5.4s)
+2026-08-07 03:39:48,999 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:51,346 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:53,842 INFO [94/1150] single:TXN-2025-019:t0-fixed:3 -> investigate (5.5s)
+2026-08-07 03:39:54,533 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:56,659 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:39:59,151 INFO [95/1150] single:TXN-2025-019:t0-fixed:4 -> investigate (5.3s)
+2026-08-07 03:39:59,678 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:01,928 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:04,939 INFO [96/1150] single:TXN-2025-020:t0-fixed:0 -> investigate (5.8s)
+2026-08-07 03:40:05,655 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:07,894 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:09,756 INFO [97/1150] single:TXN-2025-020:t0-fixed:1 -> investigate (4.8s)
+2026-08-07 03:40:10,471 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:13,135 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:14,598 INFO [98/1150] single:TXN-2025-020:t0-fixed:2 -> investigate (4.8s)
+2026-08-07 03:40:15,319 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:17,865 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:19,459 INFO [99/1150] single:TXN-2025-020:t0-fixed:3 -> investigate (4.8s)
+2026-08-07 03:40:20,098 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:22,746 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-07 03:40:24,675 INFO [100/1150] single:TXN-2025-020:t0-fixed:4 -> investigate (5.2s)
