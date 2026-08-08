@@ -1,5 +1,34 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-08 — infra-context-2 qwen replications (owner-approved, pre-launch)
+
+Purpose: de-confound model family vs Ollama version for the cache-state
+determinism findings. The three qwen sweeps completed under Ollama 0.31.1
+(infra context 1) are re-run under 0.32.6 (infra context 2) with identical
+seeds and design: same 50 + 10 cases, same conditions/repeats, same
+2,300-run planned seed schedule (`planned_runs()` depends on `MASTER_SEED`
+only), same digest-pinned model blobs.
+
+Mechanism: `config.REPLICATION_MODELS` extended so a registry KEY can
+differ from the served MODEL TAG. New keys (each with its own isolated
+results dir; runners/manifests/servers use the tag):
+
+- `qwen2.5:7b-instruct@0.32.6` → `results-qwen2.5-7b-ollama0326/` (think=None)
+- `qwen3.5:9b@0.32.6` → `results-qwen3.5-9b-ollama0326/` (think=False, as original)
+- `qwen2.5:14b-instruct@0.32.6` → `results-qwen2.5-14b-ollama0326/` (think=None)
+
+Existing keys resolve byte-identically (asserted by test); `config_hash`
+of each context-2 manifest intentionally equals its original sweep's hash
+(same design, same model identity) — the infra context is carried by the
+manifest's `ollama_version` and every journal line's `ollama_version`.
+Mini-gates re-run per key against the pinned servers before launch;
+evidence in each context-2 dir's `gates/`.
+
+The original 0.31.1 results are untouched and remain the pre-registered
+results (qwen3.5:9b headline, replications as pre-registered robustness
+checks). The context-2 sweeps are exploratory infra replications, analysed
+as a separate context, never merged with context-1 journals.
+
 ## 2026-08-07 (evening) — infra context 2: Ollama 0.31.1 → 0.32.6; re-gate results; gemma4 admitted
 
 Owner upgraded Ollama to 0.32.6 (all three qwen sweeps were completed and sealed under

@@ -6,10 +6,15 @@ model. qwen3.5:9b is the headline pre-registered result; the other models
 are robustness replications of the identical design (same cases, seeds,
 conditions, metrics — see CHANGELOG 2026-08-06).
 
+``--models`` takes replication registry KEYS (config.REPLICATION_MODELS),
+including infra-context keys like ``qwen2.5:7b-instruct@0.32.6`` — each key
+renders as its own column reading its own results dir, so context-1 (0.31.1)
+and context-2 (0.32.6) sweeps of the same model tag appear side by side.
+
 Usage (from ``backend/``)::
 
     python -m experiments.analysis.compare \
-        [--models qwen3.5:9b qwen2.5:7b-instruct mistral-nemo:latest] \
+        [--models qwen3.5:9b qwen3.5:9b@0.32.6 qwen2.5:7b-instruct] \
         [--out experiments/cross-model-comparison.md]
 """
 

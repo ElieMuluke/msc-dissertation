@@ -111,13 +111,23 @@ MAS_TOOL_PARTITION: dict[str, tuple[str, ...]] = {
 DEFAULT_CONFIG = ExperimentConfig()
 
 # --- Replication extension (2026-08-06, owner-approved) ----------------------
-#: model tag -> (results dirname, wire think parameter). qwen3.5:9b is the
-#: headline pre-registered sweep; the other two replicate the identical
-#: design as robustness checks (same conditions, cases, metrics, and the
-#: SAME planned seed schedule — planned_runs() derives seeds from
-#: MASTER_SEED only, independent of model, so per-(condition, case, repeat)
-#: seeds are identical across models for cross-model comparability).
-REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
+#: registry KEY -> (results dirname, wire think parameter[, served model tag]).
+#: qwen3.5:9b is the headline pre-registered sweep; the other entries
+#: replicate the identical design as robustness checks (same conditions,
+#: cases, metrics, and the SAME planned seed schedule — planned_runs()
+#: derives seeds from MASTER_SEED only, independent of model, so
+#: per-(condition, case, repeat) seeds are identical across models for
+#: cross-model comparability).
+#:
+#: Key/tag separation (2026-08-08, owner-approved infra-context-2
+#: replications): a 2-tuple value means the key IS the served model tag
+#: (all original entries, unchanged). A 3-tuple value adds an explicit
+#: served model tag, so one model tag can appear under several keys — one
+#: per infra context — each with its own isolated results dir. Convention
+#: for context keys: "<model-tag>@<ollama-version>". Runners, manifests
+#: and servers always use the TAG (``config_for_model(key).model``); dirs,
+#: journals and gate evidence live under the KEY's results dirname.
+REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, str]] = {
     "qwen3.5:9b": ("results", False),
     "qwen2.5:7b-instruct": ("results-qwen2.5-7b", None),
     "mistral-nemo:latest": ("results-mistral-nemo", None),
@@ -130,25 +140,51 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None]] = {
     "gemma4:latest": ("results-gemma4", None),
     "granite4:latest": ("results-granite4", None),
     "gpt-oss:20b": ("results-gpt-oss-20b", None),
+    # infra context 2 (Ollama 0.32.6) qwen replications — see CHANGELOG
+    # 2026-08-08. Same model blobs (digest-pinned), same seed schedule,
+    # distinct results dirs; the 0.31.1 sweeps stay the pre-registered results.
+    "qwen2.5:7b-instruct@0.32.6": (
+        "results-qwen2.5-7b-ollama0326", None, "qwen2.5:7b-instruct"),
+    "qwen3.5:9b@0.32.6": (
+        "results-qwen3.5-9b-ollama0326", False, "qwen3.5:9b"),
+    "qwen2.5:14b-instruct@0.32.6": (
+        "results-qwen2.5-14b-ollama0326", None, "qwen2.5:14b-instruct"),
 }
 
 
-def config_for_model(model: str) -> ExperimentConfig:
-    """The full experiment configuration for one replication model.
+def replication_entry(key: str) -> tuple[str, str, bool | None]:
+    """Resolve a registry key to ``(model_tag, dirname, think)``.
 
-    Each model gets its own sibling results dir (own manifest, journals,
+    For 2-tuple entries the key doubles as the served model tag (original
+    scheme, byte-compatible); 3-tuple entries carry the tag explicitly.
+    """
+    if key not in REPLICATION_MODELS:
+        raise KeyError(
+            f"unknown replication model {key!r}; add it to REPLICATION_MODELS"
+        )
+    entry = REPLICATION_MODELS[key]
+    if len(entry) == 2:
+        dirname, think = entry
+        return key, dirname, think
+    dirname, think, model_tag = entry
+    return model_tag, dirname, think
+
+
+def config_for_model(model: str) -> ExperimentConfig:
+    """The full experiment configuration for one replication registry key.
+
+    Each key gets its own sibling results dir (own manifest, journals,
     progress, gates evidence) so sweeps can never contaminate each other.
+    The returned config's ``.model`` is the served model TAG — the value
+    runners, manifests and Ollama servers use — which equals the key except
+    for explicit key/tag entries (e.g. ``"…@0.32.6"`` infra-context keys).
     """
     import dataclasses
 
-    if model not in REPLICATION_MODELS:
-        raise KeyError(
-            f"unknown replication model {model!r}; add it to REPLICATION_MODELS"
-        )
-    dirname, think = REPLICATION_MODELS[model]
+    model_tag, dirname, think = replication_entry(model)
     return dataclasses.replace(
         DEFAULT_CONFIG,
-        model=model,
+        model=model_tag,
         think=think,
         results_dir=EXPERIMENTS_DIR / dirname,
     )

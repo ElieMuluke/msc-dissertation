@@ -8,9 +8,12 @@
 #                start fresh pinned servers. Without it, an existing session
 #                is a hard error: we cannot verify a stale server was started
 #                with the pinned env (OLLAMA_NUM_PARALLEL=1 etc.).
-#   --model TAG  replication model (config.REPLICATION_MODELS); selects that
-#                model's results dir + manifest. Default: the headline
-#                pre-registered model (qwen3.5:9b -> results/). The runners'
+#   --model KEY  replication registry key (config.REPLICATION_MODELS); selects
+#                that key's results dir + manifest. The key may differ from the
+#                served model tag (infra-context keys like
+#                "qwen2.5:7b-instruct@0.32.6"): config resolution maps the key
+#                to the tag, and digest checks/pulls use the TAG. Default: the
+#                headline pre-registered model (qwen3.5:9b -> results/). The runners'
 #                first warm-up call loads the model; OLLAMA_MAX_LOADED_MODELS=1
 #                evicts a previously loaded model automatically, so switching
 #                models between sweeps needs no unload step.
@@ -37,8 +40,11 @@ if [[ -z "$MODEL" ]]; then
   MODEL="$(cd "$BACKEND" && $PY -c 'from experiments.config import DEFAULT_CONFIG; print(DEFAULT_CONFIG.model)')"
 fi
 RESULTS_DIR="$(cd "$BACKEND" && $PY -c "from experiments.config import config_for_model; print(config_for_model('$MODEL').results_dir)")"
+# Served model TAG (what the servers/digest checks/pulls use); equals the
+# registry key except for explicit key/tag entries (infra-context keys).
+TAG="$(cd "$BACKEND" && $PY -c "from experiments.config import config_for_model; print(config_for_model('$MODEL').model)")"
 MANIFEST="$RESULTS_DIR/manifest.json"
-echo "sweep model: $MODEL  (results: $RESULTS_DIR)"
+echo "sweep key: $MODEL  (served tag: $TAG, results: $RESULTS_DIR)"
 
 if [[ ! -f "$MANIFEST" ]]; then
   echo "ERROR: $MANIFEST missing — generate it first:" >&2
@@ -90,14 +96,14 @@ digest_on() {
   curl -s "http://127.0.0.1:$1/api/tags" | $PY -c "
 import json, sys
 tags = json.load(sys.stdin).get('models', [])
-print(next((m['digest'] for m in tags if m['name'] in ('$MODEL', '$MODEL'.removesuffix(':latest'), '$MODEL:latest')), ''))
+print(next((m['digest'] for m in tags if m['name'] in ('$TAG', '$TAG'.removesuffix(':latest'), '$TAG:latest')), ''))
 "
 }
 for port in 11437 11435; do
   ACTUAL="$(digest_on "$port")"
   if [[ "$ACTUAL" != "$EXPECTED" ]]; then
-    echo "  :$port model missing or digest drift — pulling $MODEL"
-    OLLAMA_HOST=127.0.0.1:$port ollama pull "$MODEL" || true
+    echo "  :$port model missing or digest drift — pulling $TAG"
+    OLLAMA_HOST=127.0.0.1:$port ollama pull "$TAG" || true
     ACTUAL="$(digest_on "$port")"
   fi
   if [[ "$ACTUAL" != "$EXPECTED" ]]; then

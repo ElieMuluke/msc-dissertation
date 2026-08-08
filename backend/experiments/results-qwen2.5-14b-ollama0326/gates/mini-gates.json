@@ -1,0 +1,88 @@
+{
+  "registry_key": "qwen2.5:14b-instruct@0.32.6",
+  "model": "qwen2.5:14b-instruct",
+  "date": "2026-08-08T06:29:17Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "inline_think_tags": false,
+        "content_head": "71"
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"qwen2.5:14b-instruct\\\" does not support thinking\"}"
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "sha256": [
+      "fd225946f7c097e5057f41eaff7cf99392f40128632d6d2f4c9b3125ef31b07b"
+    ],
+    "output_len": 748
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 4.08
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "investigate",
+          "investigate",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 17.23
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-qwen2.5-14b-instruct-0.32.6-j_4b6l79"
+  }
+}
