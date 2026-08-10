@@ -159,4 +159,14 @@ class MasAgent:
                 "data_findings": final["data_findings"],
                 "risk_assessment": final["risk_assessment"],
             },
+            # Harness v2: every node's output text, keyed by node name in
+            # pipeline order (dict insertion order == NODES order). The
+            # reporting entry duplicates ``output_text`` by design so the
+            # mapping is complete on its own.
+            node_outputs={
+                "orchestrator": final["plan"],
+                "data": final["data_findings"],
+                "policy_risk": final["risk_assessment"],
+                "reporting": final["report"],
+            },
         )
