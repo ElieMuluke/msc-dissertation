@@ -2998,3 +2998,21 @@
 2026-08-10 16:31:28,318 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-10 16:31:29,709 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-10 16:31:34,903 INFO [675/1150] single:TXN-2025-029:t07-varied:4 -> investigate (7.4s)
+2026-08-10 16:31:36,783 INFO results synced: results: single checkpoint after 675 runs this session
+2026-08-10 16:31:37,682 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:39,211 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:42,268 INFO [676/1150] single:TXN-2025-029:t07-varied:5 -> escalate (5.5s)
+2026-08-10 16:31:43,097 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:45,232 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:45,840 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:50,335 INFO [677/1150] single:TXN-2025-029:t07-varied:6 -> investigate (8.0s)
+2026-08-10 16:31:51,174 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:52,389 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:54,802 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:55,395 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:31:58,219 INFO [678/1150] single:TXN-2025-029:t07-varied:7 -> investigate (7.9s)
+2026-08-10 16:31:59,080 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:32:00,939 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:32:01,945 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 16:32:04,752 INFO [679/1150] single:TXN-2025-029:t07-varied:8 -> investigate (6.5s)
+2026-08-10 16:32:05,623 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
