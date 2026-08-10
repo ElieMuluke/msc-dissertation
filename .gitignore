@@ -27,3 +27,7 @@ backend/data/reports/
 # `python -m app.ingestion.watchlists.ingest` — derived data, not source.
 backend/watchlists_db.sqlite
 backend/watchlists_db.sqlite.building
+
+# runner logs are run-specific operational noise, never part of the record
+backend/experiments/results*/runner-*.log
+backend/experiments/results*/**/runner-*.log

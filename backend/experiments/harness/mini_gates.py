@@ -102,13 +102,13 @@ def determinism(config: ExperimentConfig, n: int = 5) -> dict[str, Any]:
     }
 
 
-async def _pilot(config: ExperimentConfig, scratch: Path) -> dict[str, Any]:
+async def _pilot(config: ExperimentConfig, scratch: Path, key: str) -> dict[str, Any]:
     """2 cases × 2 repeats per arm through the real runner, extraction check."""
     manifest_src = config.results_dir / "manifest.json"
     if not manifest_src.exists():
         raise SystemExit(
             f"{manifest_src} missing — generate it first: "
-            f"python -m experiments.harness.manifest --model {config.model}"
+            f"python -m experiments.harness.manifest --model '{key}'"
         )
     shutil.copy(manifest_src, scratch / "manifest.json")
     per_arm: dict[str, Any] = {}
@@ -140,13 +140,18 @@ async def _pilot(config: ExperimentConfig, scratch: Path) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", required=True)
+    parser.add_argument(
+        "--model", required=True,
+        help="replication registry key (config.REPLICATION_MODELS; may differ "
+             "from the served model tag, e.g. 'qwen2.5:7b-instruct@0.32.6')",
+    )
     parser.add_argument("--skip-pilot", action="store_true",
                         help="probes only (e.g. while servers are busy)")
     args = parser.parse_args()
     config = config_for_model(args.model)
 
     evidence: dict[str, Any] = {
+        "registry_key": args.model,
         "model": config.model,
         "date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "servers": dict(config.arm_base_urls),
@@ -161,8 +166,9 @@ def main() -> int:
           f"sha256[:16]={evidence['determinism']['sha256'][0][:16]}")
     if not args.skip_pilot:
         print(f"[mini-gates] {config.model}: 2x2 pilot per arm...")
-        scratch = Path(tempfile.mkdtemp(prefix=f"mini-gate-{config.model.replace(':', '-')}-"))
-        evidence["pilot"] = asyncio.run(_pilot(config, scratch))
+        scratch = Path(tempfile.mkdtemp(
+            prefix=f"mini-gate-{args.model.replace(':', '-').replace('@', '-')}-"))
+        evidence["pilot"] = asyncio.run(_pilot(config, scratch, args.model))
         evidence["pilot"]["scratch_dir"] = str(scratch)
         print(f"  pass={evidence['pilot']['pass']} valid={evidence['pilot']['valid_total']}")
 

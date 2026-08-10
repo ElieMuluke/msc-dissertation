@@ -148,8 +148,9 @@ def main() -> int:
                         help="overwrite an existing manifest (pre-launch only)")
     parser.add_argument(
         "--model", default=DEFAULT_CONFIG.model,
-        help="replication model tag (must be in config.REPLICATION_MODELS); "
-             "selects that model's own results dir",
+        help="replication registry key (must be in config.REPLICATION_MODELS; "
+             "may differ from the served model tag, e.g. 'qwen2.5:7b-instruct"
+             "@0.32.6'); selects that key's own results dir",
     )
     args = parser.parse_args()
     config = config_for_model(args.model)

@@ -71,7 +71,7 @@ def get_llm_ping() -> Callable[[], bool]:
 
 @lru_cache
 def get_watchlists() -> WatchlistSystem:
-    """Single shared WatchlistSystem (sanctions + FATF lists indexed once per process)."""
+    """Single shared WatchlistSystem (read-only handle on the SQLite watchlist store)."""
     return build_watchlist_system()
 
 
