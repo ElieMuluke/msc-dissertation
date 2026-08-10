@@ -3404,3 +3404,84 @@
 2026-08-10 12:43:00,527 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-10 12:43:00,812 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
 2026-08-10 12:43:01,628 INFO [125/212] single:PERT-003:pert-t05:2 -> investigate (3.1s)
+2026-08-10 12:43:03,171 INFO results synced: results: single checkpoint after 125 runs this session
+2026-08-10 12:43:03,627 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:04,454 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:04,950 INFO [126/212] single:PERT-003:pert-t05:3 -> escalate (1.8s)
+2026-08-10 12:43:05,370 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:06,172 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:06,643 INFO [127/212] single:PERT-003:pert-t05:4 -> investigate (1.7s)
+2026-08-10 12:43:07,058 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:08,310 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:09,028 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:10,380 INFO [128/212] single:PERT-004:pert-t05:0 -> investigate (3.7s)
+2026-08-10 12:43:10,901 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:11,991 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:12,544 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:13,816 INFO [129/212] single:PERT-004:pert-t05:1 -> investigate (3.4s)
+2026-08-10 12:43:14,309 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:15,699 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:16,320 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:17,984 INFO [130/212] single:PERT-004:pert-t05:2 -> investigate (4.1s)
+2026-08-10 12:43:18,456 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:19,774 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:20,228 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:21,464 INFO [131/212] single:PERT-004:pert-t05:3 -> investigate (3.5s)
+2026-08-10 12:43:21,983 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:23,274 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:23,768 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:25,172 INFO [132/212] single:PERT-004:pert-t05:4 -> investigate (3.7s)
+2026-08-10 12:43:25,639 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:26,774 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:28,176 INFO [133/212] single:PERT-005:pert-t05:0 -> escalate (3.0s)
+2026-08-10 12:43:28,669 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:29,730 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:31,358 INFO [134/212] single:PERT-005:pert-t05:1 -> investigate (3.2s)
+2026-08-10 12:43:31,840 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:32,887 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:33,608 INFO [135/212] single:PERT-005:pert-t05:2 -> escalate (2.2s)
+2026-08-10 12:43:34,128 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:35,337 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:36,133 INFO [136/212] single:PERT-005:pert-t05:3 -> investigate (2.5s)
+2026-08-10 12:43:36,655 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:37,637 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:39,014 INFO [137/212] single:PERT-005:pert-t05:4 -> investigate (2.9s)
+2026-08-10 12:43:39,572 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:40,714 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:42,003 INFO [138/212] single:PERT-006:pert-t05:0 -> investigate (3.0s)
+2026-08-10 12:43:42,524 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:43,682 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:44,776 INFO [139/212] single:PERT-006:pert-t05:1 -> investigate (2.8s)
+2026-08-10 12:43:45,272 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:46,504 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:47,368 INFO [140/212] single:PERT-006:pert-t05:2 -> dismiss (2.5s)
+2026-08-10 12:43:47,928 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:49,009 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:49,968 INFO [141/212] single:PERT-006:pert-t05:3 -> investigate (2.6s)
+2026-08-10 12:43:50,449 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:51,449 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:52,546 INFO [142/212] single:PERT-006:pert-t05:4 -> investigate (2.6s)
+2026-08-10 12:43:53,084 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:53,649 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:54,527 INFO [143/212] single:PERT-007:pert-t05:0 -> investigate (2.0s)
+2026-08-10 12:43:55,006 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:56,241 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:57,335 INFO [144/212] single:PERT-007:pert-t05:1 -> investigate (2.8s)
+2026-08-10 12:43:57,817 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:58,427 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:43:59,215 INFO [145/212] single:PERT-007:pert-t05:2 -> investigate (1.9s)
+2026-08-10 12:43:59,735 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:00,298 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:01,051 INFO [146/212] single:PERT-007:pert-t05:3 -> investigate (1.8s)
+2026-08-10 12:44:01,528 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:02,573 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:03,157 INFO [147/212] single:PERT-007:pert-t05:4 -> investigate (2.1s)
+2026-08-10 12:44:03,593 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:04,452 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:05,480 INFO [148/212] single:PERT-008:pert-t05:0 -> investigate (2.3s)
+2026-08-10 12:44:06,019 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:07,173 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:09,075 INFO [149/212] single:PERT-008:pert-t05:1 -> investigate (3.6s)
+2026-08-10 12:44:09,587 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:10,558 INFO HTTP Request: POST http://localhost:11437/api/chat "HTTP/1.1 200 OK"
+2026-08-10 12:44:11,291 INFO [150/212] single:PERT-008:pert-t05:2 -> investigate (2.2s)
