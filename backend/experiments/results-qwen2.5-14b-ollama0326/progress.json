@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-08-10T20:22:33Z",
+  "done": 30,
+  "total": 2300,
+  "arms": {
+    "single": {
+      "done": 25,
+      "total": 1150,
+      "last_run_at": "2026-08-10T20:22:28Z",
+      "mean_wall_clock_s": 5.72,
+      "eta_s": 6437.0
+    },
+    "mas": {
+      "done": 5,
+      "total": 1150,
+      "last_run_at": "2026-08-10T20:21:51Z",
+      "mean_wall_clock_s": 25.03,
+      "eta_s": 28658.0
+    }
+  }
+}
