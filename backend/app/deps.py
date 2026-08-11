@@ -90,10 +90,15 @@ def get_session_memory() -> SessionMemory:
 def get_default_pipeline() -> str:
     """Configured default analysis pipeline (per-request overridable, PRD-B §3).
 
-    Env-overridable like the RAG settings above; the literal default flips to the
-    experiment winner after the Tue 11 Aug analysis (PRD-B §7).
+    Default = "mas": the experiment winner under the pre-registered Tier-1
+    hierarchy on the headline model (qwen3.5:9b, T=0.7): pass^k split by k,
+    so the criterion fell to DAR — MAS 0.802 vs single 0.618, p<0.001.
+    Caveat recorded with the decision: chance-corrected alpha near-equal
+    (.203/.205), and the MAS arm under-escalates behavioral-pattern cases on
+    this model. Decision 2026-08-11 (PRD-B §7); full nuance in
+    docs/FINAL-RESULTS.md and docs/ANALYSIS-INSIGHTS.md.
     """
-    return os.getenv("ANALYSIS_PIPELINE", "single")
+    return os.getenv("ANALYSIS_PIPELINE", "mas")
 
 
 _RULEBOOK_PATH = Path(__file__).resolve().parent.parent / "data" / "rulebook.md"

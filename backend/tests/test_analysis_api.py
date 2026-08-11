@@ -78,7 +78,9 @@ def _run_analysis(client, body):
 
 
 def test_analysis_streams_steps_and_done(client):
-    frames = _run_analysis(client, {"account_id": "100428660", "bank": "070"})
+    # pipeline pinned: this test exercises streaming mechanics with the mocked
+    # single agent; the configured default is now "mas" (experiment winner).
+    frames = _run_analysis(client, {"account_id": "100428660", "bank": "070", "pipeline": "single"})
     stages = [f["data"].get("stage") for f in frames if f["event"] == "step"]
     assert stages[0] == "accepted"
     assert "agent_started" in stages and "persisting_report" in stages
