@@ -64,6 +64,22 @@ run journals via four independent audit scripts.
    arms (repeatability isn't degeneracy); malformed handled as an outcome category
    (0.2–0.9% per sweep).
 
+## Version-isolation addendum (2026-08-11, audited)
+
+All three qwen sweeps were re-run under Ollama 0.32.6 with identical seeds/design
+(6,900 additional runs; combined independent audit CONFIRMED). Result: byte-divergence
+counts at T=0 fixed-seed are identical across versions in every cell (qwen3.5 0/60 →
+0/60; 7b 96/100 → 96/100; 14b 105/110 → 105/110); decision flips within ±2; primary
+Tier-1 deltas ≤0.04 — far below reported effect sizes. Two refinements: (a) qwen3.5's
+raw output bytes changed on ~96% of runs between versions while remaining perfectly
+deterministic within each — determinism *class* is version-stable even when numerics
+are not; (b) qwen2.5:14b reproduced its entire 2,300-run sweep decision-for-decision
+(2,297/2,300 byte-identical), forensically verified as a genuine re-run. Conclusion:
+cache-state T=0 sensitivity is a model property, invariant to serving-stack version;
+the gemma4 family-vs-version confound is resolved (version contributes ~nothing).
+Total corpus: 7 sweeps, 16,100 scored runs, 7 independent audits (incl. combined),
+all CONFIRMED.
+
 ## Winner selection (pre-registered, decision pending owner sign-off)
 
 Criterion: Tier-1 hierarchy on the headline model (qwen3.5:9b). pass^k splits by k
