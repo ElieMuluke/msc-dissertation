@@ -162,6 +162,9 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, 
     # infra context 2 (Ollama 0.32.6) qwen replications — see CHANGELOG
     # 2026-08-08. Same model blobs (digest-pinned), same seed schedule,
     # distinct results dirs; the 0.31.1 sweeps stay the pre-registered results.
+    # gate battery 2026-08-11 (candidates for a future sweep; strict policy)
+    "granite4.1:8b": ("results-granite4.1-8b", None),
+    "lfm2.5:8b": ("results-lfm2.5-8b", None),
     "qwen2.5:7b-instruct@0.32.6": (
         "results-qwen2.5-7b-ollama0326", None, "qwen2.5:7b-instruct"),
     "qwen3.5:9b@0.32.6": (
