@@ -1,5 +1,38 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-12 (overnight) — thinking-on sweeps LAUNCHED (infra context 3, Ollama 0.32.9)
+
+Owner-approved launch of the pre-registered thinking-on track (design in the
+2026-08-11 evening entry; gate battery results in the 2026-08-11 late entry).
+Launch order, sequential on the pinned servers, harness v2 semantics on `main`
+(strict tool parsing, cache_policy="none"), think=true:
+
+1. `lfm2.5:8b@think` -> results-lfm2.5-8b-thinking/ (gate 8/8, ETA 5.9 h)
+2. `deepseek-r1:14b@think` -> results-deepseek-r1-14b-thinking/ (gate 8/8, ETA 10.0 h)
+
+Both models are admissible ONLY in this track: neither has a valid thinking-off
+configuration (lfm2.5 inlines reasoning into content under think:false;
+deepseek-r1's reasoning is structural), which is exactly why both were excluded
+from the sealed thinking-off corpus. Consequence for analysis, stated before any
+run: their comparison against the sealed corpus is CROSS-MODEL and therefore
+confounded with model identity. The only within-model thinking-on/off contrast
+available is muse-glimmer:30b (passes both tracks, 24.4 h + 34.0 h) — not
+launched tonight on time grounds; it remains the designated cross-track pair.
+
+Not launched, with reasons recorded: qwen3.5:9b@think (gate FAIL 6/8 — the MAS
+reporting node exhausts the locked num_predict=2048 on deliberation and emits
+empty content; a finding, not a defect, and unfixable without breaking a locked
+constant), gemma4@think (advertises a thinking capability it does not exercise:
+empty channel 3/3), gpt-oss:20b@think (thinking routes cleanly but the
+long-standing extraction defect persists, 4/8).
+
+Analysis plan (pre-registered): per-model reports within the thinking-on track;
+cross-track statements limited to (a) within-model where available, (b) clearly
+labelled cross-model observations against the sealed corpus. Token and wall-clock
+costs reported per arm per track — measured deliberation multiplier at gate time
+was 1.4-2.1x, not the 3-5x originally assumed.
+
+
 ## 2026-08-11 (evening) — CORPUS SEALED (contexts 1-2); infra context 3 opened; thinking-on track pre-registered
 
 **Seal.** The 7-sweep corpus is closed and final: contexts 1 (Ollama 0.31.1:
