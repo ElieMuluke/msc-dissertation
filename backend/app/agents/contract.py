@@ -46,6 +46,10 @@ class AgentResult:
     completion_tokens: int = 0
     #: Free-form extras (e.g. per-node outputs for the MAS arm). Audit only.
     extras: Mapping[str, Any] = field(default_factory=dict)
+    #: Per-node output text for multi-agent episodes, keyed by node name in
+    #: pipeline order (harness v2). Single-node agents leave this ``None``;
+    #: consumers must treat ``None`` as "not a pipeline", never as an error.
+    node_outputs: Mapping[str, str] | None = None
 
 
 @dataclass(frozen=True)

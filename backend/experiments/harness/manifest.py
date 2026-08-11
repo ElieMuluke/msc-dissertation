@@ -93,6 +93,10 @@ def config_record(config: ExperimentConfig = DEFAULT_CONFIG) -> dict[str, Any]:
         "num_predict": config.num_predict,
         "max_iterations": config.max_iterations,
         "run_timeout_s": config.run_timeout_s,
+        # Harness v2: cache-state policy is pre-registered per sweep and
+        # hashed with the config; changing it mid-sweep invalidates
+        # comparability (see ExperimentConfig.cache_policy).
+        "cache_policy": config.cache_policy,
         "master_seed": MASTER_SEED,
         "conditions": [
             {

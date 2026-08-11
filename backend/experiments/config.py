@@ -93,6 +93,25 @@ class ExperimentConfig:
     run_timeout_s: float = 900.0
     #: git commit+push of results/ every N completed runs.
     git_sync_every: int = 25
+    #: Cache-state control (harness v2, pre-registrable per sweep):
+    #: - ``"none"``    — current behaviour, byte-identical to harness v1
+    #:   (the default; sweeps 1-7 ran with this implicitly);
+    #: - ``"prewarm"`` — before each t0-fixed / pert-t0 run, the arm's exact
+    #:   opening prompt is sent once and the reply discarded, so the run
+    #:   measures warm-KV-state repeatability;
+    #: - ``"shuffle"`` — per-repeat case-order randomisation, derived
+    #:   deterministically from MASTER_SEED (averages KV-cache/history
+    #:   position effects across cases).
+    #: The active policy is recorded in the manifest and on every journal
+    #: line. WARNING: changing the policy mid-sweep invalidates the sweep's
+    #: internal comparability (runs before/after the switch saw different
+    #: cache states and, under shuffle, different execution orders) — pick
+    #: it before run 1 and keep it for the whole sweep, like every other
+    #: locked constant.
+    cache_policy: str = "none"
+    #: Refresh the per-run environment fingerprint (nvidia-smi snapshot)
+    #: every N runs; between refreshes the cached snapshot is journalled.
+    env_fingerprint_every: int = 25
     results_dir: Path = RESULTS_DIR
 
     def base_url(self, arm: str) -> str:

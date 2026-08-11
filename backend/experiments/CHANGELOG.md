@@ -1,5 +1,37 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-10 — harness v2 (branch `harness-v2`, NOT active on main)
+
+harness v2 — activated only after context-2 chain seals; sweeps 1-7 ran on
+harness v1 (main). No v1 sweep result is affected: `main`'s runner, agents
+and journal schema are byte-identical to what sweeps 1-7 executed, and
+every v2 default reproduces v1 behaviour exactly (`cache_policy="none"`,
+additive-only journal keys).
+
+Changes on this branch:
+
+- **MAS inter-node journaling** — `AgentResult` gains an optional
+  `node_outputs` field (`None` for the single arm); the MAS graph fills it
+  with each node's output text keyed by node name in pipeline order
+  (orchestrator, data, policy_risk, reporting), and the runner journals it
+  per line as `node_outputs`.
+- **Cache-state control** — pre-registrable runner option
+  `--cache-policy {none|prewarm|shuffle}` (`ExperimentConfig.cache_policy`,
+  default `none` = v1-identical). `prewarm` sends each t0-fixed/pert-t0
+  run's exact opening prompt once beforehand and discards it (warm-state
+  repeatability); `shuffle` permutes per-repeat case order
+  deterministically from `MASTER_SEED` (arm- and model-independent, so
+  comparability holds). The policy is recorded in the manifest's hashed
+  config record and on every journal line; changing it mid-sweep
+  invalidates comparability (documented in the config docstring).
+- **Environment fingerprint** — every journal line gains `env`: GPU
+  name/driver/VRAM-used snapshot (nvidia-smi, cached per
+  `env_fingerprint_every=25` runs) plus host 1-min load and a
+  load-high flag; all GPU fields are `null` where nvidia-smi is absent
+  (`experiments/harness/env_fingerprint.py`).
+- Journal schema doc comments extended (`journal.py`, `runner.execute_run`);
+  mocked tests added (`experiments/tests/test_harness_v2.py`).
+
 ## 2026-08-08 — infra-context-2 qwen replications (owner-approved, pre-launch)
 
 Purpose: de-confound model family vs Ollama version for the cache-state

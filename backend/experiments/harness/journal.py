@@ -5,6 +5,13 @@ line, schema per PRD-A. Every append is flushed and fsynced before the
 runner moves on, so a crash loses at most the in-flight run. Resume is
 journal-driven: completed runs are keyed by ``(case_id, arm, condition,
 repeat_idx)`` and skipped on restart.
+
+Harness v2 extends each line with ``node_outputs`` (MAS per-node output
+text in pipeline order; ``null`` on the single arm), ``cache_policy``
+(``none`` | ``prewarm`` | ``shuffle``) and ``env`` (GPU name/driver/VRAM
+snapshot + host-load flag, ``null`` fields where nvidia-smi is absent) —
+see ``experiments.harness.runner.execute_run`` for the field-by-field
+schema note. Harness v1 lines (sweeps 1-7) simply lack these keys.
 """
 
 from __future__ import annotations

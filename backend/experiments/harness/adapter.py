@@ -65,3 +65,31 @@ class ArmAdapter:
     async def arun(self, case: Mapping[str, Any], context: RunContext) -> AgentResult:
         """Run one fresh-context episode of this arm on ``case``."""
         return await self._build_agent().arun(case, context)
+
+    async def aprewarm(self, case: Mapping[str, Any], context: RunContext) -> None:
+        """Send this arm's exact opening prompt once and discard the reply.
+
+        Harness v2 ``cache_policy="prewarm"`` support: reproduces the FIRST
+        model call of a run byte-for-byte (same system prompt, same rendered
+        case, same tool binding as the arm's opening call — full tool set
+        for arm A, the orchestrator's partition for arm B) so the measured
+        run that follows executes against a warm server/KV state. The reply
+        is discarded and nothing is journalled here.
+        """
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        llm = self._model_factory(context)
+        tools = list(self._tool_builder())
+        if self.arm == "single":
+            system_prompt = SINGLE_PROMPT
+        else:
+            system_prompt = MAS_PROMPTS["orchestrator"]
+            allowed = tuple(MAS_TOOL_PARTITION.get("orchestrator", ()))
+            tools = [t for t in tools if t.name in allowed]
+        bound = llm.bind_tools(tools) if tools else llm
+        await bound.ainvoke(
+            [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=render_case(case)),
+            ]
+        )

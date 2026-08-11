@@ -27,6 +27,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+import random
 import time
 from pathlib import Path
 from typing import Any
@@ -34,9 +35,15 @@ from typing import Any
 from langchain_core.messages import HumanMessage
 
 from app.agents.contract import RunContext
-from experiments.config import DEFAULT_CONFIG, ExperimentConfig, config_for_model
+from experiments.config import (
+    DEFAULT_CONFIG,
+    MASTER_SEED,
+    ExperimentConfig,
+    config_for_model,
+)
 from experiments.harness import git_sync
 from experiments.harness.adapter import ArmAdapter
+from experiments.harness.env_fingerprint import EnvFingerprint
 from experiments.harness.dfah_data import load_perturbation_cases, load_primary_cases
 from experiments.harness.extraction import MALFORMED, extract_decision
 from experiments.harness.journal import (
@@ -70,14 +77,34 @@ async def _warm_up(adapter: ArmAdapter, config: ExperimentConfig) -> None:
     logger.info("warm-up call discarded")
 
 
+#: Conditions eligible for the ``prewarm`` cache policy: the deterministic
+#: repeatability conditions, where cold-vs-warm server state is a confound.
+PREWARM_CONDITIONS = ("t0-fixed", "pert-t0")
+
+
 async def execute_run(
     entry: dict[str, Any],
     adapter: ArmAdapter,
     case: dict[str, Any],
     config: ExperimentConfig,
     identity: dict[str, str],
+    env: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Run one planned entry and shape the journal record (never raises)."""
+    """Run one planned entry and shape the journal record (never raises).
+
+    Journal schema, harness v2 additions (all other fields as PRD-A):
+
+    - ``node_outputs`` — MAS arm only: each node's output text keyed by node
+      name in pipeline order (``orchestrator``, ``data``, ``policy_risk``,
+      ``reporting``); ``null`` for the single arm and for errored runs.
+    - ``cache_policy`` — the active cache-state policy for this sweep
+      (``none`` | ``prewarm`` | ``shuffle``; see ``ExperimentConfig``).
+    - ``env`` — environment fingerprint (``gpu_name``, ``gpu_driver``,
+      ``gpu_vram_used_mb``, ``host_load_1m``, ``host_load_high``; GPU
+      fields ``null`` where nvidia-smi is unavailable — see
+      ``experiments.harness.env_fingerprint``), or ``null`` when no
+      sampler was supplied.
+    """
     context = RunContext(
         run_id=entry["run_id"],
         case_id=entry["case_id"],
@@ -88,6 +115,7 @@ async def execute_run(
     started_at = _utc_now()
     t0 = time.monotonic()
     error: str | None = None
+    node_outputs: dict[str, str] | None = None
     try:
         result = await asyncio.wait_for(
             adapter.arun(case, context), timeout=config.run_timeout_s
@@ -98,6 +126,8 @@ async def execute_run(
         agent_messages = result.agent_messages
         prompt_tokens = result.prompt_tokens
         completion_tokens = result.completion_tokens
+        if result.node_outputs is not None:
+            node_outputs = dict(result.node_outputs)  # order preserved
     except Exception as exc:
         raw_output = ""
         decision = MALFORMED
@@ -126,6 +156,9 @@ async def execute_run(
         "raw_output": raw_output,
         "decision": decision,
         "error": error,
+        "node_outputs": node_outputs,
+        "cache_policy": config.cache_policy,
+        "env": env,
     }
 
 
@@ -146,6 +179,58 @@ def _select(
         keep = sorted({r["case_id"] for r in selected})[:max_cases]
         selected = [r for r in selected if r["case_id"] in keep]
     return selected
+
+
+def _cache_shuffle(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Per-repeat case-order shuffle (``cache_policy="shuffle"``).
+
+    Within each (condition, repeat_idx) group the case order is permuted by
+    an RNG seeded deterministically from ``MASTER_SEED`` and the group
+    identity only — independent of model and arm, so both arms and all
+    replication models execute the same shuffled order and stay comparable.
+    Being a pure function of the manifest, a resumed runner replays the
+    identical sequence (the resume set is key-based, so order never affects
+    which runs execute — only when).
+    """
+    groups: dict[tuple[str, int], list[dict[str, Any]]] = {}
+    for run in runs:
+        groups.setdefault((run["condition"], run["repeat_idx"]), []).append(run)
+    shuffled: list[dict[str, Any]] = []
+    for (condition, repeat_idx), group in groups.items():
+        rng = random.Random(f"{MASTER_SEED}:{condition}:{repeat_idx}")
+        group = list(group)
+        rng.shuffle(group)
+        shuffled.extend(group)
+    return shuffled
+
+
+async def _maybe_prewarm(
+    entry: dict[str, Any],
+    adapter: ArmAdapter,
+    case: dict[str, Any],
+    config: ExperimentConfig,
+) -> None:
+    """Send the run's exact opening prompt once and discard (best-effort).
+
+    Only under ``cache_policy="prewarm"`` and only for the deterministic
+    conditions (:data:`PREWARM_CONDITIONS`). A prewarm failure is logged and
+    swallowed — the measured run must still execute and be journalled.
+    """
+    if config.cache_policy != "prewarm" or entry["condition"] not in PREWARM_CONDITIONS:
+        return
+    context = RunContext(
+        run_id=f"{entry['run_id']}:prewarm",
+        case_id=entry["case_id"],
+        seed=entry["seed"],
+        temperature=entry["temperature"],
+        metadata={"arm": entry["arm"], "block": entry["block"], "prewarm": True},
+    )
+    try:
+        await asyncio.wait_for(
+            adapter.aprewarm(case, context), timeout=config.run_timeout_s
+        )
+    except Exception as exc:
+        logger.warning("prewarm failed (non-fatal) for %s: %s", entry["run_id"], exc)
 
 
 async def run_sweep(args: argparse.Namespace, config: ExperimentConfig) -> int:
@@ -172,9 +257,22 @@ async def run_sweep(args: argparse.Namespace, config: ExperimentConfig) -> int:
             )
         logger.warning("%s — continuing due to --allow-digest-mismatch", message)
 
+    manifest_policy = manifest.get("config", {}).get("cache_policy", "none")
+    if manifest_policy != config.cache_policy:
+        # v2: the policy is pre-registered in the manifest; a differing CLI
+        # value is allowed for pilots but flagged loudly (comparability).
+        logger.warning(
+            "cache_policy %r differs from the manifest's pre-registered %r — "
+            "runs journalled now are not comparable to runs under the other "
+            "policy (note it in backend/experiments/CHANGELOG.md)",
+            config.cache_policy, manifest_policy,
+        )
+
     planned = _select(
         manifest["runs"], args.arm, args.condition, args.max_cases, args.max_repeats
     )
+    if config.cache_policy == "shuffle":
+        planned = _cache_shuffle(planned)
     jpath = journal_path(config.results_dir, args.arm)
     done = completed_keys(jpath)
     todo = [
@@ -191,10 +289,15 @@ async def run_sweep(args: argparse.Namespace, config: ExperimentConfig) -> int:
     adapter = ArmAdapter(args.arm, config)
     await _warm_up(adapter, config)
 
+    env_fingerprint = EnvFingerprint(refresh_every=config.env_fingerprint_every)
     executed = 0
     with Journal(jpath) as journal:
         for entry in todo:
-            record = await execute_run(entry, adapter, cases[entry["case_id"]], config, identity)
+            await _maybe_prewarm(entry, adapter, cases[entry["case_id"]], config)
+            record = await execute_run(
+                entry, adapter, cases[entry["case_id"]], config, identity,
+                env=env_fingerprint.sample(),
+            )
             journal.append(record)
             executed += 1
             _write_progress_safely(config, manifest)
@@ -240,10 +343,22 @@ def main() -> int:
              "from the served model tag, e.g. 'qwen2.5:7b-instruct@0.32.6'); "
              "selects that key's own results dir, served tag and think handling",
     )
+    parser.add_argument(
+        "--cache-policy", default=None, choices=["none", "prewarm", "shuffle"],
+        help="cache-state control (harness v2; default: the config/manifest "
+             "value, 'none' = harness-v1 behaviour). 'prewarm' sends each "
+             "t0-fixed/pert-t0 run's exact opening prompt once beforehand and "
+             "discards it; 'shuffle' randomises per-repeat case order "
+             "deterministically from MASTER_SEED. Pre-register the policy in "
+             "the manifest; changing it mid-sweep invalidates comparability "
+             "(see ExperimentConfig.cache_policy).",
+    )
     args = parser.parse_args()
     config = config_for_model(args.model) if args.model else DEFAULT_CONFIG
     if args.results_dir is not None:
         config = dataclasses.replace(config, results_dir=args.results_dir)
+    if args.cache_policy is not None:
+        config = dataclasses.replace(config, cache_policy=args.cache_policy)
     return asyncio.run(run_sweep(args, config))
 
 
