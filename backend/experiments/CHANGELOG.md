@@ -37,6 +37,111 @@ confounded with nothing else by construction (same seeds, same cases, same
 harness) — with the caveat that token budgets differ by design and are
 reported per arm.
 
+### 2026-08-11 (night) — gate battery under 0.32.9: outcomes
+
+Outcomes only; the design above is unchanged and nothing here re-registers
+it. Both pinned servers were restarted and verified at 0.32.9 before the
+battery (recorded per evidence file). No sweep was launched. The sealed
+corpus was not touched.
+
+Harness support added for `think=True` end-to-end (model factory, hashed
+manifest config record, `think` on every journal line, mini-gates), and the
+mini-gate think probe now applies the pre-registered INVERTED criterion on
+the thinking-on track (`--expect-thinking`, else inferred from
+`config.think is True`). Registry keys `"<tag>@think"` → `results-<slug>-
+thinking/`; manifests generated with digests, `ollama_version` 0.32.9 and
+`think: true` in the hashed config (so a thinking-on `config_hash` can
+never collide with its thinking-off twin). Wire path verified in the
+installed package: `langchain_ollama/chat_models.py:804` passes `reasoning`
+through as the wire `think` field, and reasoning returns on
+`additional_kwargs["reasoning_content"]` (`:1268`/`:1350`), never
+concatenated into content — so `raw_output`, extraction and every metric
+still see the answer channel only.
+
+Per-run cost is now recorded in the gate evidence (wall clock and tokens,
+per stage and per arm). ETAs below = 1,150 runs/arm x the slower arm's
+observed pilot mean (arms run in parallel, each internally sequential).
+
+| model | thinking cap. | track | think probe | determ. | pilot | A/B wall s | A/B compl. tok | ETA | verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| granite4.1:8b | no | off (`null`) | PASS clean both surfaces | PASS | 8/8 | 2.6 / 11.6 | 181 / 994 | 3.7 h | **PASS** |
+| lfm2.5:8b | yes | off (`null`) | **FAIL** reasoning on `message.thinking` | PASS | 8/8 | 6.2 / 18.7 | 1404 / 4328 | 6.0 h | **FAIL** |
+| muse-glimmer:30b | yes | off (`false`) | PASS clean both surfaces | PASS | 8/8 | 15.9 / 76.4 | 637 / 3604 | 24.4 h | **PASS** |
+| qwen3.5:9b@think | yes | on | PASS 3/3 separate channel (5,171 ch), content clean | PASS both channels | **6/8** | 14.1 / 50.3 | 1424 / 5267 | 16.1 h | **FAIL** |
+| lfm2.5:8b@think | yes | on | PASS 3/3 separate channel (508 ch), content clean | PASS both channels | 8/8 | 6.2 / 18.5 | 1404 / 4328 | 5.9 h | **PASS** |
+| gemma4:latest@think | claims yes | on | **FAIL** `think:true` yields an EMPTY thinking channel 3/3 | PASS | 8/8 | 12.2 / 33.6 | 1022 / 3416 | 10.7 h | **FAIL** |
+| gpt-oss:20b@think | yes | on | PASS 3/3 separate channel (216 ch), content clean | PASS both channels | **4/8** | 6.6 / 29.4 | 457 / 3075 | 9.4 h | **FAIL** |
+| deepseek-r1:14b@think | yes | on | PASS 3/3 separate channel (2,608 ch), content clean | PASS both channels | 8/8 | 7.6 / 31.2 | 664 / 2599 | 10.0 h | **PASS** |
+| muse-glimmer:30b@think | yes | on | PASS 3/3 separate channel (668 ch), content clean | PASS both channels | 8/8 | 32.0 / 106.6 | 1441 / 5132 | 34.0 h | **PASS** |
+
+**Thinking-on admissions: `lfm2.5:8b@think`, `deepseek-r1:14b@think`,
+`muse-glimmer:30b@think`.** Zero inline-reasoning contamination in any
+pilot output on either track (0/8 every model), so the separate-channel
+routing holds through the real harness, tools and all — not just the probe.
+
+Findings worth recording:
+
+- **The inversion is real, and it cuts both ways.** `lfm2.5:8b` and
+  `deepseek-r1:14b` — excluded from the thinking-off corpus precisely
+  because their reasoning is structural — both pass cleanly here. The
+  pre-registered criterion admits exactly the models the other track had
+  to reject, which is the point of running the track at all.
+- **`qwen3.5:9b` fails the thinking-on gate, and the direct cross-track
+  comparison is therefore not available.** Not for contamination: its
+  probe and determinism are clean (thinking byte-identical at T=0/fixed
+  seed). It fails the pilot 6/8 because on the MAS arm the `reporting`
+  node returns EMPTY content — `node_outputs` shows orchestrator/data/
+  policy_risk all producing text and `reporting` producing 0 characters
+  with 6,108 completion tokens spent, i.e. the locked `num_predict=2048`
+  budget is consumed by deliberation before any answer is emitted.
+  Deterministic (both repeats identical). Raising `num_predict` would fix
+  it and is exactly what the pre-registration forbids — it is a locked
+  design constant, and changing it would break comparability with the
+  sealed corpus, which is the entire value of this model's cross-track
+  pair. Recorded as a finding: **on a 4-node pipeline the per-call
+  generation budget, not the model, is what binds under deliberation.**
+- **`gpt-oss:20b`'s structural thinking IS admissible** — the
+  pre-registration's open question is answered yes. It routes reasoning
+  cleanly to the separate channel under `think:true`. It still fails, at
+  4/8, on the same tool-call/extraction defect that excluded it thinking-
+  off on 0.31.1 (5/8) and 0.32.6 (4/8) — version-stable, unrelated to
+  deliberation.
+- **`gemma4:latest` advertises a capability it does not exercise.**
+  `/api/show` lists `thinking`, but `think:true` returns an empty
+  `message.thinking` on 3/3 probes while content stays clean. The
+  manipulation does not take, so the model cannot be *in* the thinking-on
+  condition and is excluded — a capability-metadata caveat worth stating
+  in the write-up, since capability flags are how the candidate set was
+  drawn.
+- **Cost multiplier is 1.4-2.1x, not the anticipated 3-5x.** Same model,
+  both tracks: `muse-glimmer:30b` 76.4 -> 106.6 s MAS (1.40x) and 3,604 ->
+  5,132 completion tokens (1.42x); `qwen3.5:9b` 7.5 -> 14.1 s single
+  (1.89x) and 23.6 -> 50.3 s MAS (2.14x, against its 0.32.6 thinking-off
+  gate). Sweep ETAs above are therefore hours, not days, except
+  `muse-glimmer:30b@think` at 34 h.
+
+0.32.9 re-gate deltas vs 0.32.6 (thinking-off; evidence retained side by
+side as `mini-gates.json` and `mini-gates-ollama0329.json`, and the 0.32.6
+manifests archived as `manifest-ollama0326.json` before regeneration):
+
+- `granite4.1:8b` — **no change**, ALL PASS both versions; 8/8 both; wall
+  2.39 -> 2.56 s (A) and 10.09 -> 11.57 s (B), i.e. noise.
+- `lfm2.5:8b` — **no change**, FAIL both versions with an identical
+  signature: `think:false` inlines `<think>` into content on 3/3 probes,
+  omitting the parameter routes reasoning to `message.thinking`. There is
+  no clean thinking-off configuration for this model; it is only
+  admissible on the thinking-on track (where it passes).
+
+`muse-glimmer:30b` pulled successfully under 0.32.9 (the 0.32.6 pull
+412'd as "requires newer Ollama") — 18 GB on disk, 27.9B params Q4_K_M,
+digest `de878ce33ad81d060001…`. It reports the `thinking` capability, so
+the assumption that it is not a thinking model was **wrong**; its
+thinking-off entry therefore sends `think: false` explicitly rather than
+omitting the parameter (omission would let it think by default, the
+qwen3.5 lesson). Two-copy constraint verified live: 15.6 GiB VRAM per
+loaded copy, 31.2 GiB for both arms, ~36 GiB total GPU usage against
+47.8 GiB — fits with headroom.
+
 
 ## 2026-08-10 — harness v2 (branch `harness-v2`, NOT active on main)
 

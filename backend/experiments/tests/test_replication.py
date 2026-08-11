@@ -9,15 +9,21 @@ from experiments.config import (
     DEFAULT_CONFIG,
     EXPERIMENTS_DIR,
     REPLICATION_MODELS,
+    THINKING_KEY_SUFFIX,
     config_for_model,
     replication_entry,
+    thinking_keys,
 )
 from experiments.harness import manifest as manifest_mod
 
 #: Original (pre-key/tag-extension) entries: registry key == served model tag.
 ORIGINAL_KEYS = tuple(k for k, v in REPLICATION_MODELS.items() if len(v) == 2)
-#: Infra-context keys: explicit served model tag differing from the key.
-CONTEXT_KEYS = tuple(k for k, v in REPLICATION_MODELS.items() if len(v) == 3)
+#: Keys with an explicit served tag: infra-context keys ("@<version>") and
+#: thinking-on keys ("@think"). Both reuse a tag under a new results dir;
+#: only the thinking-on ones intentionally change the wire ``think`` value.
+ALIAS_KEYS = tuple(k for k, v in REPLICATION_MODELS.items() if len(v) == 3)
+THINKING_KEYS = tuple(thinking_keys())
+CONTEXT_KEYS = tuple(k for k in ALIAS_KEYS if k not in THINKING_KEYS)
 
 
 def test_config_for_model_isolated_results_dirs() -> None:
@@ -35,6 +41,11 @@ def test_config_for_model_think_handling() -> None:
     assert config_for_model("qwen3.5:9b").think is False  # thinking model: send false
     assert config_for_model("qwen2.5:7b-instruct").think is None  # omit param
     assert config_for_model("mistral-nemo:latest").think is None
+    # muse-glimmer reports the "thinking" capability, so its thinking-OFF
+    # entry must send think:false explicitly — never omit (it would think).
+    assert config_for_model("muse-glimmer:30b").think is False
+    # thinking-on track: the ONLY entries that send think:true.
+    assert config_for_model("qwen3.5:9b@think").think is True
     with pytest.raises(KeyError, match="unknown replication model"):
         config_for_model("never-registered-model:1b")
     with pytest.raises(KeyError, match="unknown replication model"):
@@ -58,9 +69,11 @@ def test_config_record_flows_model_and_think() -> None:
     # Context keys serve the SAME tag/think as their original key, so their
     # config_hash intentionally matches it (identical design; infra context
     # is carried by manifest ollama_version + per-run journal fields).
+    # Thinking-on keys serve the same tag with think=True — a DIFFERENT
+    # identity, so they get their own hash: the manipulation is in the hash.
     identities = {(r["model"], r["think"]) for r in records.values()}
     assert len(set(hashes.values())) == len(identities)
-    assert len(set(hashes.values())) == len(ORIGINAL_KEYS)
+    assert len(set(hashes.values())) == len(ORIGINAL_KEYS) + len(THINKING_KEYS)
     for m, r in records.items():
         assert r["model"] == replication_entry(m)[0]
     # everything except model identity is the identical design
@@ -108,6 +121,11 @@ def test_original_keys_resolve_exactly_as_before() -> None:
         "gemma4:latest": ("gemma4:latest", "results-gemma4", None),
         "granite4:latest": ("granite4:latest", "results-granite4", None),
         "gpt-oss:20b": ("gpt-oss:20b", "results-gpt-oss-20b", None),
+        # gate battery 2026-08-11 (0.32.6), re-gated under 0.32.9
+        "granite4.1:8b": ("granite4.1:8b", "results-granite4.1-8b", None),
+        "lfm2.5:8b": ("lfm2.5:8b", "results-lfm2.5-8b", None),
+        # pulled 2026-08-11 under 0.32.9; thinking-capable -> explicit false
+        "muse-glimmer:30b": ("muse-glimmer:30b", "results-muse-glimmer-30b", False),
     }
     assert set(ORIGINAL_KEYS) == set(expected)
     for key, (tag, dirname, think) in expected.items():
@@ -160,3 +178,53 @@ def test_context2_config_hash_matches_original() -> None:
         h_ctx = manifest_mod._sha256(manifest_mod.config_record(config_for_model(key)))
         h_orig = manifest_mod._sha256(manifest_mod.config_record(config_for_model(tag)))
         assert h_ctx == h_orig
+
+
+# --- thinking-on track (infra context 3) ------------------------------------
+
+
+def test_thinking_keys_registry() -> None:
+    """Every '@think' key serves an existing tag with think=True into its
+    own '-thinking' results dir."""
+    expected = {
+        "qwen3.5:9b@think": ("qwen3.5:9b", "results-qwen3.5-9b-thinking"),
+        "lfm2.5:8b@think": ("lfm2.5:8b", "results-lfm2.5-8b-thinking"),
+        "gemma4:latest@think": ("gemma4:latest", "results-gemma4-thinking"),
+        "gpt-oss:20b@think": ("gpt-oss:20b", "results-gpt-oss-20b-thinking"),
+        "deepseek-r1:14b@think": ("deepseek-r1:14b", "results-deepseek-r1-14b-thinking"),
+        "muse-glimmer:30b@think": ("muse-glimmer:30b", "results-muse-glimmer-30b-thinking"),
+    }
+    assert set(THINKING_KEYS) == set(expected)
+    for key, (tag, dirname) in expected.items():
+        assert key.endswith(THINKING_KEY_SUFFIX)
+        assert replication_entry(key) == (tag, dirname, True)
+        c = config_for_model(key)
+        assert c.model == tag and c.model != key
+        assert c.think is True  # the manipulation, on the wire
+        assert c.results_dir == EXPERIMENTS_DIR / dirname
+
+
+def test_think_is_the_only_difference_from_thinking_off() -> None:
+    """Within-model cross-track validity: a '@think' key must differ from
+    its tag's thinking-off entry in ``think`` and results dir ONLY — every
+    other locked design constant carries over verbatim."""
+    for key in THINKING_KEYS:
+        tag = replication_entry(key)[0]
+        if tag not in REPLICATION_MODELS:
+            continue  # thinking-only candidate (no thinking-off entry)
+        on = manifest_mod.config_record(config_for_model(key))
+        off = manifest_mod.config_record(config_for_model(tag))
+        assert on["think"] is True and off["think"] is not True
+        assert config_for_model(key).results_dir != config_for_model(tag).results_dir
+        on.pop("think"), off.pop("think")
+        assert on == off  # same cases, conditions, prompts, seeds, caps
+
+
+def test_thinking_dirs_never_collide_with_sealed_dirs() -> None:
+    """A thinking-on sweep must never write into a sealed corpus dir."""
+    sealed = {config_for_model(k).results_dir
+              for k in REPLICATION_MODELS if k not in THINKING_KEYS}
+    for key in THINKING_KEYS:
+        results_dir = config_for_model(key).results_dir
+        assert results_dir not in sealed
+        assert results_dir.name.endswith("-thinking")

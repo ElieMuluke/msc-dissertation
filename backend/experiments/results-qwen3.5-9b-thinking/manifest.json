@@ -1,29 +1,31 @@
 {
-  "created_at": "2026-08-11T19:12:26Z",
-  "model": "granite4.1:8b",
-  "model_digest": "444af1c4b2fedd6b54041aca558e7300b0b3d5c0468c44619126240323ba2852",
+  "created_at": "2026-08-11T19:11:44Z",
+  "model": "qwen3.5:9b",
+  "model_digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
   "model_show": {
-    "parameters": null,
+    "parameters": "top_p                          0.95\npresence_penalty               1.5\ntemperature                    1\ntop_k                          20",
     "details": {
-      "parent_model": "/Users/runner/.ollama/models/blobs/sha256-ed902ac9eb6adce5a90c6a08c8ea201b50e23fdc5976d1cd0362006afac5309e",
+      "parent_model": "",
       "format": "gguf",
-      "family": "granite",
+      "family": "qwen35",
       "families": [
-        "granite"
+        "qwen35"
       ],
-      "parameter_size": "8.8B",
+      "parameter_size": "9.7B",
       "quantization_level": "Q4_K_M"
     },
     "capabilities": [
       "completion",
-      "tools"
+      "vision",
+      "tools",
+      "thinking"
     ]
   },
   "ollama_version": "0.32.9",
   "git_sha": "41de08925f377140991520ab4a151e139dc25e48",
   "config": {
-    "model": "granite4.1:8b",
-    "think": null,
+    "model": "qwen3.5:9b",
+    "think": true,
     "num_ctx": 16384,
     "num_predict": 2048,
     "max_iterations": 8,
@@ -99,7 +101,7 @@
       }
     }
   },
-  "config_hash": "c3658d08da83012947f2ade7512c71034536c8d68a3a1740f4077b864904187d",
+  "config_hash": "c5fbb8374bad4452506114145f61e5cf2d283b069f494a17f3cb3ff89557e46d",
   "totals": {
     "single": 1150,
     "mas": 1150

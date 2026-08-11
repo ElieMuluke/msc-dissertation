@@ -65,11 +65,23 @@ class ExperimentConfig:
     """Everything the runner and manifest need, in one injectable object."""
 
     model: str = "qwen3.5:9b"
-    #: Wire ``think`` parameter: ``False`` sends ``think: false`` (required
-    #: for thinking models — qwen3.5 thinks by default, see G0); ``None``
-    #: omits the parameter entirely (for models without a thinking mode,
-    #: where sending it could be rejected — captured per-model by the
-    #: replication mini-gate).
+    #: Wire ``think`` parameter, tri-state (langchain-ollama ``reasoning``
+    #: is passed straight through as the wire ``think`` field —
+    #: ``langchain_ollama/chat_models.py:804``, and the ollama client
+    #: serialises the request with ``exclude_none``):
+    #:
+    #: - ``False`` — sends ``think: false``; deliberation OFF. Required for
+    #:   thinking models that think by default (qwen3.5:9b, see G0). This is
+    #:   the sealed corpus's condition (contexts 1-2).
+    #: - ``None``  — omits the parameter entirely, for models without a
+    #:   thinking mode where sending it could be rejected (captured
+    #:   per-model by the replication mini-gate).
+    #: - ``True``  — sends ``think: true``; deliberation ON. The
+    #:   thinking-on track (pre-registered 2026-08-11 evening). Reasoning
+    #:   must then arrive on the SEPARATE ``message.thinking`` channel and
+    #:   must NOT appear inline in ``message.content``; that is the
+    #:   INVERTED mini-gate criterion (``mini_gates.think_behavior``).
+    #:   Expect 3-5x the tokens and wall clock of the ``False`` arms.
     think: bool | None = False
     #: One Ollama server per arm (PRD-A execution constant).
     #: Arm A moved :11434 -> :11437 on 2026-08-06 (gate day): the machine's
@@ -146,6 +158,14 @@ DEFAULT_CONFIG = ExperimentConfig()
 #: for context keys: "<model-tag>@<ollama-version>". Runners, manifests
 #: and servers always use the TAG (``config_for_model(key).model``); dirs,
 #: journals and gate evidence live under the KEY's results dirname.
+#:
+#: Thinking-on track (2026-08-11, pre-registered before any run): keys
+#: suffixed "@think" serve the same TAG with ``think=True`` into a
+#: dedicated "results-<slug>-thinking" dir. They are the ONLY entries whose
+#: think value may differ from their tag's thinking-off entry — that
+#: difference IS the manipulation, so their ``config_hash`` differs from
+#: the thinking-off key's by design (``think`` is hashed), which is what
+#: keeps the two tracks from ever being mistaken for one another.
 REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, str]] = {
     "qwen3.5:9b": ("results", False),
     "qwen2.5:7b-instruct": ("results-qwen2.5-7b", None),
@@ -165,13 +185,39 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, 
     # gate battery 2026-08-11 (candidates for a future sweep; strict policy)
     "granite4.1:8b": ("results-granite4.1-8b", None),
     "lfm2.5:8b": ("results-lfm2.5-8b", None),
+    # pulled 2026-08-11 under Ollama 0.32.9 (412'd on 0.32.6 as "requires
+    # newer Ollama"). /api/show reports capability "thinking", so its
+    # thinking-off entry sends think=false explicitly (like qwen3.5:9b),
+    # never None — omitting it would let the model think by default.
+    "muse-glimmer:30b": ("results-muse-glimmer-30b", False),
     "qwen2.5:7b-instruct@0.32.6": (
         "results-qwen2.5-7b-ollama0326", None, "qwen2.5:7b-instruct"),
     "qwen3.5:9b@0.32.6": (
         "results-qwen3.5-9b-ollama0326", False, "qwen3.5:9b"),
     "qwen2.5:14b-instruct@0.32.6": (
         "results-qwen2.5-14b-ollama0326", None, "qwen2.5:14b-instruct"),
+    # --- thinking-on track (infra context 3, Ollama 0.32.9) --------------
+    # Candidate set = every locally stored model whose /api/show
+    # capabilities include "thinking" (verified 2026-08-11 against the
+    # pinned arm-A server). Own results dirs; none collides with a sealed
+    # dir. gemma4:e4b is omitted: it shares gemma4:latest's blob digest.
+    "qwen3.5:9b@think": ("results-qwen3.5-9b-thinking", True, "qwen3.5:9b"),
+    "lfm2.5:8b@think": ("results-lfm2.5-8b-thinking", True, "lfm2.5:8b"),
+    "gemma4:latest@think": ("results-gemma4-thinking", True, "gemma4:latest"),
+    "gpt-oss:20b@think": ("results-gpt-oss-20b-thinking", True, "gpt-oss:20b"),
+    "deepseek-r1:14b@think": (
+        "results-deepseek-r1-14b-thinking", True, "deepseek-r1:14b"),
+    "muse-glimmer:30b@think": (
+        "results-muse-glimmer-30b-thinking", True, "muse-glimmer:30b"),
 }
+
+#: Registry-key suffix marking the thinking-on track (see REPLICATION_MODELS).
+THINKING_KEY_SUFFIX = "@think"
+
+
+def thinking_keys() -> tuple[str, ...]:
+    """Registry keys belonging to the thinking-on track, in registry order."""
+    return tuple(k for k in REPLICATION_MODELS if k.endswith(THINKING_KEY_SUFFIX))
 
 
 def replication_entry(key: str) -> tuple[str, str, bool | None]:

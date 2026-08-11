@@ -1,0 +1,181 @@
+{
+  "registry_key": "muse-glimmer:30b",
+  "model": "muse-glimmer:30b",
+  "date": "2026-08-11T19:18:51Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "track": "thinking-off",
+  "configured_think": false,
+  "expect_thinking": false,
+  "expect_thinking_source": "inferred from config.think",
+  "ollama_version": {
+    "single": "0.32.9",
+    "mas": "0.32.9"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": false,
+    "expect_thinking": false,
+    "criterion": "no message.thinking AND no inline reasoning markup in content",
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 15.92,
+        "prompt_tokens": 71,
+        "completion_tokens": 50,
+        "verdict": true
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 1.49,
+        "prompt_tokens": 71,
+        "completion_tokens": 50,
+        "verdict": true
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 1.44,
+        "prompt_tokens": 71,
+        "completion_tokens": 50,
+        "verdict": true
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 717,
+        "thinking_head": "Which is larger, 17 or 71? Answer with one word.\n\nWhich is larger, 17 or 71? Answer with one word.\n\nWe need answer with ",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 4.25,
+        "prompt_tokens": 71,
+        "completion_tokens": 205
+      },
+      {
+        "think_param": true,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 668,
+        "thinking_head": "Which is larger, 17 or 71? Answer with one word.\n\nWhich is larger, 17 or 71? Answer with one word.\n\nWe need answer with ",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 4.2,
+        "prompt_tokens": 71,
+        "completion_tokens": 194
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "expect_thinking": false,
+    "content_pass": true,
+    "thinking_pass": true,
+    "sha256": [
+      "c2b040fcd94c21644737b5b650159f8199b715c409e8f20a33e320b51ad48032"
+    ],
+    "thinking_sha256": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ],
+    "output_len": 671,
+    "thinking_len": 0,
+    "num_predict": 512,
+    "usage": [
+      {
+        "wall_s": 5.13,
+        "prompt_tokens": 118,
+        "completion_tokens": 250
+      },
+      {
+        "wall_s": 5.23,
+        "prompt_tokens": 118,
+        "completion_tokens": 250
+      },
+      {
+        "wall_s": 5.1,
+        "prompt_tokens": 118,
+        "completion_tokens": 250
+      },
+      {
+        "wall_s": 5.19,
+        "prompt_tokens": 118,
+        "completion_tokens": 250
+      },
+      {
+        "wall_s": 5.18,
+        "prompt_tokens": 118,
+        "completion_tokens": 250
+      }
+    ],
+    "mean_wall_s": 5.17,
+    "mean_completion_tokens": 250.0
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "inline_reasoning_outputs": 0,
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 15.9,
+        "mean_prompt_tokens": 7181.0,
+        "mean_completion_tokens": 636.5,
+        "inline_reasoning_outputs": 0
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "investigate",
+          "investigate",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 76.35,
+        "mean_prompt_tokens": 13893.5,
+        "mean_completion_tokens": 3604.2,
+        "inline_reasoning_outputs": 0
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-muse-glimmer-30b-wy0luz8w"
+  }
+}

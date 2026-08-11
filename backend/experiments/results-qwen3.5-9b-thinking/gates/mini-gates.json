@@ -1,0 +1,209 @@
+{
+  "registry_key": "qwen3.5:9b@think",
+  "model": "qwen3.5:9b",
+  "date": "2026-08-11T19:26:32Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "track": "thinking-on",
+  "configured_think": true,
+  "expect_thinking": true,
+  "expect_thinking_source": "inferred from config.think",
+  "ollama_version": {
+    "single": "0.32.9",
+    "mas": "0.32.9"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": true,
+    "expect_thinking": true,
+    "criterion": "inverted (pre-registered 2026-08-11): message.thinking non-empty AND no inline reasoning markup in content",
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 18.41,
+        "prompt_tokens": 29,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.68,
+        "prompt_tokens": 29,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.63,
+        "prompt_tokens": 29,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 5171,
+        "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking a simple comparison question (\"Which is larger, 17 or",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 11.29,
+        "prompt_tokens": 27,
+        "completion_tokens": 1329
+      },
+      {
+        "think_param": true,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 5171,
+        "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking a simple comparison question (\"Which is larger, 17 or",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 11.51,
+        "prompt_tokens": 27,
+        "completion_tokens": 1329,
+        "verdict": true
+      },
+      {
+        "think_param": true,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 5171,
+        "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking a simple comparison question (\"Which is larger, 17 or",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 11.04,
+        "prompt_tokens": 27,
+        "completion_tokens": 1329,
+        "verdict": true
+      },
+      {
+        "think_param": true,
+        "http_ok": true,
+        "thinking_field_present": true,
+        "thinking_nonempty": true,
+        "thinking_len": 5171,
+        "thinking_head": "Thinking Process:\n\n1.  **Analyze the Request:** The user is asking a simple comparison question (\"Which is larger, 17 or",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 11.32,
+        "prompt_tokens": 27,
+        "completion_tokens": 1329,
+        "verdict": true
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "expect_thinking": true,
+    "content_pass": true,
+    "thinking_pass": true,
+    "sha256": [
+      "508c8b824d37dfc9d2155f6d69b89a5a2a0bc5a822aa431a994afa843f5c6de8"
+    ],
+    "thinking_sha256": [
+      "9c50c8fe24611b0f92a132b8058b2a6e1f8bee2534b76be7e1d963cb4ff18b90"
+    ],
+    "output_len": 760,
+    "thinking_len": 7320,
+    "num_predict": 2048,
+    "usage": [
+      {
+        "wall_s": 16.56,
+        "prompt_tokens": 76,
+        "completion_tokens": 2023
+      },
+      {
+        "wall_s": 16.56,
+        "prompt_tokens": 76,
+        "completion_tokens": 2023
+      },
+      {
+        "wall_s": 16.59,
+        "prompt_tokens": 76,
+        "completion_tokens": 2023
+      },
+      {
+        "wall_s": 16.84,
+        "prompt_tokens": 76,
+        "completion_tokens": 2023
+      },
+      {
+        "wall_s": 16.56,
+        "prompt_tokens": 76,
+        "completion_tokens": 2023
+      }
+    ],
+    "mean_wall_s": 16.62,
+    "mean_completion_tokens": 2023.0
+  },
+  "pilot": {
+    "pass": false,
+    "valid_total": "6/8",
+    "inline_reasoning_outputs": 0,
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 14.13,
+        "mean_prompt_tokens": 4574.5,
+        "mean_completion_tokens": 1423.5,
+        "inline_reasoning_outputs": 0
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 2,
+        "decisions": [
+          "malformed",
+          "malformed",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 50.31,
+        "mean_prompt_tokens": 12067.5,
+        "mean_completion_tokens": 5266.5,
+        "inline_reasoning_outputs": 0
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-qwen3.5-9b-think-nvv865i4"
+  }
+}

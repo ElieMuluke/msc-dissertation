@@ -2,10 +2,29 @@
 
 The factory closes over the arm's base URL and builds a fresh ``ChatOllama``
 per run with that run's temperature and seed (from :class:`RunContext`).
-Thinking is disabled via the API parameter (``reasoning=False`` in
-langchain-ollama, which sends ``think: false`` on the wire — verified in the
-G0 probe). top_p / top_k / min_p are left at Ollama server defaults per the
-locked design constants; they are recorded in the manifest, not set here.
+
+Thinking is controlled by ``ExperimentConfig.think``, passed through as
+langchain-ollama's ``reasoning``. That value reaches the wire unmodified:
+``langchain_ollama/chat_models.py:804`` builds the request as
+``"think": kwargs.pop("reasoning", self.reasoning)`` and the ollama client
+serialises with ``model_dump(exclude_none=True)``
+(``ollama/_client.py:402``, field ``ChatRequest.think`` at
+``ollama/_types.py:403``). So ``False`` sends ``think: false``, ``True``
+sends ``think: true``, and ``None`` omits the key entirely — the three
+cases the harness relies on.
+
+Under ``reasoning=True`` langchain-ollama also splits the response: the
+server's ``message.thinking`` is stored in
+``AIMessage.additional_kwargs["reasoning_content"]``
+(``chat_models.py:1268`` sync / ``:1350`` async) and never concatenated
+into ``content``, so
+``AgentResult.output_text`` — and therefore extraction, the canonical
+trajectory and every metric — sees the answer channel only. Reasoning is
+fed back on later turns as the message's ``thinking`` field
+(``chat_models.py:1080``), which is the deliberation the track is testing.
+
+top_p / top_k / min_p are left at Ollama server defaults per the locked
+design constants; they are recorded in the manifest, not set here.
 """
 
 from __future__ import annotations
@@ -31,8 +50,10 @@ def make_model_factory(config: ExperimentConfig, arm: str) -> ModelFactory:
             temperature=context.temperature,
             seed=context.seed,
             # Tri-state: False sends "think": false (thinking models);
-            # None omits the parameter (models without a thinking mode —
-            # the ollama client serializes with exclude_none).
+            # True sends "think": true (thinking-on track); None omits the
+            # parameter (models without a thinking mode — the ollama client
+            # serializes with exclude_none). See the module docstring for
+            # the langchain-ollama/ollama call sites this relies on.
             reasoning=config.think,
             num_ctx=config.num_ctx,
             num_predict=config.num_predict,

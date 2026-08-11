@@ -1,29 +1,30 @@
 {
-  "created_at": "2026-08-11T19:12:26Z",
-  "model": "granite4.1:8b",
-  "model_digest": "444af1c4b2fedd6b54041aca558e7300b0b3d5c0468c44619126240323ba2852",
+  "created_at": "2026-08-11T19:12:04Z",
+  "model": "gpt-oss:20b",
+  "model_digest": "17052f91a42e97930aa6e28a6c6c06a983e6a58dbb00434885a0cf5313e376f7",
   "model_show": {
-    "parameters": null,
+    "parameters": "temperature                    1",
     "details": {
-      "parent_model": "/Users/runner/.ollama/models/blobs/sha256-ed902ac9eb6adce5a90c6a08c8ea201b50e23fdc5976d1cd0362006afac5309e",
+      "parent_model": "",
       "format": "gguf",
-      "family": "granite",
+      "family": "gptoss",
       "families": [
-        "granite"
+        "gptoss"
       ],
-      "parameter_size": "8.8B",
-      "quantization_level": "Q4_K_M"
+      "parameter_size": "20.9B",
+      "quantization_level": "MXFP4"
     },
     "capabilities": [
       "completion",
-      "tools"
+      "tools",
+      "thinking"
     ]
   },
   "ollama_version": "0.32.9",
   "git_sha": "41de08925f377140991520ab4a151e139dc25e48",
   "config": {
-    "model": "granite4.1:8b",
-    "think": null,
+    "model": "gpt-oss:20b",
+    "think": true,
     "num_ctx": 16384,
     "num_predict": 2048,
     "max_iterations": 8,
@@ -99,7 +100,7 @@
       }
     }
   },
-  "config_hash": "c3658d08da83012947f2ade7512c71034536c8d68a3a1740f4077b864904187d",
+  "config_hash": "14b2d07f1549e8b11407912c4c604564fd9f873365b4ddbd748408b3d036ec90",
   "totals": {
     "single": 1150,
     "mas": 1150

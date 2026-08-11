@@ -97,6 +97,14 @@ async def execute_run(
     - ``node_outputs`` — MAS arm only: each node's output text keyed by node
       name in pipeline order (``orchestrator``, ``data``, ``policy_risk``,
       ``reporting``); ``null`` for the single arm and for errored runs.
+    - ``think`` — the wire ``think`` parameter this sweep ran under:
+      ``false`` / ``null`` (thinking-off, the sealed corpus) or ``true``
+      (the thinking-on track). It is the per-run stamp that keeps the two
+      tracks separable in any pooled read of the journals, exactly as
+      ``ollama_version`` separates infra contexts. Under ``true`` the
+      reasoning text is NOT in ``raw_output``: langchain-ollama keeps it on
+      the separate ``reasoning_content`` channel, so ``raw_output``,
+      ``decision`` and every metric still see the answer only.
     - ``cache_policy`` — the active cache-state policy for this sweep
       (``none`` | ``prewarm`` | ``shuffle``; see ``ExperimentConfig``).
     - ``env`` — environment fingerprint (``gpu_name``, ``gpu_driver``,
@@ -340,8 +348,9 @@ def main() -> int:
     parser.add_argument(
         "--model", default=None,
         help="replication registry key (config.REPLICATION_MODELS; may differ "
-             "from the served model tag, e.g. 'qwen2.5:7b-instruct@0.32.6'); "
-             "selects that key's own results dir, served tag and think handling",
+             "from the served model tag, e.g. 'qwen2.5:7b-instruct@0.32.6' or "
+             "the thinking-on track's 'qwen3.5:9b@think'); selects that key's "
+             "own results dir, served tag and think handling",
     )
     parser.add_argument(
         "--cache-policy", default=None, choices=["none", "prewarm", "shuffle"],
