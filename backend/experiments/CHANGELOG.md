@@ -1,5 +1,43 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-11 (evening) — CORPUS SEALED (contexts 1-2); infra context 3 opened; thinking-on track pre-registered
+
+**Seal.** The 7-sweep corpus is closed and final: contexts 1 (Ollama 0.31.1:
+qwen3.5:9b headline, qwen2.5:7b, qwen2.5:14b) and 2 (0.32.6: gemma4, plus
+0.32.6 re-runs of the three qwen sweeps). 16,100 scored runs, all sealed
+against their manifests and independently audited (7 audits, all CONFIRMED).
+No further runs will be added to these contexts; nothing below alters them.
+
+**Infra context 3 (Ollama 0.32.9).** Owner upgraded 2026-08-11. All gate
+evidence produced under 0.32.6 (granite4.1:8b PASS, lfm2.5:8b FAIL) is
+superseded for launch purposes and must be re-produced under 0.32.9 before
+any sweep; prior evidence is retained with its version suffix.
+
+**Thinking-on condition (pre-registered, before any run).** Rationale: the
+sealed corpus holds deliberation OFF as a control, which maximises internal
+validity but excludes the configuration in which reasoning-capable models are
+actually deployed (an ecological-validity limitation stated in the
+dissertation). This track tests whether the decomposition effect survives
+deliberation. Design constants are unchanged EXCEPT the wire ``think``
+parameter, which is enabled; every other locked constant (cases, conditions,
+repeats, seed schedule, extraction rule, canonical trajectory, metrics)
+carries over verbatim, so within-model arm comparisons remain valid.
+
+Gate criterion is INVERTED for this track and pre-registered as such: a
+thinking-on model passes only if reasoning is emitted on a SEPARATE channel
+(``message.thinking``) and the answer content is free of inline reasoning
+markup — a model that inlines ``<think>`` into content (observed on
+lfm2.5:8b under ``think: false``) contaminates the measured output and is
+excluded. Determinism and pilot-extraction criteria are unchanged.
+
+Thinking-on results are analysed within-model and within-track. Cross-track
+comparisons (thinking-on vs the sealed thinking-off corpus) are legitimate
+only where the same model appears in both, must be labelled as such, and are
+confounded with nothing else by construction (same seeds, same cases, same
+harness) — with the caveat that token budgets differ by design and are
+reported per arm.
+
+
 ## 2026-08-10 — harness v2 (branch `harness-v2`, NOT active on main)
 
 harness v2 — activated only after context-2 chain seals; sweeps 1-7 ran on
