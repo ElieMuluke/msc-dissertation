@@ -209,15 +209,58 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, 
         "results-deepseek-r1-14b-thinking", True, "deepseek-r1:14b"),
     "muse-glimmer:30b@think": (
         "results-muse-glimmer-30b-thinking", True, "muse-glimmer:30b"),
+    # --- budget-raised thinking-on condition (2026-08-12, pre-registered) ---
+    # qwen3.5:9b@think FAILED its gate 6/8 because the MAS `reporting` node
+    # spends the locked num_predict=2048 on deliberation and emits empty
+    # content. This key re-runs the identical design with the generation
+    # budget raised (see THINKING_BUDGET_OVERRIDES) so the qwen family is
+    # represented in the thinking track at all. TWO factors therefore differ
+    # from the sealed thinking-off qwen3.5:9b sweep (think AND num_predict):
+    # that comparison is CONFOUNDED by construction and must be reported as
+    # such — see CHANGELOG 2026-08-12.
+    "qwen3.5:9b@think-budget": (
+        "results-qwen3.5-9b-thinking-budget", True, "qwen3.5:9b"),
 }
 
-#: Registry-key suffix marking the thinking-on track (see REPLICATION_MODELS).
+#: Registry-key marker for the thinking-on track (see REPLICATION_MODELS).
+#: A key either ends with it ("<tag>@think") or qualifies it with a
+#: hyphenated variant ("<tag>@think-budget"); both send ``think=True``.
 THINKING_KEY_SUFFIX = "@think"
+
+#: Per-registry-key override of the locked ``num_predict`` constant.
+#:
+#: ``num_predict`` is a LOCKED design constant (2048 everywhere else, hashed
+#: into every manifest's config record). This dict is the single, explicit
+#: place where a pre-registered condition may raise it, keyed by registry KEY
+#: so one served tag can appear both overridden and not. The value flows
+#: through :func:`config_for_model` into ``ExperimentConfig.num_predict`` and
+#: therefore into the manifest's hashed ``config`` record and every journal
+#: line — a budget-raised sweep can never be confused with a standard one.
+#:
+#: Raising it BREAKS comparability with every sweep run at 2048: any
+#: cross-condition claim involving an overridden key is confounded by the
+#: budget as well as by whatever else differs. Add an entry only with a dated
+#: CHANGELOG pre-registration that states the confound.
+THINKING_BUDGET_OVERRIDES: dict[str, int] = {
+    # 8192: the failing qwen3.5:9b@think gate showed the MAS `reporting` node
+    # consuming 6,108 completion tokens without emitting an answer, so 2048
+    # (and 4096) cannot fit deliberation + answer on a 4-node pipeline. 8192
+    # is the smallest power-of-two headroom above the observed deliberation
+    # cost. num_ctx stays 16384, so prompt + generation still fit the context.
+    "qwen3.5:9b@think-budget": 8192,
+}
 
 
 def thinking_keys() -> tuple[str, ...]:
-    """Registry keys belonging to the thinking-on track, in registry order."""
-    return tuple(k for k in REPLICATION_MODELS if k.endswith(THINKING_KEY_SUFFIX))
+    """Registry keys belonging to the thinking-on track, in registry order.
+
+    Covers both the plain ``"@think"`` keys and hyphenated variants of the
+    marker (``"@think-budget"``) — every key here runs ``think=True``.
+    """
+    return tuple(
+        k for k in REPLICATION_MODELS
+        if k.endswith(THINKING_KEY_SUFFIX) or f"{THINKING_KEY_SUFFIX}-" in k
+    )
 
 
 def replication_entry(key: str) -> tuple[str, str, bool | None]:
@@ -246,6 +289,10 @@ def config_for_model(model: str) -> ExperimentConfig:
     The returned config's ``.model`` is the served model TAG — the value
     runners, manifests and Ollama servers use — which equals the key except
     for explicit key/tag entries (e.g. ``"…@0.32.6"`` infra-context keys).
+
+    ``num_predict`` is the locked 2048 unless the KEY appears in
+    :data:`THINKING_BUDGET_OVERRIDES`, in which case that condition's
+    pre-registered raised budget is used (and is hashed into its manifest).
     """
     import dataclasses
 
@@ -254,5 +301,6 @@ def config_for_model(model: str) -> ExperimentConfig:
         DEFAULT_CONFIG,
         model=model_tag,
         think=think,
+        num_predict=THINKING_BUDGET_OVERRIDES.get(model, DEFAULT_CONFIG.num_predict),
         results_dir=EXPERIMENTS_DIR / dirname,
     )

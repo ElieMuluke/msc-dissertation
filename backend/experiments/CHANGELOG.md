@@ -1,5 +1,66 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-12 (late) — `qwen3.5:9b@think-budget` PRE-REGISTERED (budget-raised thinking-on condition, no runs yet)
+
+Written BEFORE run 1 of this condition. Manifest generated
+(`results-qwen3.5-9b-thinking-budget/manifest.json`, 2,300 planned runs,
+config_hash `15ca01ae0e69`, model_digest `6488c96fa5faab…`, Ollama 0.32.9);
+nothing has been executed against it.
+
+**Why.** `qwen3.5:9b@think` failed its gate 6/8 (2026-08-11 late entry): on the
+MAS arm the `reporting` node emits EMPTY content after spending 6,108
+completion tokens, i.e. deliberation consumes the locked `num_predict=2048`
+before any answer is generated. Deterministic across repeats. The owner wants
+the qwen family represented in the thinking-on track; that is only possible
+with a larger per-call generation budget.
+
+**(a) What changed, and that it is a locked constant.** `num_predict` is a
+locked design constant (2048 in every sweep to date, hashed into every
+manifest's config record). It is raised to **8192 for this condition and this
+condition only**, via a new per-registry-key override
+(`config.THINKING_BUDGET_OVERRIDES`, keyed by registry KEY, consulted by
+`config_for_model`). No other key's `num_predict` and no other key's
+`config_hash` changes — pinned and asserted in
+`tests/test_replication.py::test_non_overridden_config_hashes_unchanged`. The
+sole reason for the raise is that deliberation demonstrably does not fit in
+2048 on a 4-node pipeline: 6,108 tokens observed with no answer emitted. 8192
+is the smallest power-of-two headroom above that observed cost; `num_ctx`
+stays 16384 so prompt + generation still fit the context window.
+
+**(b) The comparison against the sealed thinking-off `qwen3.5:9b` sweep is
+CONFOUNDED.** TWO factors differ between this condition and `results/`:
+`think` (false -> true) AND `num_predict` (2048 -> 8192). Any difference
+between them is therefore not attributable to deliberation alone. It MUST be
+reported as a confounded, two-factor comparison and MUST NOT be presented as a
+clean within-model thinking contrast. The only clean within-model
+thinking-on/off pair in the corpus remains `muse-glimmer:30b` (both tracks at
+the locked 2048). The confound is carried in the artefacts, not just in prose:
+the raised budget is inside the hashed config record (this condition's
+`config_hash` differs from both `qwen3.5:9b` and `qwen3.5:9b@think`) and is
+stamped on every journal line as a new `num_predict` field, so a
+budget-raised run can never be pooled with a standard one by accident.
+
+**(c) The budget exhaustion at 2048 is itself a reportable finding.** On a
+4-node MAS pipeline under deliberation, the binding constraint is the per-call
+generation budget rather than the model: the terminal `reporting` node is
+starved of output tokens by the reasoning that precedes it, while the single
+agent at the same budget answers fine. That asymmetry — decomposition raising
+the per-call generation cost until the last node cannot answer — is a result
+about decomposition under deliberation and is reported as such, independently
+of whatever this condition produces.
+
+**(d) The primary analysis for this condition is within-condition.** Single vs
+MAS at the SAME model, digest, seeds, cases, prompts and the same 8192 budget
+is internally valid and unconfounded; it is the pre-registered primary
+analysis here, exactly as in every other sweep. Cross-condition statements are
+secondary and carry the (b) caveat verbatim.
+
+Registry: `qwen3.5:9b@think-budget` -> served tag `qwen3.5:9b`, `think=true`,
+`results-qwen3.5-9b-thinking-budget/`, `num_predict=8192`. Seed schedule
+byte-identical to every other sweep (derived from MASTER_SEED only), harness
+v2 semantics on `main`, `cache_policy="none"`.
+
+
 ## 2026-08-12 (overnight) — thinking-on sweeps LAUNCHED (infra context 3, Ollama 0.32.9)
 
 Owner-approved launch of the pre-registered thinking-on track (design in the

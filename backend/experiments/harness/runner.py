@@ -105,6 +105,12 @@ async def execute_run(
       reasoning text is NOT in ``raw_output``: langchain-ollama keeps it on
       the separate ``reasoning_content`` channel, so ``raw_output``,
       ``decision`` and every metric still see the answer only.
+    - ``num_predict`` — the per-call generation cap this sweep ran under.
+      Normally the locked 2048; a pre-registered budget-raised condition
+      (``config.THINKING_BUDGET_OVERRIDES``) journals its raised value, so a
+      pooled read of the journals can never mistake a budget-raised run for a
+      standard one. Harness lines written before 2026-08-12 lack the key and
+      are all 2048 by construction.
     - ``cache_policy`` — the active cache-state policy for this sweep
       (``none`` | ``prewarm`` | ``shuffle``; see ``ExperimentConfig``).
     - ``env`` — environment fingerprint (``gpu_name``, ``gpu_driver``,
@@ -155,6 +161,7 @@ async def execute_run(
         "model_digest": identity["model_digest"],
         "ollama_version": identity["ollama_version"],
         "think": config.think,
+        "num_predict": config.num_predict,
         "started_at": started_at,
         "wall_clock_s": round(time.monotonic() - t0, 3),
         "prompt_tokens": prompt_tokens,
