@@ -1,5 +1,41 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-12 (afternoon) — full remaining sweep queue APPROVED (owner), pre-registered
+
+Owner approved running every gated-and-ready sweep to completion. Queue, in
+execution order, all on infra context 3 (Ollama 0.32.9), harness v2 semantics
+on `main` (strict tool parsing, cache_policy="none"):
+
+1. `qwen3.5:9b@think-budget` — RUNNING (thinking-on, num_predict=8192; the
+   budget raise and its confound are pre-registered in the 2026-08-12 late entry)
+2. `deepseek-r1:14b@think` — thinking-on, gate 8/8, ~10 h. Admissible only in
+   this track (structural reasoning; the day-one exclusion from the sealed
+   corpus).
+3. `granite4.1:8b` — thinking-OFF, gate 8/8, ~4 h. Fifth thinking-off model and
+   a redemption test of granite4:latest's documented non-terminating-loop
+   failure (same vendor/family, newer release): establishes whether that
+   exclusion was a version property rather than a vendor one.
+4. `muse-glimmer:30b` — thinking-OFF, gate 8/8, ~24 h.
+5. `muse-glimmer:30b@think` — thinking-ON, gate 8/8, ~34 h.
+
+Sweeps 4 and 5 together are the project's ONLY unconfounded within-model
+thinking-on/off contrast: same model, same weights digest, same seed schedule,
+same harness, same infra context — one changed wire parameter. Every other
+thinking-on/off statement in this project is cross-model and must be labelled
+as such. They are therefore the scientifically load-bearing pair, and are run
+adjacently and analysed as a matched pair.
+
+Note on num_predict for the muse-glimmer thinking-on sweep: it runs at the
+LOCKED 2048, not the raised budget, because its gate passed 8/8 at 2048 — so
+the pair differs in the `think` parameter alone. (qwen3.5 required the raise
+only because its 4-node pipeline starved at 2048; that asymmetry is itself a
+reportable finding and does not propagate here.)
+
+Each sweep on completion: verify run-for-run and seed-for-seed against its
+manifest, seal and commit, generate its analysis report, and undergo an
+independent audit by a fresh-context agent writing its own recomputation code.
+
+
 ## 2026-08-12 (morning) — lfm2.5:8b@think SEALED + audited; pre-registered criterion did NOT fully hold
 
 Sweep `lfm2.5:8b@think` complete (2300/2300, Ollama 0.32.9, think=true on every
