@@ -1,5 +1,49 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-12 (morning) — lfm2.5:8b@think SEALED + audited; pre-registered criterion did NOT fully hold
+
+Sweep `lfm2.5:8b@think` complete (2300/2300, Ollama 0.32.9, think=true on every
+run, seeds match manifest, single digest). Independent audit
+(`analysis/independent_check_lfm25_thinking.py`): integrity CLEAN on every check
+including an independently regenerated seed schedule; **every reported number
+reproduces to |diff| <= 0.0005** across Tier 1/2/3, the perturbation block, the
+ROUGE-L appendix and the arm-difference statistics. Two defects recorded:
+
+**1. Thinking-channel criterion VIOLATED at 3/2300 (0.13%).** The pre-registered
+inverted criterion (2026-08-11 evening) requires the scored answer channel to be
+free of inline reasoning markup. The gate passed on a 3-probe pilot; at full
+scale, three single-arm t07-varied runs emit a complete reasoning paragraph on
+the ANSWER channel terminated by an orphan `</think>` (two of them containing a
+competing verdict), and one MAS `data` node leaked similarly into downstream
+context. Runs: single:TXN-2025-027:t07-varied:2, single:TXN-2025-042:t07-varied:11,
+single:TXN-2025-047:t07-varied:10, mas:TXN-2025-030:t07-varied:12.
+No metric changes (the extraction rule reads the last non-empty line; 0/2300
+extraction mismatches), but the sweep must be reported as **0.13% channel
+contamination, not "content clean"**. Note for future gates: a 3-probe pilot
+cannot detect a 0.1%-scale event; scale-appropriate contamination scanning
+belongs in the seal step, not only the gate.
+
+**2. Majority-vote tie-break: documentation corrected to match code.**
+`analysis/metrics.py::majority_vote` breaks ties by canonical OUTCOMES order
+(escalate > dismiss > investigate > malformed) and always has; the metrics
+provenance table said "first-observed". The table is corrected — the code is
+what produced every published number. Latent corpus-wide; ties cancel to net
+zero in the sealed sweeps, so no sealed figure changes. Affects one cell in this
+sweep (mas/t07 majority_vote_accuracy 0.360 canonical vs 0.340 first-observed).
+Majority-vote accuracy is Tier 2 and is not part of the winner criterion.
+
+**Headline (thinking-on, T=0.7):** single pass^1 0.491 / MAS 0.344 (paired diff
++0.147, CI [0.07, 0.22], p<0.001); DAR 0.434 / 0.421 (diff n.s., p=0.58); flip
+rate 0.98 both arms — the lowest repeatability and highest flip rate of any sweep
+in the project. 144 malformed (6.3%): 105 MAS "verdict welded onto a prose
+paragraph", 27 single-arm empty answers that spent MORE tokens than successful
+runs on the same case (the same budget-exhaustion mode that disqualified
+qwen3.5:9b@think at gate time), 10 wrong keyword, 2 no decision.
+Cross-model comparison against the sealed thinking-off corpus is CONFOUNDED
+(lfm2.5 has no admissible thinking-off configuration by construction) — no
+"thinking made repeatability worse" claim is supported by this sweep alone.
+
+
 ## 2026-08-12 (late) — `qwen3.5:9b@think-budget` PRE-REGISTERED (budget-raised thinking-on condition, no runs yet)
 
 Written BEFORE run 1 of this condition. Manifest generated
