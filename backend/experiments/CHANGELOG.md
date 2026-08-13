@@ -1,5 +1,54 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-13 — qwen3.5:9b@think-budget SEALED + audited; confound statement CORRECTED to four factors
+
+Sweep complete (2300/2300, think=true, num_predict=8192, Ollama 0.32.9). Independent
+audit (`analysis/independent_check_qwen35_thinking_budget.py`): integrity CLEAN
+(seed schedule independently regenerated; 0/2300 decision re-extraction mismatches);
+**all 109 published metrics and all 9 statistical quantities reproduce to <=0.0005**.
+Channel integrity CLEAN at scale: 0/2300 across 17 markup patterns including orphan
+closers (contrast lfm2.5's 3/2300).
+
+**CORRECTION — the confound is FOUR factors, not two.** The 2026-08-12 entry named
+`think` and `num_predict`. The artifacts show the sealed thinking-off qwen3.5:9b sweep
+also differs in **ollama_version** (0.31.1 vs 0.32.9) and **harness revision** (v1 vs
+v2). No thinking-off qwen3.5:9b sweep exists at 0.32.9/v2. The auditor sized the infra
+factor alone using two thinking-off sweeps (0.31.1 -> 0.32.6): single t0-fixed pass^1
+moves 0.400 -> 0.300, mas 0.260 -> 0.300, single t07 alpha 0.205 -> 0.241 — i.e. an
+Ollama-version change alone moves Tier 1 by up to 0.10, comparable to the differences
+the cross-condition comparison would be asked to carry. **No attribution to
+deliberation is supportable from this pair.** Not "thinking raised single-arm pass^1
+from 0.364 to 0.548", not the flip-rate change, not the 4 -> 36 malformed rise. The
+within-condition single-vs-MAS contrast remains internally valid (identical model,
+digest, seeds, cases, prompts, budget, infra) and is this condition's primary analysis.
+The clean within-model thinking contrast remains muse-glimmer's pair, which will be run
+adjacently on one infra context and one harness revision.
+
+**The budget raise did NOT fully cure its target.** 34/2300 empty outputs remain
+(11 infrastructure errors; 8 with the literal gate signature — three upstream nodes
+produce output, the `reporting` node emits 0 chars — of which 5 are DETERMINISTIC
+across all seed-42 repeats of PERT-001; 15 single-arm silent empties), plus 2 MAS
+truncations mid-sentence after ~13k tokens. Raising 2048 -> 8192 cleared the primary
+t0-fixed block (0/500, which unblocked the gate) but the mechanism persists. Report the
+residual alongside the gate pass.
+
+**Report prose defect fixed:** `analysis/report.py` caption said majority-vote ties
+break by first-observed decision; the code uses canonical outcome order. Caption
+corrected and affected reports regenerated (no number changes — the conventions agree
+in every cell of both thinking sweeps).
+
+**Interpretation caveat recorded:** `mas/pert-t0` shows DAR 1.000 / flip 0.000 while
+PERT-001 was malformed on all 5 repeats. Malformed==malformed agreement is the
+pre-registered rule, but the instrument check on that case measures reproducible
+failure, not reproducible judgement — state it when citing the perturbation block.
+
+**Within-condition result (internally valid):** single pass^1 0.548 vs MAS 0.264
+(paired +0.284, CI [0.172, 0.396], p<0.001); DAR 0.631 vs 0.724 but alpha 0.413 vs
+0.277 — MAS agrees with itself more while discriminating less (571 of 750 MAS t07 runs
+answered "investigate", 20 answered "dismiss"). Cost: MAS 17,318 tokens and 76 s/run vs
+single 9,550 and 28 s.
+
+
 ## 2026-08-12 (afternoon) — full remaining sweep queue APPROVED (owner), pre-registered
 
 Owner approved running every gated-and-ready sweep to completion. Queue, in
