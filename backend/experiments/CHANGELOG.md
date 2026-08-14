@@ -1,5 +1,20 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-14 — DECLARED DEVIATION: owner machine reboot mid-sweep (muse-glimmer:30b MAS arm)
+
+Owner-requested pause for a machine restart, declared BEFORE resume. Runner stopped
+cleanly via SIGINT at 2026-08-14T19:0x UTC with the MAS journal at **653/1150 complete
+runs** (single arm was already sealed at 1150/1150, finished 11:52 UTC). Journal
+verified intact at stop: newline-terminated, no torn tail. Resume uses the standard
+key-based set-difference path against the unchanged manifest.
+
+Pre-declared consequence: the reboot inserts one cold-cache model-load boundary at the
+resume point (~run 654, inside t07-varied where seeds vary per repeat). Protocol on
+resume is identical to launch: one discarded warm-up generation after model load. Given
+the documented first-evaluation cache-state mechanism, any residual effect is confined
+to the first scored run after resume; its run key will be identifiable from the
+timestamp gap in the journal. No metric definition, seed, or plan changes.
+
 ## 2026-08-14 — deepseek-r1 EXCLUDED (tool channel never existed); granite4.1 RE-ADMITTED as null result; adversarial verification round
 
 Independent audits of both 08-13 sweeps (`results-deepseek-r1-14b-thinking/audit-independent.md`,
