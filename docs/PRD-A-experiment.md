@@ -7,6 +7,7 @@ Deadline chain: **build Wed 6 Aug → gates + pilot Thu 7 Aug daytime → launch
 
 Does decomposing one compliance agent into a multi-agent pipeline change decision repeatability, and at what cost? Thesis claim: *first measurement of decision repeatability as a function of agentic decomposition in a compliance-triage workflow, via controlled repeated-run comparison on an externally authored benchmark.*
 
+
 ## Locked design constants
 
 Changing any row after run 1 invalidates the pre-registration. Edits before launch require a dated note in `backend/experiments/CHANGELOG.md`.
