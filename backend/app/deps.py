@@ -22,7 +22,7 @@ from app.ingestion.watchlists import WatchlistSystem, build_watchlist_system
 from app.reports import ReportSystem, build_report_system
 
 # Validated retrieval config (see docs/evaluation.md and the 2026-07-17 24-run sweep):
-# section-aware chunking + parent-context prefix + bge-small-en-v1.5 (aml_sections_c)
+# section-aware chunking + parent-context prefix + bge-small-en-v1.5
 # with hybrid BM25+vector search raises context_precision/recall over both the plain-vector
 # aml_corpus baseline and the prior MiniLM/aml_sections_b config, with no cost to
 # faithfulness/answer_relevancy. bm25_weight=0.4 chosen from the sweep's 0.2-0.4 band (the
@@ -30,10 +30,21 @@ from app.reports import ReportSystem, build_report_system
 # context_recall, 0.787 vs 0.769). Each field is independently env-overridable (matching
 # RagConfig.embedding_model's own RAG_EMBEDDING_MODEL convention) so the deployed config can
 # be tuned without a code change; the literals below are the sweep-recommended defaults.
+#
+# Collection provenance (2026-08-14, docs/RETRIEVAL-CONFIG-RECONCILIATION.md): the original
+# `aml_sections_c` in ./chroma_db was overwritten post-evaluation with page-window chunks
+# (0/57 golden-set reproduction). The evaluated configuration was rebuilt byte-faithfully
+# into ./chroma_eval as `aml_sections_eval` (2,569 chunks, 56/57 reproduction — the demo
+# default, matching Ch.4 Table 3). A second collection `aml_sections_eval_ofsi` (2,668)
+# adds the 99 OFSI general-guidance chunks so rulebook rule SAN-1's citation resolves;
+# it perturbs 9/57 golden queries (quantified in the reconciliation doc). Switch via
+#   RAG_COLLECTION_NAME=aml_sections_eval_ofsi
+# The overwritten ./chroma_db store is retained untouched as evidence.
 _RAG_CONFIG = RagConfig(
-    collection_name=os.getenv("RAG_COLLECTION_NAME", "aml_sections_c"),
+    collection_name=os.getenv("RAG_COLLECTION_NAME", "aml_sections_eval"),
     embedding_model=os.getenv("RAG_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
     bm25_weight=float(os.getenv("RAG_BM25_WEIGHT", "0.4")),
+    persist_dir=os.getenv("RAG_PERSIST_DIR", "./chroma_eval"),
 )
 
 
