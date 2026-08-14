@@ -33,6 +33,16 @@ run journals via four independent audit scripts.
 | alpha single/mas | .205/.203 | .102/.279 | .382/.340 | .387/.406 |
 | arm diff significant? | yes (both, p≤.003) | yes (both) | no | yes (both, p≤.011) |
 
+> **Degeneracy annotation (added 2026-08-14, applied uniformly):** the high-DAR MAS
+> cells above are mode-collapsed and must not be quoted without their decision
+> distribution. qwen3.5-MAS (DAR 0.802) is 86.0% modal-`investigate`, majority-vote
+> accuracy 11/50 — below the 0.520 constant-`dismiss` baseline — with a 0–1/10
+> perturbation response; qwen2.5:14b-MAS (DAR 0.914) is 93.1% modal-`investigate`,
+> MV 11/50 (below baseline), perturbation MV moved 0/10 at both T>0 conditions.
+> The granite4.1:8b sweep (87.7% MAS / 85.6% single modal-`investigate`, all cells
+> below baseline) is re-admitted as a fifth no-arm-difference data point under this
+> same annotation (owner decision 2026-08-14; see `docs/DEFECT-IMPACT-ANALYSIS.md`).
+
 ## Findings
 
 1. **Decomposition changes repeatability — but the direction is model-dependent.**
@@ -55,14 +65,21 @@ run journals via four independent audit scripts.
    Ollama versions (open upstream parser bugs #17274/#16932). Capability gating before
    reliability measurement is a methodological requirement, not a nicety.
 4. **Consistent secondary results**: MAS is more format-disciplined (malformed outputs
-   concentrate in the single arm, all four models); all models over-produce
+   concentrate in the single arm in three of four models; qwen2.5:14b ties 2 vs 2); all models over-produce
    `investigate` vs the benchmark labels except gemma4 (healthiest decision balance and
-   the best single-arm label agreement in the experiment, pass^1=0.552); MAS costs
-   ~1.8× tokens and ~2.5–3.4× wall-clock per decision (per-arm token accounting
-   pre-registered as the answer to the equal-compute critique, arXiv:2604.02460).
-5. **Instrument checks passed**: perturbation variants flip decisions at T>0 in both
-   arms (repeatability isn't degeneracy); malformed handled as an outcome category
-   (0.2–0.9% per sweep).
+   the best single-arm label agreement among the sealed thinking-off sweeps,
+   pass^1=0.552 — across the full valid corpus this is a statistical tie with
+   qwen3.5:9b@think-budget-single, 0.548: gap +0.004, 95% CI [−0.096, +0.111]);
+   MAS costs **1.8–3.1×** tokens and **2.2–3.7×** wall-clock per decision,
+   model-dependent *(corrected 2026-08-14 from "~1.8×"/"~2.5–3.4×", which did not
+   reproduce from the journals)* (per-arm token accounting pre-registered as the
+   answer to the equal-compute critique, arXiv:2604.02460).
+5. **Instrument checks passed — with one disclosed exception** *(corrected
+   2026-08-14)*: perturbation variants flip decisions at T>0 in every arm except
+   qwen2.5:14b-MAS, whose majority vote moved 0/10 at both T>0 conditions (2/100 run
+   flips) — for that cell, repeatability cannot be fully separated from degeneracy
+   (see annotation above); malformed handled as an outcome category (0.2–0.9% per
+   sweep).
 
 ## Version-isolation addendum (2026-08-11, audited)
 
@@ -85,7 +102,11 @@ all CONFIRMED.
 Criterion: Tier-1 hierarchy on the headline model (qwen3.5:9b). pass^k splits by k
 (pass^1 → single; pass^5/pass^15 → MAS), so the hierarchy falls to 1.2 DAR → **MAS**,
 with the near-equal chance-corrected alpha (.205 vs .203) reported as the honest
-caveat. Production default flips to the winner after sign-off.
+caveat. Production default flips to the winner after sign-off. *(Second caveat added
+2026-08-14: the deciding DAR 0.802 carries the degeneracy annotation above — 86.0%
+modal collapse, MV below the constant baseline, 0–1/10 perturbation response —
+whether the `mas` default stands is an open owner decision point; see
+`docs/DEFECT-IMPACT-ANALYSIS.md` §3.)*
 
 ## Artifact (Design Science contribution)
 

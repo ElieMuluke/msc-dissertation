@@ -11,6 +11,15 @@ journals; harness attribution independently verified (see verdicts below).
    dismissed 1–2 of 780 dismiss-labelled runs. qwen3.5-MAS milder form (86%
    investigate). Krippendorff's alpha exposes it; regulators should require
    chance-corrected agreement.
+   *Degeneracy annotation (added 2026-08-14, applied uniformly):* at t07,
+   qwen2.5:14b-MAS is 93.1% modal-`investigate` with majority-vote accuracy 11/50 —
+   below the 0.520 constant-`dismiss` baseline — and moved its perturbation majority
+   vote 0/10 at both T>0 conditions (2/100 run-level flips); qwen3.5-MAS is 86.0%
+   modal, MV 11/50 (below baseline), perturbation MV moved 0–1/10. The granite4.1
+   sweep (87.7% MAS / 85.6% single modal-`investigate`, all cells below baseline) is
+   re-admitted as a fifth no-arm-difference data point carrying this identical
+   annotation (owner decision 2026-08-14) — the standard is uniform; see
+   `docs/DEFECT-IMPACT-ANALYSIS.md`.
 2. **Decomposition redistributes the decision spectrum; which category survives is
    model-specific.** Dismiss discrimination collapses under MAS in 3/4 models
    (q3.5 .20→.05, 14b .04→.01, gemma4 .46→.003/390-run≈1 run) with qwen2.5:7b the
@@ -25,7 +34,8 @@ journals; harness attribution independently verified (see verdicts below).
    q3.5-single 1.02→.44 best; q7b-mas 4.22→.10 worst; gemma4-single fewest tools
    (2.0/run) and best escalation. Cause: benchmark instrument property (below).
 5. **Majority-vote rescues accuracy from instability**: 7b-MAS 27/50 and
-   gemma4-single 30/50 majority-agreement lead all configs; self-consistency voting
+   gemma4-single 30/50 majority-agreement lead the four context-1/2 sweeps this annex
+   covers (later sweeps exceed it, e.g. lfm2.5-thinking-single 34/50); self-consistency voting
    (Wang et al.) converts run variance into accuracy at k× cost. Report tokens per
    voted decision.
 6. **Best-analyst config = gemma4-single** (balanced 244/312/184 decision mix,
