@@ -1,5 +1,56 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-14 — deepseek-r1 EXCLUDED (tool channel never existed); granite4.1 RE-ADMITTED as null result; adversarial verification round
+
+Independent audits of both 08-13 sweeps (`results-deepseek-r1-14b-thinking/audit-independent.md`,
+`results-granite4.1-8b/audit-independent.md`) plus a corpus-wide tool-channel census
+(`docs/TOOL-CHANNEL-CENSUS.md`) and two adversarial verification passes
+(`docs/ADVERSARIAL-HARNESS-VERDICT.md`, `docs/ADVERSARIAL-FINDINGS-VERDICT.md`).
+
+**deepseek-r1:14b@think — EXCLUDED from all cross-model comparison (infra-invalid).**
+0/2,300 runs made a tool call. Root cause proven at byte level: the Ollama registry
+template layer (556 B, no `.Tools` block) wins template precedence and silently drops
+the tool definitions the harness sent; `/api/show` nonetheless reports the model
+tools-capable. Harness innocence verified by adversarial wire probe (request payloads
+byte-identical across models/arms; parser drops nothing — every recordable channel
+journalled, malformed args fail loudly, deepseek raw_output contains zero attempted
+tool syntax). The MAS data node asserted tool-derived facts in 1,150/1,150 runs
+without any retrieval. Retained as a capability-gating negative case only.
+
+**granite4.1:8b — RE-ADMITTED as the fifth no-meaningful-arm-advantage data point
+(owner decision, option a), with a uniform degeneracy annotation.** The adversarial
+pass showed the degeneracy criteria that had excluded granite are failed as badly or
+worse by retained cells (qwen2.5-14b-MAS 93.1% modal-investigate vs granite-MAS 87.7%;
+qwen3.5-MAS 86.0%). Exclusion was therefore inconsistent; the honest resolution is
+re-admission plus the same annotation on every degenerate cell. Its only significant
+arm effects are t0-fixed favouring single (DAR −0.092 p=.019, flip +0.180 p=.047,
+entropy +0.098 p=.018).
+
+**Harness verdict:** correct and symmetric (byte-level, adversarially probed) with ONE
+owned defect: qwen3.5@think-budget policy-node deaths are 92/167 num_predict starvation
+at 8192 (node deliberated past the budget and was cut off before calling) + 11 server
+errors; only ~64 are genuine declines. Disclosed as harness-config starvation, not
+model behaviour. Materiality bounded: excluding all node-dead MAS runs keeps every
+arm-difference inside committed bootstrap CIs — no re-runs required. lfm2.5-thinking
+(470/1,150 policy-node-dead, 96% substantive fabricated assessments) and muse-glimmer
+(articulate refusals) pockets stand as model behaviour.
+
+**Gate deficiency recorded:** no gate ever sent a `tools` key, so 8/8 was zero evidence
+about the tool channel; capability probes cannot be trusted either (`/api/show` lied for
+deepseek). New seal-time checks (pre-registered here, before the muse-glimmer pair
+seals): (1) tool-liveness — per-arm min tool calls > 0 AND per-node non-zero call rate
+via the tool-name partition; (2) degeneracy — modal-decision rate vs label prior plus
+constant-answer baseline beside any reliability number. gemma3:27b flagged DO-NOT-SWEEP
+as-is (template also lacks `.Tools`).
+
+**Corrections to committed docs** (applied in the same round): census MAS truncation
+sub-attributions retracted (classifier compared run-summed tokens to a per-call cap);
+FINAL-RESULTS/SUPERVISOR-PACK cost summaries corrected to journal-derived values
+(qwen2.5-7b 2.1k→6.5k, token multiple 1.8–3.1×); "best label agreement" restated as a
+statistical tie, gemma4-single 0.552 vs qwen3.5@think-budget 0.548 (Δ+0.004,
+95% CI [−0.096,+0.111], inverts on repeat-0 exclusion); entropy ln4-normalisation
+deflation (metrics.py:129) disclosed corpus-wide, no conclusion depends on it.
+
 ## 2026-08-13 — qwen3.5:9b@think-budget SEALED + audited; confound statement CORRECTED to four factors
 
 Sweep complete (2300/2300, think=true, num_predict=8192, Ollama 0.32.9). Independent
