@@ -1,5 +1,32 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-15 — muse-glimmer:30b (thinking-off) SEALED; first sweep under the new seal checks; @think pair LAUNCHED
+
+**Sealed 2026-08-15 07:08 UTC: 2,300/2,300** (single 1150, mas 1150). Integrity at seal:
+unique run keys complete both arms, single digest de878ce33ad8, uniform Ollama 0.32.9,
+1 journalled error (single arm; outcome category, not excluded). The 2026-08-14 declared
+reboot deviation executed as written: stopped at MAS 653, resumed losslessly, no second
+infra context introduced (0.32.9 throughout).
+
+**First sweep evaluated under the pre-registered seal checks**
+(`analysis/seal_checks_muse_glimmer.py`, output at `results-muse-glimmer-30b/seal-checks.txt`):
+
+- **Tool-liveness: PASS.** Single 1 zero-tool run/1150; MAS zero-tool 7/1150; node-level
+  via tool-name partition — data dead 16/1150 (1.4%), policy_risk dead 78/1150 (6.8%,
+  articulate refusals per the census; disclosed).
+- **Degeneracy: FLAGGED in every arm×condition cell.** Modal `investigate` 72–74%
+  (single) / 78–84% (MAS) against a 53% dismiss prior; majority-vote accuracy below the
+  best constant baseline in all 10 cells. Worst: MAS pert-t10 MV accuracy **0.000** vs
+  0.600 baseline — the perturbation instrument check fails hard in the MAS arm.
+  muse-glimmer:30b (thinking-off) therefore joins the uniform degeneracy annotation;
+  the no-meaningful-arm-advantage corpus grows to **six models**.
+
+**@think pair launched 07:31–07:33 UTC** (gate 8/8 of 2026-08-11; manifest pre-generated
+at 0.32.9, config unchanged): single on :11437 (arm A), mas on :11435 (arm B), both
+arms concurrent per protocol, ETA ~34 h. Wall-clock remains indicative only under
+co-residency; tokens are the cost metric. This is the designated within-model
+thinking-on/off contrast — the only clean one in the corpus.
+
 ## 2026-08-14 — DECLARED DEVIATION: owner machine reboot mid-sweep (muse-glimmer:30b MAS arm)
 
 Owner-requested pause for a machine restart, declared BEFORE resume. Runner stopped
