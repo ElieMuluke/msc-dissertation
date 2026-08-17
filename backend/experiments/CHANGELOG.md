@@ -1,5 +1,19 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-17 — DECLARED DEVIATION: machine shutdown killed the @think pair 45 min after launch; resumed after 2-day gap
+
+The 2026-08-15 07:31 launch of the muse-glimmer:30b@think pair ran ~45 minutes; the
+machine was powered off at ~08:16 UTC mid-request (both runner logs end abruptly with
+200-OK lines, no error) and did not boot again until 2026-08-17 11:04 UTC. Journals
+survived intact: single 45 complete runs (a 46th was recovered whole by resume
+healing), mas 13. Both runners relaunched 2026-08-17 12:09 UTC on freshly restarted
+pinned servers (:11437 / :11435, both Ollama 0.32.9 — same infra context, no version
+drift across the gap). Standard consequence, same as the 08-14 reboot deviation: one
+cold-cache model-load boundary per arm at the resume point, warm-up discard applied,
+resume-point run keys identifiable from the two-day timestamp gap. No plan, seed, or
+config change. Revised seal ETA: ~2026-08-18 late evening (2,241 runs remaining at
+launch-rate ~68 runs/h combined).
+
 ## 2026-08-15 — muse-glimmer:30b (thinking-off) SEALED; first sweep under the new seal checks; @think pair LAUNCHED
 
 **Sealed 2026-08-15 07:08 UTC: 2,300/2,300** (single 1150, mas 1150). Integrity at seal:
