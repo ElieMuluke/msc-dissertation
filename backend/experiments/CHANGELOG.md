@@ -1,5 +1,69 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-17 — muse-glimmer:30b (thinking-off) AUDITED; two seal-check defects found and fixed; CORRECTION to a published figure
+
+Independent audit (`results-muse-glimmer-30b/audit-independent.md`, blind protocol,
+read-only). Eleventh of twelve sealed sweeps to receive one.
+
+**Resume integrity VERIFIED LOSSLESS.** The 2026-08-14 declared reboot deviation
+behaved exactly as declared: sole >10 min gap (1009 s) sits between
+`mas:TXN-2025-027:t07-varied:12` (plan position 653/1150, matching the declaration to
+the run) and `:13`. Plan contiguous, journal order == plan order, 0 duplicate keys, 0
+seed/temperature mismatches around the boundary, digest/version/num_predict/think
+unchanged. First post-resume run is byte-anomalous (longest output and wall clock of
+its 15 siblings) but decision-normal — the predicted cold-cache signature.
+All tracked analysis inputs hash-identical to seal commit `9be3958`; 0/2300 decision
+re-extraction mismatches. Also found: an **undeclared** dual-arm stall at
+2026-08-14T05:25:45Z (~458 s excess, both arms same second, no data loss), which
+evaded the gap detector by 1 s.
+
+**CORRECTION — MAS pert-t10 majority-vote accuracy is 0.100, not 0.000.** The
+2026-08-15 entry published 0.000 as this sweep's sharpest degeneracy figure. Cause:
+`analysis/seal_checks_muse_glimmer.py` used `Counter.most_common` (first-observed
+tie-break) where the locked convention is canonical `OUTCOMES` order
+(`analysis/metrics.py:majority_vote`). One genuine 2–2 investigate/escalate tie on
+PERT-001 (ground truth escalate) flipped the cell. Fixed in `5bbbb8a`; the checks were
+re-run and `seal-checks.txt` regenerated. Degeneracy verdict is unchanged — all 10
+cells still fall below the best constant-answer baseline (0.520 primary, 0.600
+perturbation) — but the specific number was wrong and is withdrawn.
+
+**SEAL-CHECK DEFECT — tool-liveness under-detected severed channels ~15×.** Counting
+tool calls passes a node that calls its tools and then emits nothing downstream. The
+audit found **226/1150 MAS runs (19.7%) with an empty `data` node output despite
+averaging 8.69 tool calls**; 224 of the 226 answer `investigate`, and their accuracy is
+0.145 against 0.275 for intact runs. Union with the call-dead runs is 242/1150 (21.0%).
+Consequence for interpretation: **muse-glimmer's MAS degeneracy is partly a pipeline
+defect, not purely model behaviour**, and must be reported as such. Per-node
+empty-output detection added to the seal checks (`5bbbb8a`) and will run on the
+@think pair at seal.
+
+**Arm-direction correction for cross-model grouping.** MAS is significantly *worse* on
+label agreement (pass^1 0.2478 vs 0.3861; diff −0.1130, CI [−0.2000, −0.0330],
+p=0.0121; perturbation −0.3067, p=0.0036) and its DAR advantage (+0.032) is **not**
+significant (p=0.103). muse-glimmer therefore does NOT belong in the
+"single-accurate / MAS-repeatable" trade group; it groups with lfm2.5 as
+"MAS worse without compensating repeatability gain". Dismiss class is near-absent in
+MAS: 4/1150 runs (0.35%) against single's 125/1150, on a benchmark whose primary block
+is 26/50 dismiss-labelled.
+
+**T=0 determinism, MAS arm: FLAWED.** Single is byte-identical 48/50, rising to 50/50
+when repeat 0 is excluded (r0 deviates 2/50, r1–r4 0/50 — the deepseek-r1 pattern).
+MAS is **0/50 byte-identical** with 9 fixed-seed groups flipping decision; excluding
+repeat 0 moves alpha 0.7802 -> 0.9101 (+0.130) but leaves byte identity at 0/50.
+Not contention (t0-fixed ran 100% contended, pert-t0 100% solo, both 0%). Cause is the
+case-major plan under `cache_policy="none"`; the harness ships `prewarm` for exactly
+this and it was not enabled. Repeats are therefore not independent, and T=0 results
+for this sweep should be reported with repeats {0,1} excluded or the policy corrected.
+
+Other audit findings recorded without action this round: wall-clock incomparable
+between arms (MAS 139.40 s contended vs 78.52 s solo, 1.775x; use the
+contention-invariant token ratio 2.372x); `progress.json` MAS mean wall clock
+unreconcilable with the journal (+12.6%); the sole `malformed` run is an Ollama 500
+tool-parse fault with 0 tokens scored as a model outcome; and the successor @think
+sweep appended to the *sealed* directory's arm-B server log after the seal commit
+(analysis inputs unaffected, but sealed dirs should be made read-only with a
+`SHA256SUMS` manifest).
+
 ## 2026-08-17 — DECLARED DEVIATION: machine shutdown killed the @think pair 45 min after launch; resumed after 2-day gap
 
 The 2026-08-15 07:31 launch of the muse-glimmer:30b@think pair ran ~45 minutes; the
