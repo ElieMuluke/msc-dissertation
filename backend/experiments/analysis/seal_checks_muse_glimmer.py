@@ -36,6 +36,20 @@ def load_labels() -> dict[str, str]:
     return labels
 
 
+OUTCOMES = ("escalate", "investigate", "dismiss", "malformed")
+
+
+def majority(decisions: list[str]) -> str:
+    """Modal decision, ties broken by canonical OUTCOMES order.
+
+    Must match ``analysis/metrics.py:majority_vote``. Using ``Counter.most_common``
+    here instead broke one perturbation cell (audit 2026-08-17).
+    """
+    counts = Counter(decisions)
+    top = max(counts.values())
+    return next(o for o in OUTCOMES if counts.get(o, 0) == top)
+
+
 def tool_names(run: dict) -> list[str]:
     names = []
     for c in run.get("tool_calls") or []:
@@ -74,6 +88,27 @@ def check_sweep(results: Path) -> int:
                       + ("  <-- DISCLOSE (>10%)" if 0.10 <= rate < 1.0 else ""))
                 failures += 0 if ok else 1
 
+            # Call-counting alone misses a severed channel: a node can call its tools
+            # and still emit nothing downstream. Found on muse-glimmer thinking-off
+            # (226/1150 empty data-node outputs at 8.69 calls/run), audit 2026-08-17.
+            severed = set()
+            for label in ("data", "policy_risk", "reporting"):
+                empty = [
+                    r for r in runs
+                    if isinstance(r.get("node_outputs"), dict)
+                    and not (r["node_outputs"].get(label) or "").strip()
+                ]
+                rate = len(empty) / n
+                ok = rate < 0.10
+                severed |= {id(r) for r in empty}
+                print(f"[{'PASS' if ok else 'DISCLOSE'}] node {label}: EMPTY output "
+                      f"{len(empty)}/{n} ({rate:.1%}) despite tool calls")
+            if severed:
+                broken = [r for r in runs if id(r) in severed]
+                dist = Counter(r.get("decision") or "malformed" for r in broken)
+                print(f"          severed-channel runs {len(broken)}/{n} "
+                      f"({len(broken) / n:.1%}); decisions {dict(dist)}")
+
         # --- 2. degeneracy ----------------------------------------------------
         by_cond: dict[str, list[dict]] = {}
         for r in runs:
@@ -91,7 +126,7 @@ def check_sweep(results: Path) -> int:
             votes: dict[str, Counter] = {}
             for r in rs:
                 votes.setdefault(r["case_id"], Counter())[r.get("decision") or "malformed"] += 1
-            scored = [(c, v.most_common(1)[0][0]) for c, v in votes.items() if c in labels]
+            scored = [(c, majority(list(v.elements()))) for c, v in votes.items() if c in labels]
             mv_acc = (sum(1 for c, d in scored if labels[c] == d) / len(scored)) if scored else 0.0
             baseline = max(
                 sum(1 for c, _ in scored if labels[c] == cand) / len(scored)

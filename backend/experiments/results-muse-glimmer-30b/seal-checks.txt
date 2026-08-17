@@ -2,7 +2,7 @@
 === results-muse-glimmer-30b / single: 1150 runs ===
 tool calls/run: min=0 median=4 max=7; zero-tool runs=1/1150
 [PASS] arm-level tool-liveness (total calls > 0)
-label prior: {'investigate': 9, 'dismiss': 32, 'escalate': 19} (modal dismiss 53.3%)
+label prior: {'dismiss': 32, 'investigate': 9, 'escalate': 19} (modal dismiss 53.3%)
   pert-t0: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
   pert-t05: modal=investigate 54.0%; MV-acc=0.300; best-constant-baseline=0.600  [DEGENERATE — annotate]
   pert-t10: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
@@ -14,10 +14,14 @@ tool calls/run: min=0 median=8 max=11; zero-tool runs=7/1150
 [PASS] arm-level tool-liveness (total calls > 0)
 [PASS] node data: dead 16/1150 (1.4%)
 [PASS] node policy_risk: dead 78/1150 (6.8%)
-label prior: {'investigate': 9, 'dismiss': 32, 'escalate': 19} (modal dismiss 53.3%)
+[DISCLOSE] node data: EMPTY output 226/1150 (19.7%) despite tool calls
+[PASS] node policy_risk: EMPTY output 0/1150 (0.0%) despite tool calls
+[PASS] node reporting: EMPTY output 0/1150 (0.0%) despite tool calls
+          severed-channel runs 226/1150 (19.7%); decisions {'investigate': 224, 'dismiss': 1, 'escalate': 1}
+label prior: {'dismiss': 32, 'investigate': 9, 'escalate': 19} (modal dismiss 53.3%)
   pert-t0: modal=investigate 84.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
   pert-t05: modal=investigate 78.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
-  pert-t10: modal=investigate 80.0%; MV-acc=0.000; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 80.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
   t0-fixed: modal=investigate 82.4%; MV-acc=0.320; best-constant-baseline=0.520  [DEGENERATE — annotate]
   t07-varied: modal=investigate 80.8%; MV-acc=0.240; best-constant-baseline=0.520  [DEGENERATE — annotate]
 
