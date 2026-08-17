@@ -1,5 +1,46 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-17 — DEFECT OBSERVED MID-SWEEP, recorded before results exist: thinking mode severs the MAS data channel
+
+Recorded at 155/1150 MAS runs of the in-flight `muse-glimmer:30b@think` sweep, i.e.
+**before** any analysis of that sweep, so this is a dated observation and not a post-hoc
+explanation of its results.
+
+**Observation.** In the @think MAS arm, `node_outputs["data"]` is empty in
+**146/155 runs (94.2%)** and every run so far decides `investigate` (155/155, all
+t0-fixed). The same model's sealed thinking-off MAS arm shows 226/1150 (19.7%).
+The @think **single** arm is healthy over the same window (426 runs: 280 investigate,
+121 escalate, 13 dismiss, 12 malformed), so this is specific to the pipeline arm
+under thinking, not to the model or the harness generally.
+
+**Mechanism, read from code, not inferred from outputs.** `app/agents/mas.py`
+assigns `data_findings = loop.output_text` (the data node's final message *content*),
+and `_node_input` forwards it verbatim as `"DATA FINDINGS:\n{data_findings}"`. Under
+`think=true` the data node calls its tools (median 9 calls/run) but returns empty
+content, placing its reasoning on the separate thinking channel. Policy & Risk and
+Reporting therefore receive an empty findings block. Inspected run
+`mas:TXN-2025-001:t0-fixed`: 9 tool calls, orchestrator output 1,776 chars, data node
+0 chars, and Policy & Risk still produced a 3,874-char assessment reconstructed from
+the case text alone. Evidence is retrieved and then discarded before it reaches the
+node that scores risk.
+
+**Status: sweep CONTINUES unchanged pending owner decision.** No configuration,
+prompt, plan or seed has been altered — altering the harness mid-track would break the
+pre-registration and make this sweep non-comparable with the twelve sealed ones. The
+options put to the owner are (1) run to completion and report the defect as a measured
+property of the deployed pipeline under thinking, (2) stop, add an empty-content
+fallback to `run_tool_loop`, and re-run as a separate, differently-configured track, or
+(3) stop and capability-gate thinking-on MAS out, retaining the partial runs as
+evidence.
+
+**Interpretation constraint for whichever option is taken.** If this sweep completes,
+its MAS arm does not measure decomposition against a working pipeline; it measures
+decomposition with one inter-node channel severed. Any thinking-on/off contrast drawn
+from it must say so. The finding itself is substantive — it is a concrete, quantified
+instance of inter-agent misalignment (MAST) arising from a serialisation boundary
+rather than from model reasoning, and it was invisible to tool-call counting, which is
+what the 2026-08-17 seal-check fix was added to catch.
+
 ## 2026-08-17 — muse-glimmer:30b (thinking-off) AUDITED; two seal-check defects found and fixed; CORRECTION to a published figure
 
 Independent audit (`results-muse-glimmer-30b/audit-independent.md`, blind protocol,
