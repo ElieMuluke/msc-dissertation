@@ -1,5 +1,60 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-17 (later) — MECHANISM CORRECTED: empty node outputs are per-node iteration-cap exhaustion, not thinking-channel routing. @think MAS arm STOPPED at 201 runs
+
+The earlier entry today attributed empty `node_outputs["data"]` to thinking-mode content
+routing. **That attribution is withdrawn.** Adversarial verification
+(`docs/EMPTY-NODE-VERDICT.md`, offline probes against the real `run_tool_loop` with a
+mocked client, zero LLM calls) refuted it for the dominant failure class.
+
+**Actual mechanism.** `max_iterations = 8` is a pre-registered locked constant applied
+**per node**. Every muse-glimmer empty-`data` run terminates with the data node at
+exactly 8 tool calls: the loop hits the cap while the model is still requesting tools,
+so the final message is a tool-call turn whose content is empty, and that empty string
+becomes `data_findings`. No answer turn is ever produced, so no text is lost — this is
+cap semantics, not a defect in the harness. Decisive counter-evidence to the thinking
+story: the **thinking-off** sweep shows 19.7% with `thinking_field_present: false` in
+its gate evidence — no thinking channel exists there at all. Thinking only amplifies
+the rate (more tokens per turn, fewer turns before the cap): 19.7% -> 95.0%.
+
+A minority class does match model behaviour rather than cap exhaustion: qwen3.5
+@think-budget `policy_risk` (92/94 with zero tool calls and ~2x completion tokens =
+token-budget exhaustion within a single turn), lfm2.5 `policy_risk` (18/20), and
+qwen3.5 `reporting` (8, which ARE caught as `malformed`).
+
+**Decomposition is a necessary co-factor, and this is the finding.** The same model
+never hits the cap once in 1,150 single-arm runs (maximum 7 tool calls for the entire
+task). Its data node — the only multi-tool node, fed an exhaustive plan by the
+orchestrator — exhausts 8 on its own. The pipeline holds 4 x 8 = 32 iterations against
+the monolith's 8 and still starves, because the budget is partitioned per role instead
+of pooled. Detectability is asymmetric: all 64 single-arm empties become `malformed`,
+while all 536 empty-node MAS runs are error-free and emit a parseable decision.
+Downstream does not fabricate — it writes "Data findings: none" and rulebook-herds to
+`investigate` (224/226).
+
+**Fix A REJECTED** (keep last non-empty assistant text in `run_tool_loop`). Mock test:
+recovers nothing for the single-empty-turn class and, for cap-hit runs, at best
+mid-investigation narration, never an evidence summary. `run_tool_loop` is shared code,
+so it could retroactively flip 58 sealed single-arm `malformed` outcomes. No harness
+change will be made mid-programme.
+
+**DECISION — `muse-glimmer:30b@think` MAS arm STOPPED at 201/1150 and capability-gated
+out.** At 95.0% cap-exhausted data node and 155/155 identical `investigate` decisions,
+the arm has zero decision variance: DAR is trivially 1.0 and alpha is undefined, so it
+measures a starved pipeline rather than decomposition. Gated out on the same principle
+already applied to `deepseek-r1:14b@think` (tool channel), now applied to a second,
+different channel failure. The 201 runs are retained as evidence, not deleted. The
+**single** arm continues to completion and remains valid (it never reaches the cap);
+it provides a within-model thinking-on/off contrast for the monolithic architecture.
+
+Consequence for corpus counts: the @think sweep will seal as a **single-arm-only**
+track. Corpus totals must be stated as twelve complete sweeps (27,600 runs) plus one
+single-arm track, not thirteen complete sweeps.
+
+Prior-entry corrections carried: qwen3.5@think-budget per-node rates (0/0.5/8.3/0.7%)
+hold only after excluding 11 Ollama-EOF error rows whose `node_outputs` are absent;
+muse@think single-arm empty rate is 3.1% (21/667, partial), not 3.3%.
+
 ## 2026-08-17 — DEFECT OBSERVED MID-SWEEP, recorded before results exist: thinking mode severs the MAS data channel
 
 Recorded at 155/1150 MAS runs of the in-flight `muse-glimmer:30b@think` sweep, i.e.
