@@ -1,0 +1,172 @@
+{
+  "registry_key": "qwen2.5:7b-instruct@b32",
+  "model": "qwen2.5:7b-instruct",
+  "date": "2026-08-18T09:53:27Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "track": "thinking-off",
+  "configured_think": null,
+  "expect_thinking": false,
+  "expect_thinking_source": "inferred from config.think",
+  "ollama_version": {
+    "single": "0.32.9",
+    "mas": "0.32.9"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "expect_thinking": false,
+    "criterion": "no message.thinking AND no inline reasoning markup in content",
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 6.96,
+        "prompt_tokens": 46,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.31,
+        "prompt_tokens": 46,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.29,
+        "prompt_tokens": 46,
+        "completion_tokens": 3
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.29,
+        "prompt_tokens": 46,
+        "completion_tokens": 3,
+        "verdict": true
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"qwen2.5:7b-instruct\\\" does not support thinking\"}",
+        "wall_s": 0.08
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "expect_thinking": false,
+    "content_pass": true,
+    "thinking_pass": true,
+    "sha256": [
+      "458d02aa7340c6518c476b09ca4d52308eb49afb5bf0dc8cf81f28d507d92a6b"
+    ],
+    "thinking_sha256": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ],
+    "output_len": 335,
+    "thinking_len": 0,
+    "num_predict": 512,
+    "usage": [
+      {
+        "wall_s": 0.86,
+        "prompt_tokens": 95,
+        "completion_tokens": 64
+      },
+      {
+        "wall_s": 0.85,
+        "prompt_tokens": 95,
+        "completion_tokens": 64
+      },
+      {
+        "wall_s": 0.87,
+        "prompt_tokens": 95,
+        "completion_tokens": 64
+      },
+      {
+        "wall_s": 0.76,
+        "prompt_tokens": 95,
+        "completion_tokens": 64
+      },
+      {
+        "wall_s": 0.78,
+        "prompt_tokens": 95,
+        "completion_tokens": 64
+      }
+    ],
+    "mean_wall_s": 0.82,
+    "mean_completion_tokens": 64.0
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "inline_reasoning_outputs": 0,
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "investigate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 2.71,
+        "mean_prompt_tokens": 2300.5,
+        "mean_completion_tokens": 197.8,
+        "inline_reasoning_outputs": 0
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 51.34,
+        "mean_prompt_tokens": 6827.8,
+        "mean_completion_tokens": 987.0,
+        "inline_reasoning_outputs": 0
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-qwen2.5-7b-instruct-b32-zgyv5wc3"
+  }
+}
