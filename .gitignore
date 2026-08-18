@@ -32,3 +32,8 @@ backend/watchlists_db.sqlite.building
 backend/experiments/results*/runner-*.log
 backend/experiments/results*/**/runner-*.log
 backend/experiments/watchdog.log
+
+docs/*.pdf
+docs/*.docx
+docs/*.tex
+docs/final-figs/
