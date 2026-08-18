@@ -58,6 +58,11 @@ class MasAgent:
     ``prompts`` maps each node name in :data:`NODES` to its system prompt.
     ``tool_partition`` maps node names to the tool names that node may call;
     nodes absent from the mapping (or mapped to an empty tuple) call no tools.
+
+    ``max_iterations`` is either one int applied to every node (the
+    pre-registered v2 behaviour, byte-compatible) or a mapping of node name
+    -> per-node LLM-turn budget (budget-sensitivity track); a mapping must
+    cover every node in :data:`NODES` and name no others.
     """
 
     def __init__(
@@ -67,7 +72,7 @@ class MasAgent:
         prompts: Mapping[str, str],
         tool_partition: Mapping[str, Sequence[str]],
         render_case: CaseRenderer,
-        max_iterations: int = 8,
+        max_iterations: int | Mapping[str, int] = 8,
     ) -> None:
         missing = [n for n in NODES if n not in prompts]
         if missing:
@@ -75,12 +80,27 @@ class MasAgent:
         unknown = set(tool_partition) - set(NODES)
         if unknown:
             raise ValueError(f"tool_partition names unknown nodes: {sorted(unknown)}")
+        if isinstance(max_iterations, Mapping):
+            missing_budgets = [n for n in NODES if n not in max_iterations]
+            if missing_budgets:
+                raise ValueError(
+                    f"missing iteration budgets for nodes: {missing_budgets}"
+                )
+            unknown_budgets = set(max_iterations) - set(NODES)
+            if unknown_budgets:
+                raise ValueError(
+                    f"iteration budgets name unknown nodes: {sorted(unknown_budgets)}"
+                )
+            budgets = {n: int(max_iterations[n]) for n in NODES}
+        else:
+            budgets = {n: int(max_iterations) for n in NODES}
         self._model_factory = model_factory
         self._tools = list(tools)
         self._prompts = dict(prompts)
         self._partition = {n: tuple(tool_partition.get(n, ())) for n in NODES}
         self._render_case = render_case
-        self._max_iterations = max_iterations
+        #: Per-node LLM-turn budgets (uniform when an int was passed).
+        self._max_iterations = budgets
 
     def _node_tools(self, node: str) -> list[BaseTool]:
         allowed = self._partition[node]
@@ -106,7 +126,9 @@ class MasAgent:
                 SystemMessage(content=self._prompts[node]),
                 HumanMessage(content=self._node_input(node, state)),
             ]
-            loop = await run_tool_loop(llm, tools, messages, self._max_iterations)
+            loop = await run_tool_loop(
+                llm, tools, messages, self._max_iterations[node]
+            )
             return {
                 output_key: loop.output_text,
                 "tool_calls": loop.tool_calls,

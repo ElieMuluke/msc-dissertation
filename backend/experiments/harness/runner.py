@@ -111,6 +111,13 @@ async def execute_run(
       pooled read of the journals can never mistake a budget-raised run for a
       standard one. Harness lines written before 2026-08-12 lack the key and
       are all 2048 by construction.
+    - ``iteration_budgets`` — budget-sensitivity track ("@b32" registry
+      keys) only: the LLM-turn budget(s) enforced on THIS run — the single
+      arm journals ``{"single": 32}``, the MAS arm its per-node mapping
+      (``{"orchestrator": 4, "data": 16, "policy_risk": 8, "reporting":
+      4}``) — so an audit can verify the budget per run. ``null`` on every
+      non-b32 sweep (which runs the v2-uniform ``max_iterations``); lines
+      written before the b32 track lack the key entirely.
     - ``cache_policy`` — the active cache-state policy for this sweep
       (``none`` | ``prewarm`` | ``shuffle``; see ``ExperimentConfig``).
     - ``env`` — environment fingerprint (``gpu_name``, ``gpu_driver``,
@@ -172,6 +179,15 @@ async def execute_run(
         "decision": decision,
         "error": error,
         "node_outputs": node_outputs,
+        "iteration_budgets": (
+            (
+                {"single": config.single_iteration_budget}
+                if entry["arm"] == "single"
+                else dict(config.mas_iteration_budgets)
+            )
+            if config.budget_track
+            else None
+        ),
         "cache_policy": config.cache_policy,
         "env": env,
     }
