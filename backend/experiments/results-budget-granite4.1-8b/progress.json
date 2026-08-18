@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-08-18T15:39:58Z",
-  "done": 1130,
+  "generated_at": "2026-08-18T15:41:34Z",
+  "done": 1157,
   "total": 2300,
   "arms": {
     "single": {
-      "done": 805,
+      "done": 825,
       "total": 1150,
-      "last_run_at": "2026-08-18T15:39:51Z",
-      "mean_wall_clock_s": 4.94,
-      "eta_s": 1705.0
+      "last_run_at": "2026-08-18T15:41:30Z",
+      "mean_wall_clock_s": 4.79,
+      "eta_s": 1557.0
     },
     "mas": {
-      "done": 325,
+      "done": 332,
       "total": 1150,
-      "last_run_at": "2026-08-18T15:39:46Z",
-      "mean_wall_clock_s": 13.33,
-      "eta_s": 10997.0
+      "last_run_at": "2026-08-18T15:41:12Z",
+      "mean_wall_clock_s": 12.8,
+      "eta_s": 10466.0
     }
   }
 }
