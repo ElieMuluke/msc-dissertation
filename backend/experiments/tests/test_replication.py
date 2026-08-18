@@ -16,6 +16,7 @@ from experiments.config import (
     THINKING_BUDGET_OVERRIDES,
     THINKING_KEY_SUFFIX,
     config_for_model,
+    is_budget_track_key,
     replication_entry,
     thinking_keys,
 )
@@ -36,7 +37,11 @@ ORIGINAL_KEYS = tuple(k for k, v in REPLICATION_MODELS.items() if len(v) == 2)
 #: results dir; only the thinking-on ones change the wire ``think`` value.
 ALIAS_KEYS = tuple(k for k, v in REPLICATION_MODELS.items() if len(v) == 3)
 THINKING_KEYS = tuple(thinking_keys())
-CONTEXT_KEYS = tuple(k for k in ALIAS_KEYS if k not in THINKING_KEYS)
+#: Budget-sensitivity track keys ("@b32"): equalised + disclosed budgets.
+B32_KEYS = tuple(k for k in REPLICATION_MODELS if is_budget_track_key(k))
+CONTEXT_KEYS = tuple(
+    k for k in ALIAS_KEYS if k not in THINKING_KEYS and k not in B32_KEYS
+)
 #: Keys whose locked ``num_predict`` is raised by a pre-registered override.
 BUDGET_KEYS = tuple(k for k in REPLICATION_MODELS if k in THINKING_BUDGET_OVERRIDES)
 
@@ -88,16 +93,32 @@ def test_config_record_flows_model_and_think() -> None:
     # identity, so they get their own hash: the manipulation is in the hash.
     # A budget-raised key serves the same tag AND think, so its raised
     # num_predict is what must separate it — hence it joins the identity.
-    identities = {(r["model"], r["think"], r["num_predict"]) for r in records.values()}
+    # The b32 track joins the identity: same tag/think/num_predict as a v2
+    # key must STILL hash differently there (budgets + prompts differ).
+    identities = {
+        (r["model"], r["think"], r["num_predict"], "iteration_budgets" in r)
+        for r in records.values()
+    }
     assert len(set(hashes.values())) == len(identities)
-    assert len(set(hashes.values())) == len(ORIGINAL_KEYS) + len(THINKING_KEYS)
+    assert (
+        len(set(hashes.values()))
+        == len(ORIGINAL_KEYS) + len(THINKING_KEYS) + len(B32_KEYS)
+    )
     for m, r in records.items():
         assert r["model"] == replication_entry(m)[0]
     # everything except model identity + generation budget is the same design
+    # WITHIN each track; the b32 track additionally differs in prompts and
+    # carries the iteration_budgets record (and in nothing else).
     for r in records.values():
         r.pop("model"), r.pop("think"), r.pop("num_predict")
-    stripped = list(records.values())
-    assert all(r == stripped[0] for r in stripped)
+    v2 = [r for m, r in records.items() if m not in B32_KEYS]
+    b32 = [r for m, r in records.items() if m in B32_KEYS]
+    assert all(r == v2[0] for r in v2)
+    assert all(r == b32[0] for r in b32)
+    extra_keys = set(b32[0]) - set(v2[0])
+    assert extra_keys == {"iteration_budgets"}
+    differing = {k for k in v2[0] if b32[0][k] != v2[0][k]}
+    assert differing == {"prompts"}
 
 
 def test_build_manifest_uses_model_config(monkeypatch, tmp_path) -> None:
@@ -262,14 +283,21 @@ def test_thinking_dirs_never_collide_with_sealed_dirs() -> None:
 def test_budget_override_registry() -> None:
     """The override is keyed by registry KEY, raises the locked num_predict,
     and leaves num_ctx (and every other locked constant) alone."""
-    assert set(BUDGET_KEYS) == {"qwen3.5:9b@think-budget"}
+    # the b32 track's qwen3.5 thinking-on sweep carries the same 8192
+    # override as its sealed counterpart (pre-approved; same confound).
+    assert set(BUDGET_KEYS) == {"qwen3.5:9b@think-budget", "qwen3.5:9b@b32-think-budget"}
     assert THINKING_BUDGET_OVERRIDES["qwen3.5:9b@think-budget"] == 8192
-    c = config_for_model("qwen3.5:9b@think-budget")
-    assert c.model == "qwen3.5:9b"  # same served tag
-    assert c.think is True
-    assert c.num_predict == 8192  # the raised budget
-    assert c.num_ctx == DEFAULT_CONFIG.num_ctx == 16384  # prompt+gen still fit
-    assert c.results_dir == EXPERIMENTS_DIR / "results-qwen3.5-9b-thinking-budget"
+    assert THINKING_BUDGET_OVERRIDES["qwen3.5:9b@b32-think-budget"] == 8192
+    for key, dirname in (
+        ("qwen3.5:9b@think-budget", "results-qwen3.5-9b-thinking-budget"),
+        ("qwen3.5:9b@b32-think-budget", "results-budget-qwen3.5-9b-thinking"),
+    ):
+        c = config_for_model(key)
+        assert c.model == "qwen3.5:9b"  # same served tag
+        assert c.think is True
+        assert c.num_predict == 8192  # the raised budget
+        assert c.num_ctx == DEFAULT_CONFIG.num_ctx == 16384  # prompt+gen still fit
+        assert c.results_dir == EXPERIMENTS_DIR / dirname
     # every other key in the registry keeps the locked constant
     for key in REPLICATION_MODELS:
         if key not in BUDGET_KEYS:
@@ -352,22 +380,40 @@ PINNED_CONFIG_HASHES = {
         "0adb076dd556dd7230d1c198d8bc53491e56ea5ba538aea5d3d759649442496c",
     "muse-glimmer:30b@think":
         "4fcdbb64fd00534711bd2aca70d1896429e7e219f97ac2e1fe025648dd0812b8",
+    # budget-sensitivity track (v2b): new identities by design — budgets +
+    # disclosure prompts are hashed. Pinned pre-launch 2026-08-18.
+    "qwen2.5:7b-instruct@b32":
+        "dff4516b50da49fef61498365e26c1323be542e4f3a44490c7fd8cee21756fc0",
+    "granite4.1:8b@b32":
+        "d04c66dc090443c6d26e8e52f5dcbd918907275f9d4fde4ac45834b1a8801236",
+    "qwen3.5:9b@b32":
+        "57724ba1c490e4dd1eb8f2853a4eba5dc2dbe93ff79082d9430905eab30bc33a",
+    "lfm2.5:8b@b32-think":
+        "29b037af9d23c0084edd1f9c5b6e6470f9b7b52e92e8df5df7b309123431d3e7",
+    "gemma4:latest@b32":
+        "548dc4adbfcbd00cb559a57843af54a8539d8652ae31eca3ab8e57d10a77cc37",
 }
 
 
 def test_non_overridden_config_hashes_unchanged() -> None:
-    """Every non-overridden key's config identity is byte-pinned here. The
-    override must move exactly one key's hash (the budget-raised one) and no
-    other; a diff on any line below means a locked constant moved."""
+    """Every non-overridden key's config identity is byte-pinned here
+    (v2 keys pinned 2026-08-12; b32 keys pinned pre-launch 2026-08-18).
+    Only the num_predict-overridden keys (BUDGET_KEYS) hash outside this
+    table; a diff on any line below means a locked constant moved."""
     assert set(PINNED_CONFIG_HASHES) | set(BUDGET_KEYS) == set(REPLICATION_MODELS)
     for key, expected in PINNED_CONFIG_HASHES.items():
         config = config_for_model(key)
         assert config.num_predict == 2048, key
         assert manifest_mod._sha256(manifest_mod.config_record(config)) == expected, key
-    budget_hash = manifest_mod._sha256(
-        manifest_mod.config_record(config_for_model("qwen3.5:9b@think-budget"))
-    )
-    assert budget_hash not in set(PINNED_CONFIG_HASHES.values())
+    budget_hashes = {
+        key: manifest_mod._sha256(
+            manifest_mod.config_record(config_for_model(key))
+        )
+        for key in BUDGET_KEYS
+    }
+    assert len(set(budget_hashes.values())) == len(budget_hashes)
+    for key, budget_hash in budget_hashes.items():
+        assert budget_hash not in set(PINNED_CONFIG_HASHES.values()), key
 
 
 @pytest.mark.parametrize(

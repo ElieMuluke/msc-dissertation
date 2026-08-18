@@ -36,8 +36,9 @@ from experiments.config import (
 from experiments.harness import journal
 from experiments.harness.dfah_data import load_perturbation_cases, load_primary_cases
 from experiments.harness.models import model_digest, model_show, ollama_version
-from experiments.mas.prompts import MAS_PROMPTS
+from experiments.mas.prompts import MAS_PROMPTS, MAS_PROMPTS_B32
 from experiments.single.prompts import SYSTEM_PROMPT as SINGLE_PROMPT
+from experiments.single.prompts import SYSTEM_PROMPT_B32 as SINGLE_PROMPT_B32
 
 
 def _sha256(obj: Any) -> str:
@@ -85,8 +86,22 @@ def planned_runs(config: ExperimentConfig = DEFAULT_CONFIG) -> list[dict[str, An
 
 
 def config_record(config: ExperimentConfig = DEFAULT_CONFIG) -> dict[str, Any]:
-    """Everything hash-worthy about the configuration, prompts included."""
-    return {
+    """Everything hash-worthy about the configuration, prompts included.
+
+    Budget-sensitivity track (``config.budget_track``, "@b32" keys): the
+    record embeds the budget-disclosing prompt variants and gains an
+    ``iteration_budgets`` key (single scalar + per-node MAS mapping), so a
+    b32 sweep's ``config_hash`` can never collide with a v2 sweep's. For
+    every other config the record is byte-identical to the pre-b32 code
+    path (the pinned hashes in ``tests/test_replication.py`` enforce this).
+    """
+    if config.budget_track:
+        single_prompt = SINGLE_PROMPT_B32
+        mas_prompts = MAS_PROMPTS_B32
+    else:
+        single_prompt = SINGLE_PROMPT
+        mas_prompts = MAS_PROMPTS
+    record = {
         "model": config.model,
         "think": config.think,
         "num_ctx": config.num_ctx,
@@ -110,8 +125,8 @@ def config_record(config: ExperimentConfig = DEFAULT_CONFIG) -> dict[str, Any]:
         ],
         "mas_tool_partition": {k: list(v) for k, v in MAS_TOOL_PARTITION.items()},
         "prompts": {
-            "single_system": SINGLE_PROMPT,
-            **{f"mas_{k}": v for k, v in MAS_PROMPTS.items()},
+            "single_system": single_prompt,
+            **{f"mas_{k}": v for k, v in mas_prompts.items()},
         },
         # R2: sampling params are NOT sent by the harness; the server applies
         # its defaults. Recorded numerically (Ollama documented defaults for
@@ -124,6 +139,15 @@ def config_record(config: ExperimentConfig = DEFAULT_CONFIG) -> dict[str, Any]:
             "min_p": {"server_default": 0.0},
         },
     }
+    if config.budget_track:
+        # The per-role LLM-turn budgets actually enforced by the adapter —
+        # hashed, so budget-track manifests are self-describing and can
+        # never be mistaken for (or by) a v2-uniform sweep.
+        record["iteration_budgets"] = {
+            "single": config.single_iteration_budget,
+            "mas": dict(config.mas_iteration_budgets),
+        }
+    return record
 
 
 def build_manifest(config: ExperimentConfig = DEFAULT_CONFIG) -> dict[str, Any]:

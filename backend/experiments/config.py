@@ -35,6 +35,33 @@ FIXED_SEED = 42
 #: Master seed from which all varied per-run seeds are pre-generated.
 MASTER_SEED = 20260805
 
+# --- Budget-sensitivity track (v2b, pre-registered; "@b32" registry keys) ----
+#: Per-role LLM-turn budgets for the MAS pipeline. These are the existing
+#: ``max_iterations`` semantics (model calls per tool loop), applied per
+#: node — NOT tool-call counts. They pool to 32, matching the single arm,
+#: so the pooled turn budget is EQUAL across arms and each agent is TOLD
+#: its budget (see the *_B32 prompt variants). Sized to demand: the data
+#: node is the only multi-tool node (16); policy_risk has one tool (8);
+#: orchestrator and reporting call no tools (4 each, headroom only).
+MAS_ITERATION_BUDGETS: dict[str, int] = {
+    "orchestrator": 4,
+    "data": 16,
+    "policy_risk": 8,
+    "reporting": 4,
+}
+#: The single arm's LLM-turn budget under the budget track — the pooled MAS
+#: total, disclosed in its prompt exactly as each MAS role's budget is.
+SINGLE_ITERATION_BUDGET: int = 32
+#: Registry-key marker for the budget-sensitivity track: a key contains
+#: "@b32" either terminally ("<tag>@b32") or hyphen-qualified
+#: ("<tag>@b32-think", "<tag>@b32-think-budget").
+B32_KEY_MARKER = "@b32"
+
+
+def is_budget_track_key(key: str) -> bool:
+    """True for budget-sensitivity ("@b32") registry keys."""
+    return key.endswith(B32_KEY_MARKER) or f"{B32_KEY_MARKER}-" in key
+
 
 @dataclass(frozen=True)
 class Condition:
@@ -100,7 +127,26 @@ class ExperimentConfig:
     #: Generation cap per LLM call, recorded in the manifest.
     num_predict: int = 2048
     #: Max tool-loop iterations per agent before it is forced to answer.
+    #: v2-UNIFORM LEGACY: the pre-registered v2 sweeps ran this single scalar
+    #: for every agent in both arms (8 per agent — pooled 32 for the 4-node
+    #: MAS pipeline vs 8 for the monolith, the asymmetry the budget track
+    #: removes). It stays readable so old manifests keep verifying; the
+    #: budget-sensitivity track ignores it in favour of the per-role fields
+    #: below (selected by ``budget_track``).
     max_iterations: int = 8
+    #: Budget-sensitivity track (v2b, "@b32" registry keys) — per-role
+    #: LLM-turn budgets for the MAS pipeline (the existing ``max_iterations``
+    #: semantics, applied per node; NOT tool-call counts). Pooled: 32.
+    mas_iteration_budgets: dict[str, int] = field(
+        default_factory=lambda: dict(MAS_ITERATION_BUDGETS)
+    )
+    #: Budget-sensitivity track — the single arm's LLM-turn budget, equal to
+    #: the MAS pipeline's pooled total so neither arm is budget-bound first.
+    single_iteration_budget: int = SINGLE_ITERATION_BUDGET
+    #: True only for "@b32" registry keys: selects the per-role budgets above
+    #: AND the budget-disclosing prompt variants (SYSTEM_PROMPT_B32 /
+    #: MAS_PROMPTS_B32). False = byte-identical v2 construction.
+    budget_track: bool = False
     #: Hard per-run timeout; expiry is journalled as an error, never retried.
     run_timeout_s: float = 900.0
     #: git commit+push of results/ every N completed runs.
@@ -220,6 +266,26 @@ REPLICATION_MODELS: dict[str, tuple[str, bool | None] | tuple[str, bool | None, 
     # such — see CHANGELOG 2026-08-12.
     "qwen3.5:9b@think-budget": (
         "results-qwen3.5-9b-thinking-budget", True, "qwen3.5:9b"),
+    # --- budget-sensitivity track (v2b, pre-registered; owner-approved) ------
+    # "@b32" keys re-run the identical design with the iteration budget
+    # EQUALISED across arms (single 32; MAS 4/16/8/4 per role, pooled 32)
+    # and DISCLOSED to every agent in its prompt (SYSTEM_PROMPT_B32 /
+    # MAS_PROMPTS_B32). Everything else is the locked v2 design — cases,
+    # conditions, seeds, num_predict 2048, num_ctx 16384, cache_policy
+    # "none", strict v2 parsing, run_timeout_s 900. ``think`` per key
+    # mirrors the tag's sealed counterpart exactly. The "@b32-think-budget"
+    # key additionally carries its sealed counterpart's pre-approved
+    # num_predict=8192 override (see THINKING_BUDGET_OVERRIDES) — that
+    # sweep is confounded vs 2048 sweeps by construction, as before.
+    "qwen2.5:7b-instruct@b32": (
+        "results-budget-qwen2.5-7b", None, "qwen2.5:7b-instruct"),
+    "granite4.1:8b@b32": ("results-budget-granite4.1-8b", None, "granite4.1:8b"),
+    "qwen3.5:9b@b32": ("results-budget-qwen3.5-9b", False, "qwen3.5:9b"),
+    "lfm2.5:8b@b32-think": (
+        "results-budget-lfm2.5-8b-thinking", True, "lfm2.5:8b"),
+    "qwen3.5:9b@b32-think-budget": (
+        "results-budget-qwen3.5-9b-thinking", True, "qwen3.5:9b"),
+    "gemma4:latest@b32": ("results-budget-gemma4", None, "gemma4:latest"),
 }
 
 #: Registry-key marker for the thinking-on track (see REPLICATION_MODELS).
@@ -248,6 +314,10 @@ THINKING_BUDGET_OVERRIDES: dict[str, int] = {
     # is the smallest power-of-two headroom above the observed deliberation
     # cost. num_ctx stays 16384, so prompt + generation still fit the context.
     "qwen3.5:9b@think-budget": 8192,
+    # Budget track: the qwen3.5:9b thinking-on sweep carries its sealed
+    # counterpart's raised generation budget (same rationale, same confound
+    # disclosure — see CHANGELOG-budget-track-DRAFT.md).
+    "qwen3.5:9b@b32-think-budget": 8192,
 }
 
 
@@ -293,6 +363,10 @@ def config_for_model(model: str) -> ExperimentConfig:
     ``num_predict`` is the locked 2048 unless the KEY appears in
     :data:`THINKING_BUDGET_OVERRIDES`, in which case that condition's
     pre-registered raised budget is used (and is hashed into its manifest).
+
+    ``budget_track`` is True only for "@b32" keys (see
+    :func:`is_budget_track_key`); every other key constructs byte-identically
+    to the pre-b32 code path.
     """
     import dataclasses
 
@@ -303,4 +377,5 @@ def config_for_model(model: str) -> ExperimentConfig:
         think=think,
         num_predict=THINKING_BUDGET_OVERRIDES.get(model, DEFAULT_CONFIG.num_predict),
         results_dir=EXPERIMENTS_DIR / dirname,
+        budget_track=is_budget_track_key(model),
     )
