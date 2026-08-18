@@ -1,0 +1,28 @@
+
+=== results-budget-granite4.1-8b / single: 1150 runs ===
+tool calls/run: min=1 median=4 max=7; zero-tool runs=0/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+label prior: {'escalate': 19, 'dismiss': 32, 'investigate': 9} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 60.0%; MV-acc=0.300; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=investigate 78.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 70.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=investigate 80.4%; MV-acc=0.340; best-constant-baseline=0.520  [DEGENERATE — annotate]
+  t07-varied: modal=investigate 83.5%; MV-acc=0.260; best-constant-baseline=0.520  [DEGENERATE — annotate]
+
+=== results-budget-granite4.1-8b / mas: 1150 runs ===
+tool calls/run: min=4 median=5 max=8; zero-tool runs=0/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+[PASS] node data: dead 0/1150 (0.0%)
+[PASS] node policy_risk: dead 0/1150 (0.0%)
+[PASS] node data: EMPTY output 0/1150 (0.0%) despite tool calls
+[PASS] node policy_risk: EMPTY output 0/1150 (0.0%) despite tool calls
+[PASS] node reporting: EMPTY output 0/1150 (0.0%) despite tool calls
+label prior: {'escalate': 19, 'dismiss': 32, 'investigate': 9} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 68.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=investigate 76.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 70.0%; MV-acc=0.100; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=investigate 74.0%; MV-acc=0.380; best-constant-baseline=0.520  [DEGENERATE — annotate]
+  t07-varied: modal=investigate 75.5%; MV-acc=0.320; best-constant-baseline=0.520  [DEGENERATE — annotate]
+
+==================================================
+SEAL CHECKS: ALL PASS

@@ -1,5 +1,46 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-18 (evening) — granite4.1@b32 SEALED; the control model FALSIFIES the starvation-relief prediction and exposes a design confound
+
+Two budget-track sweeps sealed: `qwen2.5:7b-instruct@b32` (2,300/2,300) and
+`granite4.1:8b@b32` (2,300/2,300), both seal-checks ALL PASS.
+
+**Pre-stated prediction, recorded 2026-08-18 at pre-registration: granite4.1 was chosen
+as the control because its pipeline hit the uniform 8-turn cap in 5 of 1,150 runs, so
+the budget manipulation should be inert and its results should not move.**
+
+**The prediction failed.** granite pipeline pass^1 rose 0.289 -> 0.393 at the primary
+condition, paired per-case difference +0.104 (bootstrap 95% CI [+0.061, +0.149],
+permutation p<0.001); majority-vote accuracy 0.220 -> 0.320; DAR fell 0.845 -> 0.743.
+Its single arm did NOT move (+0.017, CI [-0.009, +0.044], p=0.25). Cap hits at the new
+ceiling: 0/1,150.
+
+**Consequence: the track confounds two manipulations and the control isolates which one
+acts.** v2b changed (a) per-role budget sizes and (b) disclosure of the budget in every
+agent's prompt. For granite, (a) was inert by construction, so its entire pipeline gain
+is attributable to (b). Supporting asymmetry: on qwen2.5:7b, where the cap DID bind 33.1%
+of pipeline runs, the pipeline gain was SMALLER (+0.045, CI [+0.005, +0.084], p=0.024)
+than on the model where it never bound. Relieving starvation is therefore neither
+necessary nor sufficient for the improvement.
+
+**Correction to the 2026-08-17 mechanism entry.** That entry framed per-node cap
+exhaustion as "the dominant mechanism behind empty MAS node outputs" — which remains
+true for the empty-output phenomenon itself (417/417 muse runs at exactly 8 data-node
+calls). It is NOT the dominant mechanism behind the arm-difference magnitudes, and no
+claim that raising budgets explains accuracy changes is supported. Disclosure appears to
+act more strongly than size, and specifically on the pipeline arm: an agent occupying one
+stage has no view of the whole task by which to judge sufficiency, and the instruction
+supplies it.
+
+**Not claimed, and pre-registered as future work:** separating (a) from (b) requires a
+disclosure-only condition at the original 8-turn cap. It is stated as a limitation in
+Chapter 4, not resolved.
+
+**What the track DOES establish so far:** the single-versus-pipeline difference is not an
+artefact of the iteration constraint. It persists and widens once the constraint is
+lifted, on both sealed models (qwen2.5:7b pipeline advantage +0.156 -> +0.174; granite
+from -0.010 to +0.077 in favour of the pipeline).
+
 ## 2026-08-18 (later) — DECLARED INCIDENT: duplicate runner pairs on results-budget-qwen2.5-7b; journals QUARANTINED, sweep RESTARTED from zero
 
 During the owner-authorized pause-purge-resume sequence this morning, the queue was
