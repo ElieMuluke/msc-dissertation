@@ -41,8 +41,12 @@ for KEY in "${KEYS[@]}"; do
   DIR=$($PY -c "from experiments.config import config_for_model; print(config_for_model('$KEY').results_dir)")
   log "=== $KEY -> $DIR ==="
 
-  $PY -m experiments.harness.manifest --model "$KEY" >> "$LOG" 2>&1 \
-    || { log "MANIFEST FAIL $KEY — skipping"; continue; }
+  if [ -f "$DIR/manifest.json" ]; then
+    log "manifest exists $KEY — reusing (no runs journalled yet or resuming)"
+  else
+    $PY -m experiments.harness.manifest --model "$KEY" >> "$LOG" 2>&1 \
+      || { log "MANIFEST FAIL $KEY — skipping"; continue; }
+  fi
 
   if $PY -m experiments.harness.mini_gates --model "$KEY" >> "$LOG" 2>&1; then
     log "gates PASS $KEY"
@@ -51,21 +55,22 @@ for KEY in "${KEYS[@]}"; do
     continue
   fi
 
+  # DIR is ABSOLUTE (config_for_model returns a resolved path) — use it as-is.
   $PY -m experiments.harness.runner --arm single --model "$KEY" \
-      >> "$B/experiments/$DIR/runner-single.log" 2>&1 &
+      >> "$DIR/runner-single.log" 2>&1 &
   P1=$!
   $PY -m experiments.harness.runner --arm mas --model "$KEY" \
-      >> "$B/experiments/$DIR/runner-mas.log" 2>&1 &
+      >> "$DIR/runner-mas.log" 2>&1 &
   P2=$!
   log "runners launched $KEY (single=$P1 mas=$P2)"
   wait $P1; R1=$?
   wait $P2; R2=$?
-  S=$(wc -l < "$B/experiments/$DIR/journal-single.jsonl" 2>/dev/null || echo 0)
-  M=$(wc -l < "$B/experiments/$DIR/journal-mas.jsonl" 2>/dev/null || echo 0)
+  S=$(wc -l < "$DIR/journal-single.jsonl" 2>/dev/null || echo 0)
+  M=$(wc -l < "$DIR/journal-mas.jsonl" 2>/dev/null || echo 0)
   log "SWEEP DONE $KEY single=$S/1150($R1) mas=$M/1150($R2)"
 
-  $PY -m experiments.analysis.seal_checks "$B/experiments/$DIR" \
-      > "$B/experiments/$DIR/seal-checks.txt" 2>&1
+  $PY -m experiments.analysis.seal_checks "$DIR" \
+      > "$DIR/seal-checks.txt" 2>&1
   log "seal checks $KEY (exit $?)"
 done
 
