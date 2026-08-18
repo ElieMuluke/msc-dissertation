@@ -1,7 +1,7 @@
 {
   "registry_key": "qwen2.5:7b-instruct@b32",
   "model": "qwen2.5:7b-instruct",
-  "date": "2026-08-18T10:03:59Z",
+  "date": "2026-08-18T10:34:11Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -30,7 +30,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 6.66,
+        "wall_s": 7.37,
         "prompt_tokens": 46,
         "completion_tokens": 3
       },
@@ -44,7 +44,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 11.58,
+        "wall_s": 0.37,
         "prompt_tokens": 46,
         "completion_tokens": 3
       },
@@ -58,7 +58,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 12.12,
+        "wall_s": 0.34,
         "prompt_tokens": 46,
         "completion_tokens": 3
       },
@@ -72,7 +72,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 12.13,
+        "wall_s": 0.34,
         "prompt_tokens": 46,
         "completion_tokens": 3,
         "verdict": true
@@ -82,7 +82,7 @@
         "http_ok": false,
         "status": 400,
         "error_body": "{\"error\":\"\\\"qwen2.5:7b-instruct\\\" does not support thinking\"}",
-        "wall_s": 0.09
+        "wall_s": 0.1
       }
     ]
   },
@@ -93,43 +93,43 @@
     "content_pass": true,
     "thinking_pass": true,
     "sha256": [
-      "64e2d148c035b1db9a1334eb7bfc2a79b7d25a8eb53f00fe86eef7bd12c66db5"
+      "458d02aa7340c6518c476b09ca4d52308eb49afb5bf0dc8cf81f28d507d92a6b"
     ],
     "thinking_sha256": [
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     ],
-    "output_len": 358,
+    "output_len": 335,
     "thinking_len": 0,
     "num_predict": 512,
     "usage": [
       {
-        "wall_s": 12.55,
+        "wall_s": 0.78,
         "prompt_tokens": 95,
-        "completion_tokens": 70
+        "completion_tokens": 64
       },
       {
-        "wall_s": 13.97,
+        "wall_s": 0.81,
         "prompt_tokens": 95,
-        "completion_tokens": 70
+        "completion_tokens": 64
       },
       {
-        "wall_s": 12.71,
+        "wall_s": 0.78,
         "prompt_tokens": 95,
-        "completion_tokens": 70
+        "completion_tokens": 64
       },
       {
-        "wall_s": 13.08,
+        "wall_s": 0.73,
         "prompt_tokens": 95,
-        "completion_tokens": 70
+        "completion_tokens": 64
       },
       {
-        "wall_s": 13.35,
+        "wall_s": 0.7,
         "prompt_tokens": 95,
-        "completion_tokens": 70
+        "completion_tokens": 64
       }
     ],
-    "mean_wall_s": 13.13,
-    "mean_completion_tokens": 70.0
+    "mean_wall_s": 0.76,
+    "mean_completion_tokens": 64.0
   },
   "pilot": {
     "pass": true,
@@ -142,13 +142,13 @@
         "decisions": [
           "dismiss",
           "dismiss",
-          "investigate",
+          "escalate",
           "investigate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 4.13,
-        "mean_prompt_tokens": 2292.5,
-        "mean_completion_tokens": 204.5,
+        "mean_wall_clock_s": 2.35,
+        "mean_prompt_tokens": 2300.5,
+        "mean_completion_tokens": 197.8,
         "inline_reasoning_outputs": 0
       },
       "mas": {
@@ -161,12 +161,12 @@
           "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 22.63,
-        "mean_prompt_tokens": 7208.2,
-        "mean_completion_tokens": 1166.5,
+        "mean_wall_clock_s": 12.67,
+        "mean_prompt_tokens": 7761.5,
+        "mean_completion_tokens": 1316.2,
         "inline_reasoning_outputs": 0
       }
     },
-    "scratch_dir": "/tmp/mini-gate-qwen2.5-7b-instruct-b32-7myuried"
+    "scratch_dir": "/tmp/mini-gate-qwen2.5-7b-instruct-b32-vhlj0zjw"
   }
 }
