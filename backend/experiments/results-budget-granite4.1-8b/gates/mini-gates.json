@@ -1,0 +1,172 @@
+{
+  "registry_key": "granite4.1:8b@b32",
+  "model": "granite4.1:8b",
+  "date": "2026-08-18T14:30:08Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "track": "thinking-off",
+  "configured_think": null,
+  "expect_thinking": false,
+  "expect_thinking_source": "inferred from config.think",
+  "ollama_version": {
+    "single": "0.32.9",
+    "mas": "0.32.9"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "expect_thinking": false,
+    "criterion": "no message.thinking AND no inline reasoning markup in content",
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 9.49,
+        "prompt_tokens": 23,
+        "completion_tokens": 2
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.23,
+        "prompt_tokens": 23,
+        "completion_tokens": 2
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.23,
+        "prompt_tokens": 23,
+        "completion_tokens": 2
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "71",
+        "wall_s": 0.24,
+        "prompt_tokens": 23,
+        "completion_tokens": 2,
+        "verdict": true
+      },
+      {
+        "think_param": true,
+        "http_ok": false,
+        "status": 400,
+        "error_body": "{\"error\":\"\\\"granite4.1:8b\\\" does not support thinking\"}",
+        "wall_s": 0.09
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "expect_thinking": false,
+    "content_pass": true,
+    "thinking_pass": true,
+    "sha256": [
+      "92dbf5158ce4d2c8908b2860595fb2685fe4d5672ac317cc0d3cd4071f914c31"
+    ],
+    "thinking_sha256": [
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ],
+    "output_len": 586,
+    "thinking_len": 0,
+    "num_predict": 512,
+    "usage": [
+      {
+        "wall_s": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 106
+      },
+      {
+        "wall_s": 1.01,
+        "prompt_tokens": 69,
+        "completion_tokens": 106
+      },
+      {
+        "wall_s": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 106
+      },
+      {
+        "wall_s": 0.95,
+        "prompt_tokens": 69,
+        "completion_tokens": 106
+      },
+      {
+        "wall_s": 0.92,
+        "prompt_tokens": 69,
+        "completion_tokens": 106
+      }
+    ],
+    "mean_wall_s": 0.98,
+    "mean_completion_tokens": 106.0
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "inline_reasoning_outputs": 0,
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 2.96,
+        "mean_prompt_tokens": 3737.0,
+        "mean_completion_tokens": 238.8,
+        "inline_reasoning_outputs": 0
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 10.01,
+        "mean_prompt_tokens": 8032.0,
+        "mean_completion_tokens": 824.2,
+        "inline_reasoning_outputs": 0
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-granite4.1-8b-b32-qvfy5oyv"
+  }
+}
