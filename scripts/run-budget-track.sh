@@ -14,6 +14,18 @@ cd "$B"
 
 log() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$LOG"; }
 
+# HARD GUARD (added after the 2026-08-18 duplicate-runner incident): never start
+# while ANY harness runner is alive — a second pair interleaving with a live one
+# writes duplicate run keys into the journal and invalidates the sweep.
+if pgrep -f "experiments\.harness\.runner" | grep -qv "^$$\$"; then
+  ALIVE=$(pgrep -fa "experiments\.harness\.runner" | grep -v run-budget-track || true)
+  if [ -n "$ALIVE" ]; then
+    log "ABORT: live runner processes detected; refusing to start:"
+    log "$ALIVE"
+    exit 1
+  fi
+fi
+
 # ---- 1. wait for the muse@think single arm to finish ------------------------
 THINK=$B/experiments/results-muse-glimmer-30b-thinking
 log "queue start; waiting for muse@think single arm to seal"

@@ -40,7 +40,7 @@ PERTS = Path(__file__).resolve().parents[1] / "perturbation_cases.json"
 DATA_TOOLS = {"check_sanctions_list", "get_customer_profile", "search_precedents"}
 POLICY_TOOLS = {"calculate_risk_score"}
 
-OUTCOMES = ("escalate", "investigate", "dismiss", "malformed")
+from experiments.config import OUTCOMES  # canonical order: escalate, dismiss, investigate, malformed
 
 
 def load_labels() -> dict[str, str]:

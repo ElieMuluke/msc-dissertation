@@ -1,5 +1,24 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-18 (later) — DECLARED INCIDENT: duplicate runner pairs on results-budget-qwen2.5-7b; journals QUARANTINED, sweep RESTARTED from zero
+
+During the owner-authorized pause-purge-resume sequence this morning, the queue was
+relaunched before the previous runner pair had fully exited (their SIGINT shutdown was
+still draining an in-flight request). Two runner pairs then wrote the qwen2.5:7b@b32
+journals concurrently from 10:07:58Z: at detection (independent master-report
+recomputation), 288 duplicate-key lines (single) and 50 (MAS), including 68+10
+duplicated keys with differing decisions at identical seed and temperature. The
+contaminated journals CANNOT support a valid v2b measurement and are quarantined
+untouched at `results-budget-qwen2.5-7b/quarantine-dup-runners-20260818/` as evidence.
+No other directory is affected (all sealed sweeps re-verified: 0 duplicates).
+
+Remedies applied before restart: (1) the queue script now hard-aborts if ANY live
+harness runner is detected at startup; (2) `analysis/seal_checks{,_muse_glimmer}.py`
+now import the canonical `OUTCOMES` order from config instead of a hardcoded copy
+whose dismiss/investigate order differed (master-report finding; affects only
+tie-break display in seal checks, no sealed number). The sweep restarts from zero
+against the unchanged manifest and gate evidence; seeds and plan are untouched.
+
 ## 2026-08-18 — PRE-REGISTERED: budget-sensitivity track v2b LAUNCHED (owner GO)
 
 

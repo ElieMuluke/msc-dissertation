@@ -36,7 +36,7 @@ def load_labels() -> dict[str, str]:
     return labels
 
 
-OUTCOMES = ("escalate", "investigate", "dismiss", "malformed")
+from experiments.config import OUTCOMES  # canonical order: escalate, dismiss, investigate, malformed
 
 
 def majority(decisions: list[str]) -> str:
