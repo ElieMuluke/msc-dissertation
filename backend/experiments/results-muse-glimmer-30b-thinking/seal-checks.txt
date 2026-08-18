@@ -1,0 +1,25 @@
+
+=== results-muse-glimmer-30b-thinking / single: 1150 runs ===
+tool calls/run: min=0 median=6 max=8; zero-tool runs=3/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+label prior: {'escalate': 19, 'dismiss': 32, 'investigate': 9} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 50.0%; MV-acc=0.300; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=investigate 67.6%; MV-acc=0.340; best-constant-baseline=0.520  [DEGENERATE — annotate]
+  t07-varied: modal=investigate 68.9%; MV-acc=0.320; best-constant-baseline=0.520  [DEGENERATE — annotate]
+
+=== results-muse-glimmer-30b-thinking / mas: 201 runs ===
+tool calls/run: min=7 median=9 max=10; zero-tool runs=0/201
+[PASS] arm-level tool-liveness (total calls > 0)
+[PASS] node data: dead 0/201 (0.0%)
+[PASS] node policy_risk: dead 6/201 (3.0%)
+[DISCLOSE] node data: EMPTY output 191/201 (95.0%) despite tool calls
+[PASS] node policy_risk: EMPTY output 0/201 (0.0%) despite tool calls
+[PASS] node reporting: EMPTY output 0/201 (0.0%) despite tool calls
+          severed-channel runs 191/201 (95.0%); decisions {'investigate': 191}
+label prior: {'escalate': 13, 'dismiss': 21, 'investigate': 7} (modal dismiss 51.2%)
+  t0-fixed: modal=investigate 99.5%; MV-acc=0.195; best-constant-baseline=0.512  [DEGENERATE — annotate]
+
+==================================================
+SEAL CHECKS: ALL PASS
