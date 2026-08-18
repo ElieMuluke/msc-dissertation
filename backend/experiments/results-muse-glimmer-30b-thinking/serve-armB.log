@@ -130120,3 +130120,4 @@ slot print_timing: id  0 | task 899876 | n_decoded =    527, tg =  28.00 t/s, tg
 srv          stop: cancel task, id_task = 899876
 slot      release: id  0 | task 899876 | stop processing: n_tokens = 719, truncated = 0
 srv  update_slots: all slots are idle
+time=2026-08-18T01:15:13.149+01:00 level=INFO source=model_recommendations.go:177 msg="model recommendations cache sleep scheduled" wait=3h12m43.115585052s consecutive_failures=0
