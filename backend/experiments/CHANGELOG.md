@@ -1,5 +1,23 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-19 — DECLARED DEVIATION: unplanned machine outage during qwen3.5:9b@b32-think-budget; resumed losslessly
+
+The machine powered off unexpectedly at approximately 2026-08-19T14:34Z during the
+fifth budget-track sweep. Both pinned arm servers and both runners died. Journals
+survived intact (fsync-per-append): single 791/1150, mas 301/1150, no torn tails.
+
+Servers restarted on the same infrastructure context (Ollama 0.32.9 both arms, no
+version drift across the outage) and the queue relaunched at 14:35Z. It re-verified
+the four already-sealed budget sweeps (each 1150/1150, seal checks re-run, all PASS)
+before reaching the live one. Runners confirmed resumed at 15:54:59Z with
+`completed=791 todo=359` (single) and `completed=301 todo=849` (mas), matching the
+journals exactly.
+
+Standard consequence, identical to the 2026-08-14 reboot and the 2026-08-17 shutdown:
+one cold-cache model-load boundary per arm at the resume point, warm-up discard applied
+per protocol, resume-point run keys identifiable from the timestamp gap. No plan, seed,
+prompt, budget or config change.
+
 ## 2026-08-18 (evening) — granite4.1@b32 SEALED; the control model FALSIFIES the starvation-relief prediction and exposes a design confound
 
 Two budget-track sweeps sealed: `qwen2.5:7b-instruct@b32` (2,300/2,300) and
