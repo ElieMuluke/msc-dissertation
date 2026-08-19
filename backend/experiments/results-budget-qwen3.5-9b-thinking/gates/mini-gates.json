@@ -1,7 +1,7 @@
 {
   "registry_key": "qwen3.5:9b@b32-think-budget",
   "model": "qwen3.5:9b",
-  "date": "2026-08-19T06:25:55Z",
+  "date": "2026-08-19T14:45:00Z",
   "servers": {
     "single": "http://localhost:11437",
     "mas": "http://localhost:11435"
@@ -30,7 +30,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 12.72,
+        "wall_s": 10.8,
         "prompt_tokens": 29,
         "completion_tokens": 3
       },
@@ -44,7 +44,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 0.64,
+        "wall_s": 0.55,
         "prompt_tokens": 29,
         "completion_tokens": 3
       },
@@ -58,7 +58,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 0.6,
+        "wall_s": 0.59,
         "prompt_tokens": 29,
         "completion_tokens": 3
       },
@@ -72,7 +72,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 12.26,
+        "wall_s": 11.37,
         "prompt_tokens": 27,
         "completion_tokens": 1329
       },
@@ -86,7 +86,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 11.84,
+        "wall_s": 11.5,
         "prompt_tokens": 27,
         "completion_tokens": 1329,
         "verdict": true
@@ -116,7 +116,7 @@
         "inline_think_tags": false,
         "content_nonempty": true,
         "content_head": "71",
-        "wall_s": 11.35,
+        "wall_s": 11.38,
         "prompt_tokens": 27,
         "completion_tokens": 1329,
         "verdict": true
@@ -140,32 +140,32 @@
     "num_predict": 8192,
     "usage": [
       {
-        "wall_s": 16.85,
+        "wall_s": 16.94,
         "prompt_tokens": 76,
         "completion_tokens": 2023
       },
       {
-        "wall_s": 16.68,
+        "wall_s": 16.74,
         "prompt_tokens": 76,
         "completion_tokens": 2023
       },
       {
-        "wall_s": 16.71,
+        "wall_s": 16.73,
         "prompt_tokens": 76,
         "completion_tokens": 2023
       },
       {
-        "wall_s": 16.54,
+        "wall_s": 16.73,
         "prompt_tokens": 76,
         "completion_tokens": 2023
       },
       {
-        "wall_s": 16.61,
+        "wall_s": 16.76,
         "prompt_tokens": 76,
         "completion_tokens": 2023
       }
     ],
-    "mean_wall_s": 16.68,
+    "mean_wall_s": 16.78,
     "mean_completion_tokens": 2023.0
   },
   "pilot": {
@@ -183,7 +183,7 @@
           "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 20.12,
+        "mean_wall_clock_s": 19.66,
         "mean_prompt_tokens": 10417.0,
         "mean_completion_tokens": 2003.5,
         "inline_reasoning_outputs": 0
@@ -198,12 +198,12 @@
           "escalate"
         ],
         "errors": [],
-        "mean_wall_clock_s": 81.53,
+        "mean_wall_clock_s": 83.52,
         "mean_prompt_tokens": 10462.0,
         "mean_completion_tokens": 9262.0,
         "inline_reasoning_outputs": 0
       }
     },
-    "scratch_dir": "/tmp/mini-gate-qwen3.5-9b-b32-think-budget-jau1voth"
+    "scratch_dir": "/tmp/mini-gate-qwen3.5-9b-b32-think-budget-thnj2f23"
   }
 }
