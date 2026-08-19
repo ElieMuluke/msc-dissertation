@@ -1,0 +1,29 @@
+
+=== results-budget-lfm2.5-8b-thinking / single: 1150 runs ===
+tool calls/run: min=0 median=3 max=6; zero-tool runs=76/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+label prior: {'escalate': 19, 'dismiss': 32, 'investigate': 9} (modal dismiss 53.3%)
+  pert-t0: modal=dismiss 40.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=escalate 34.0%; MV-acc=0.600; best-constant-baseline=0.600  [ok]
+  pert-t10: modal=dismiss 44.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=dismiss 46.0%; MV-acc=0.600; best-constant-baseline=0.520  [ok]
+  t07-varied: modal=dismiss 37.5%; MV-acc=0.680; best-constant-baseline=0.520  [ok]
+
+=== results-budget-lfm2.5-8b-thinking / mas: 1150 runs ===
+tool calls/run: min=0 median=6 max=12; zero-tool runs=36/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+[PASS] node data: dead 79/1150 (6.9%)
+[PASS] node policy_risk: dead 374/1150 (32.5%)  <-- DISCLOSE (>10%)
+[PASS] node data: EMPTY output 17/1150 (1.5%) despite tool calls
+[PASS] node policy_risk: EMPTY output 29/1150 (2.5%) despite tool calls
+[PASS] node reporting: EMPTY output 0/1150 (0.0%) despite tool calls
+          severed-channel runs 46/1150 (4.0%); decisions {'escalate': 14, 'dismiss': 6, 'malformed': 2, 'investigate': 24}
+label prior: {'escalate': 19, 'dismiss': 32, 'investigate': 9} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 60.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=escalate 44.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 38.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=escalate 32.0%; MV-acc=0.440; best-constant-baseline=0.520  [DEGENERATE — annotate]
+  t07-varied: modal=investigate 34.5%; MV-acc=0.480; best-constant-baseline=0.520  [DEGENERATE — annotate]
+
+==================================================
+SEAL CHECKS: ALL PASS
