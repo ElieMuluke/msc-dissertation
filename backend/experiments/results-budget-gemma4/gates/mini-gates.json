@@ -1,0 +1,179 @@
+{
+  "registry_key": "gemma4:latest@b32",
+  "model": "gemma4:latest",
+  "date": "2026-08-20T09:54:16Z",
+  "servers": {
+    "single": "http://localhost:11437",
+    "mas": "http://localhost:11435"
+  },
+  "track": "thinking-off",
+  "configured_think": null,
+  "expect_thinking": false,
+  "expect_thinking_source": "inferred from config.think",
+  "ollama_version": {
+    "single": "0.32.9",
+    "mas": "0.32.9"
+  },
+  "think_behavior": {
+    "pass": true,
+    "configured_think": null,
+    "expect_thinking": false,
+    "criterion": "no message.thinking AND no inline reasoning markup in content",
+    "records": [
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "Seventyone",
+        "wall_s": 20.38,
+        "prompt_tokens": 26,
+        "completion_tokens": 4
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "Seventyone",
+        "wall_s": 0.67,
+        "prompt_tokens": 26,
+        "completion_tokens": 4
+      },
+      {
+        "think_param": false,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "Seventyone",
+        "wall_s": 0.68,
+        "prompt_tokens": 26,
+        "completion_tokens": 4
+      },
+      {
+        "think_param": null,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "Seventy-one",
+        "wall_s": 0.73,
+        "prompt_tokens": 33,
+        "completion_tokens": 5,
+        "verdict": true
+      },
+      {
+        "think_param": true,
+        "http_ok": true,
+        "thinking_field_present": false,
+        "thinking_nonempty": false,
+        "thinking_len": 0,
+        "thinking_head": "",
+        "inline_think_tags": false,
+        "content_nonempty": true,
+        "content_head": "Seventy-one",
+        "wall_s": 0.74,
+        "prompt_tokens": 33,
+        "completion_tokens": 5
+      }
+    ]
+  },
+  "determinism": {
+    "pass": true,
+    "n": 5,
+    "expect_thinking": false,
+    "content_pass": true,
+    "thinking_pass": true,
+    "sha256": [
+      "cbc9f6982597370f3db52c93509b036cf179e4e9129d921d1842ca07a1fcdb80"
+    ],
+    "thinking_sha256": [
+      "843eae0d66c3b362034cb404c4371a11176d09c09e093b990f18c54d8e739f4d"
+    ],
+    "output_len": 760,
+    "thinking_len": 940,
+    "num_predict": 512,
+    "usage": [
+      {
+        "wall_s": 3.32,
+        "prompt_tokens": 83,
+        "completion_tokens": 349
+      },
+      {
+        "wall_s": 3.32,
+        "prompt_tokens": 83,
+        "completion_tokens": 349
+      },
+      {
+        "wall_s": 3.29,
+        "prompt_tokens": 83,
+        "completion_tokens": 349
+      },
+      {
+        "wall_s": 3.31,
+        "prompt_tokens": 83,
+        "completion_tokens": 349
+      },
+      {
+        "wall_s": 3.26,
+        "prompt_tokens": 83,
+        "completion_tokens": 349
+      }
+    ],
+    "mean_wall_s": 3.3,
+    "mean_completion_tokens": 349.0
+  },
+  "pilot": {
+    "pass": true,
+    "valid_total": "8/8",
+    "inline_reasoning_outputs": 0,
+    "arms": {
+      "single": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "dismiss",
+          "dismiss",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 13.27,
+        "mean_prompt_tokens": 3542.5,
+        "mean_completion_tokens": 1393.2,
+        "inline_reasoning_outputs": 0
+      },
+      "mas": {
+        "runs": 4,
+        "valid": 4,
+        "decisions": [
+          "escalate",
+          "investigate",
+          "escalate",
+          "escalate"
+        ],
+        "errors": [],
+        "mean_wall_clock_s": 39.17,
+        "mean_prompt_tokens": 6643.2,
+        "mean_completion_tokens": 4284.8,
+        "inline_reasoning_outputs": 0
+      }
+    },
+    "scratch_dir": "/tmp/mini-gate-gemma4-latest-b32-8_ocpg78"
+  }
+}
