@@ -1,0 +1,29 @@
+
+=== results-budget-qwen3.5-9b-thinking / single: 1150 runs ===
+tool calls/run: min=0 median=6 max=14; zero-tool runs=5/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+label prior: {'investigate': 9, 'escalate': 19, 'dismiss': 32} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=investigate 50.0%; MV-acc=0.400; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 56.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=investigate 42.0%; MV-acc=0.560; best-constant-baseline=0.520  [ok]
+  t07-varied: modal=investigate 49.6%; MV-acc=0.580; best-constant-baseline=0.520  [ok]
+
+=== results-budget-qwen3.5-9b-thinking / mas: 1150 runs ===
+tool calls/run: min=0 median=8 max=24; zero-tool runs=11/1150
+[PASS] arm-level tool-liveness (total calls > 0)
+[PASS] node data: dead 19/1150 (1.7%)
+[PASS] node policy_risk: dead 56/1150 (4.9%)
+[PASS] node data: EMPTY output 34/1150 (3.0%) despite tool calls
+[PASS] node policy_risk: EMPTY output 39/1150 (3.4%) despite tool calls
+[PASS] node reporting: EMPTY output 2/1150 (0.2%) despite tool calls
+          severed-channel runs 73/1150 (6.3%); decisions {'escalate': 22, 'investigate': 38, 'dismiss': 10, 'malformed': 3}
+label prior: {'investigate': 9, 'escalate': 19, 'dismiss': 32} (modal dismiss 53.3%)
+  pert-t0: modal=investigate 70.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t05: modal=investigate 64.0%; MV-acc=0.300; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  pert-t10: modal=investigate 62.0%; MV-acc=0.200; best-constant-baseline=0.600  [DEGENERATE — annotate]
+  t0-fixed: modal=investigate 66.0%; MV-acc=0.260; best-constant-baseline=0.520  [DEGENERATE — annotate]
+  t07-varied: modal=investigate 66.9%; MV-acc=0.280; best-constant-baseline=0.520  [DEGENERATE — annotate]
+
+==================================================
+SEAL CHECKS: ALL PASS
