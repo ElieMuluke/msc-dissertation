@@ -1,5 +1,44 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-21 — BUDGET TRACK v2b COMPLETE: all six sweeps sealed (13,800 runs); six models, six response profiles
+
+Queue completed 2026-08-21T02:10:15Z. Sweeps three to six sealed after the 19-Aug
+outage entry: qwen3.5:9b@b32 (commit 422e780), lfm2.5:8b@b32-think (20d092d),
+qwen3.5:9b@b32-think-budget (2e64b19), gemma4:latest@b32 (311d977). Each 2,300/2,300,
+seal checks ALL PASS. Corpus now 42,550 scored runs (12 v2 sweeps + muse@think
+single-arm 1,150 + 201 gated MAS runs retained as evidence + 6 v2b sweeps).
+
+Paired v2->v2b results (t07-varied pass^1; bootstrap CI + permutation, per-case):
+- qwen2.5:7b      single +0.028 p=.27      MAS +0.045 p=.022-.024 (seed-dependent 5k perms)
+- granite4.1:8b   single +0.017 p=.24      MAS +0.104 p<.001
+- qwen3.5:9b      single +0.071 p=.023     MAS +0.035 p=.031
+- lfm2.5@think    single +0.009 p=.75      MAS +0.039 p=.22
+- qwen3.5@think   single -0.025 p=.24      MAS +0.035 p=.21
+- gemma4          single -0.135 p<.001     MAS +0.011 p=.34
+
+Findings, in the order the evidence forced them:
+1. Starvation relief works where starvation existed (qwen2.5:7b cap hits 33.1% -> 2.9%)
+   but is neither necessary nor sufficient for accuracy gains.
+2. The granite control FALSIFIED the starvation-relief prediction (entry 2026-08-18
+   evening): its gain is attributable to budget DISCLOSURE. Confound (size vs
+   disclosure) declared; disclosure-only condition at cap 8 is the pre-specified
+   follow-up, not run.
+3. Disclosure's beneficiary is model-dependent: pipeline (granite, qwen2.5:7b),
+   monolith (qwen3.5-off), neither (both thinking models), and on gemma4 it HARMS
+   the corpus's best configuration (single 0.552 -> 0.417, CI [-0.204,-0.063],
+   p<.001, tokens +51%). Budget disclosure is not a free intervention.
+4. Both thinking models consumed the headroom without converting it (tokens +44-55%;
+   qwen3.5@think MAS cap hits ROSE 35 -> 46). Two-model observation, flagged as
+   suggestive: deliberation absorbs whatever headroom it is given.
+5. The pre-registered question resolves: no model reverses its arm ordering under an
+   equalised, disclosed budget. The single-vs-MAS difference is not an artefact of
+   the iteration constraint.
+
+Multiplicity: 24 paired tests were run across the track (2 arms x 6 models x
+{pass^1, DAR}); a Holm-Bonferroni pass is owed with the full analysis
+(docs/BUDGET-TRACK-ANALYSIS.md, in preparation) and findings that do not survive it
+must be downgraded there.
+
 ## 2026-08-19 — DECLARED DEVIATION: unplanned machine outage during qwen3.5:9b@b32-think-budget; resumed losslessly
 
 The machine powered off unexpectedly at approximately 2026-08-19T14:34Z during the
