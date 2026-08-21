@@ -30,6 +30,8 @@ PAIRS = [
     ("granite4.1:8b", "results-granite4.1-8b", "results-budget-granite4.1-8b"),
     ("qwen3.5:9b", "results-qwen3.5-9b-ollama0326", "results-budget-qwen3.5-9b"),
     ("lfm2.5:8b (think)", "results-lfm2.5-8b-thinking", "results-budget-lfm2.5-8b-thinking"),
+    ("qwen3.5:9b (think)", "results-qwen3.5-9b-thinking-budget", "results-budget-qwen3.5-9b-thinking"),
+    ("gemma4", "results-gemma4", "results-budget-gemma4"),
 ]
 
 BLUE, ORANGE, GREY = "#2E7BC4", "#E8663A", "#8A8F98"
@@ -71,7 +73,7 @@ def paired_stats(before: dict[str, float], after: dict[str, float]):
     )
 
 
-fig, axes = plt.subplots(1, 2, figsize=(11, 5.2), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(11, 6.4), sharey=True)
 verification: list[str] = []
 
 for ax, arm, colour in ((axes[0], "single", BLUE), (axes[1], "mas", ORANGE)):
