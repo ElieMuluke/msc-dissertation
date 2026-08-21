@@ -1,5 +1,20 @@
 # Experiment changelog (pre-registration discipline)
 
+## 2026-08-21 (later) — CORRECTIONS to this morning's completion entry
+
+Two figures in the 2026-08-21 completion entry are corrected after the full analysis
+(`docs/BUDGET-TRACK-ANALYSIS.md`, script `analysis/budget_track_analysis.py`):
+- gemma4@b32 MAS p-value: stated p=.34; reproducible value is **p=.46** (stable across
+  200k permutations, 3 seeds). Delta (+0.011) and the not-significant conclusion are
+  unchanged.
+- Multiplicity family: stated as "24 paired tests"; the analysis defines the
+  pre-registered primary family as **12** (2 arms x 6 models, pass^1) with a 36-test
+  extended family (adding DAR and alpha). Under Holm on the 12-test family, exactly two
+  accuracy effects survive: granite4.1 MAS +0.104 (Holm p=.0006) and gemma4 single
+  -0.135 (Holm p=.011); qwen2.5:7b MAS and both qwen3.5-off gains are nominal only.
+  Nine effects survive in the 36-test family, six of them DAR declines.
+The write-up was corrected the same morning.
+
 ## 2026-08-21 — BUDGET TRACK v2b COMPLETE: all six sweeps sealed (13,800 runs); six models, six response profiles
 
 Queue completed 2026-08-21T02:10:15Z. Sweeps three to six sealed after the 19-Aug
