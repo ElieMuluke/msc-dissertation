@@ -95,31 +95,71 @@ results: 18 sealed sweeps of 2,300 runs each, comparing a single compliance
 agent against a four-agent pipeline on the DFAH compliance-triage benchmark.
 The locked design is in [docs/PRD-A-experiment.md](docs/PRD-A-experiment.md).
 
-Running a sweep needs a clone of the DFAH benchmark and two Ollama servers, one
-per architecture. Run everything from `backend/` with the venv active.
+### Reproducing the figures (no Ollama, no sweeps)
+
+The 18 sealed sweeps are committed, so every results figure can be rebuilt from
+the journals alone. This is the fast path and needs no GPU and no model server.
 
 ```bash
-python -m experiments.harness.gates g0        # capability + determinism gates
-python -m experiments.harness.gates g1
-python -m experiments.harness.manifest        # freeze the run matrix + seeds
-python -m experiments.harness.runner --arm single   # one process per arm
-python -m experiments.harness.runner --arm mas
+cd backend
+source .venv/bin/activate
+
+# the ground-truth labels live in the DFAH benchmark clone, outside this repo
+export DFAH_ALERTS=/path/to/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json
+
+python -m experiments.analysis.figures --out ../docs/final-figs     # Figures 5-13
+python -m experiments.analysis.figures --only fig10 fig13           # a subset
 ```
 
-The runner is checkpointed: it skips runs already journalled, so an interrupted
-sweep resumes losslessly by re-running the same command.
+Takes seconds. Writes nine PNGs covering Experiments 1-3, pass^k, temperature-zero
+and 0.7 decision changes, token cost, and decision redistribution. Every figure is
+computed from the journals plus the labels and nothing else. See
+[docs/figures.md](docs/figures.md) for what each one shows and which sweep feeds it.
 
-Analysis reads the journals only and needs no Ollama:
+Other analysis, also journal-only:
 
 ```bash
-python -m experiments.analysis.report                    # per-sweep report + figures
-python -m experiments.analysis.compare --models <keys>   # cross-model table
-python -m experiments.analysis.seal_checks <results_dir> # tool-liveness + degeneracy
-python -m experiments.analysis.figures --out ../docs/final-figs   # Figures 5-13
+python -m experiments.analysis.report                      # per-sweep report
+python -m experiments.analysis.compare --models <keys>     # cross-model table
+python -m experiments.analysis.seal_checks <results_dir>   # tool-liveness + degeneracy
 ```
 
-See [docs/figures.md](docs/figures.md) for what each figure shows and which
-sweep feeds it.
+### Running a sweep from scratch
+
+Only needed to add a model or re-measure. A sweep is 2,300 runs and takes hours.
+It needs the DFAH benchmark clone (point `DFAH_REPO` in
+`backend/experiments/config.py` at it) and **two Ollama servers**, one per
+architecture, so the arms cannot contend for the same process:
+
+```bash
+OLLAMA_HOST=127.0.0.1:11437 ollama serve &   # single-agent arm
+OLLAMA_HOST=127.0.0.1:11435 ollama serve &   # MAS arm
+```
+
+Then, from `backend/` with the venv active. `--model` takes a registry key from
+`config.REPLICATION_MODELS` (e.g. `qwen2.5:7b-instruct`, `qwen3.5:9b@think`,
+`granite4.1:8b@b32`); each key gets its own results directory.
+
+```bash
+python -m experiments.harness.gates g0                        # capability gate
+python -m experiments.harness.gates g1                        # determinism gate
+python -m experiments.harness.manifest --model <key>          # freeze run matrix + seeds
+python -m experiments.harness.mini_gates --model <key>        # per-model admission gate
+
+python -m experiments.harness.runner --arm single --model <key>   # one process per arm,
+python -m experiments.harness.runner --arm mas    --model <key>   # run both concurrently
+```
+
+The manifest is generated once and never regenerated: the runner consumes it and
+never draws its own seeds. The runner is checkpointed and skips runs already
+journalled, so an interrupted sweep resumes losslessly by re-running the same
+command. Errors and timeouts are journalled as `malformed` rather than retried.
+
+When a sweep completes, validate it before using it:
+
+```bash
+python -m experiments.analysis.seal_checks experiments/results-<name>
+```
 
 ## Features
 
