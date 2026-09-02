@@ -10,6 +10,34 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-09-02 (later) — Environment, docs, and repository maintenance
+**Done:** Created `backend/.venv` (Python 3.14.7, 213 packages from `requirements.txt`)
+and ran the suite: **306 passed, 1 skipped**. Note `uv.lock` is an empty stub (no
+`[[package]]` entries) and `pyproject.toml` carries only `[tool.pytest.ini_options]`, so
+`uv sync` has nothing to resolve — `requirements.txt` is the only real manifest.
+Rewrote `README.md`, `SETUP.md` and `backend/README.md`: prerequisites with versions
+(Python 3.14+, uv, Ollama, Node 18+, Yarn), corrected run steps, a Tests section, the
+experiment-harness and figure-regeneration commands, and a documentation index. Two
+commands in `SETUP.md` could not have worked (`source venv/bin/activate` missing the dot;
+`uv install` is not a subcommand), and both READMEs told you to copy a `.env.example` that
+does not exist — replaced with a table of the 15 environment variables the code actually
+reads, with their real defaults.
+Repository maintenance: history was rewritten and the remote force-updated, so every
+commit SHA changed. Commit authorship is normalised to a single identity. A few working
+documents are intentionally local-only and covered by `.gitignore` — do not re-add them.
+**State:** Local and remote both at the same commit; working tree clean apart from three
+untracked `docs/` files that predate this session. Experiment data verified intact against
+the pre-rewrite state by blob hash: all 46 journals and 30 manifests byte-identical, 18
+sealed sweeps × 2,300 = 41,400 runs on disk unchanged. Full-history bundles are in
+`~/backups/` if anything needs recovering.
+**Next:** Consider giving `pyproject.toml` a real `[project]` table so `uv sync` can
+reproduce the environment — the pins that guard the wire-payload tests
+(`langchain-ollama`, `langchain-core`, `ollama`, `langgraph`) currently live only in a
+comment. Fifteen citations in `docs/DEFECT-IMPACT-ANALYSIS.md` and
+`docs/RETRIEVAL-CONFIG-RECONCILIATION.md` point at a document that is no longer tracked
+and could be tidied. Remaining dissertation edits are tracked in `~/Downloads/figs/`
+(`suggested_changes.docx`, `suggested_section_4_2_2.docx`).
+
 ## 2026-09-02 — Figure regeneration from sweep journals (+ dissertation figure/Gantt work)
 **Done:** Added `backend/experiments/analysis/figures.py`, one entry point that rebuilds
 every data-derived dissertation figure (Figures 5–13) from the sweep journals and the DFAH
