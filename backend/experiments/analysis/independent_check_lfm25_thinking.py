@@ -67,10 +67,10 @@ from collections import Counter, defaultdict
 from itertools import combinations
 from pathlib import Path
 
-EXP = Path("/home/el/projects/msc-dissertation/backend/experiments")
+EXP = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments")
 RES = EXP / "results-lfm2.5-8b-thinking"
 ALERTS = Path(
-    "/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
+    "/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
 )
 PERT = EXP / "perturbation_cases.json"
 

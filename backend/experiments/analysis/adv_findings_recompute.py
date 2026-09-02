@@ -25,7 +25,7 @@ from experiments.analysis import metrics
 from experiments.harness.dfah_data import (
     ground_truth, load_primary_cases, load_perturbation_cases)
 
-BASE = Path("/home/el/projects/msc-dissertation/backend/experiments")
+BASE = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments")
 
 SWEEPS = {
     "qwen3.5-9b@0.31.1": "results",

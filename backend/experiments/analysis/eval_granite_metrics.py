@@ -11,9 +11,9 @@ import random
 from collections import Counter, defaultdict
 from itertools import combinations
 
-RES = "/home/el/projects/msc-dissertation/backend/experiments/results-granite4.1-8b"
-LABELS = "/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
-PERT = "/home/el/projects/msc-dissertation/backend/experiments/perturbation_cases.json"
+RES = "/home/eliem/Projects/ai/msc-dissertation/backend/experiments/results-granite4.1-8b"
+LABELS = "/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
+PERT = "/home/eliem/Projects/ai/msc-dissertation/backend/experiments/perturbation_cases.json"
 VALID = ("escalate", "dismiss", "investigate")
 random.seed(20260814)
 

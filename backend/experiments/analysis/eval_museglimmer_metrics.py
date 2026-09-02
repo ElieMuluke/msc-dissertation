@@ -19,7 +19,7 @@ from pathlib import Path
 
 RES = Path("experiments/results-muse-glimmer-30b")
 ALERTS = Path(
-    "/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
+    "/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
 )
 PERT = Path("experiments/perturbation_cases.json")
 ARMS = ["single", "mas"]

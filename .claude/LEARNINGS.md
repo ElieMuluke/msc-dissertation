@@ -12,6 +12,50 @@ Format per entry:
 
 ---
 
+## 2026-08-26 — /unslop and /stop-slop: don't split sentences just for clause count
+**Remark:** "now, 7.2 sounds harder to read compared to before. and it seems you did not
+use /unslop or /stop-slop . revert back" — followed by confirmation that the same
+mechanical fix had been applied across the rest of the Discussion and Conclusion chapters
+too. The applied fix (splitting every sentence with 2+ clauses into several short ones)
+made the prose choppier, not clearer, and had to be fully reverted.
+**Apply:** Dense-but-grammatically-sound academic prose (parallel "and" lists, compound
+"but...and" clauses, a colon followed by a semicolon-separated list) is not slop. Splitting
+it on sentence length or clause count alone is not what stop-slop/unslop ask for and makes
+things worse. When running these skills on manuscript prose, only fix genuine problems:
+comma splices (3+ independent clauses joined only by commas), true sentence fragments (no
+main verb), ambiguous referents ("under it" — under what?), and unnamed-but-nameable
+subjects ("the model that..." when the model is already known). Leave everything else
+exactly as written, even if a sentence runs long. When asked to re-check something already
+reverted for the same issue, apply this narrower bar before touching any text.
+
+## 2026-08-24 — Manuscript terminology: "architecture", not "arm"
+**Remark:** "I am not using the word arm, I want to use the word architecture
+(single- and multi-agent) and we should be explicit about that."
+**Apply:** In all dissertation/manuscript prose, write "the single-agent architecture"
+and "the multi-agent architecture" (or "both architectures", "per architecture"), never
+"arm/Arm A/Arm B". The code keeps `arm` with values `single`/`mas` (adapter, journals,
+manifests); when prose must reference those artifacts, bridge once at first use, e.g.
+"the harness records the architecture as `arm` (`single`/`mas`) in its journals", then
+use "architecture" throughout. Do not rename anything in code for this.
+
+## 2026-08-21 — Manuscript prose style: no em dashes, short sentences
+**Remark:** "I do not like em dashes and too long sentences... it feels hard to read
+and get the point." Also: give ONE suggestion when asked for text, not multiple choices.
+(The user invoked a "/humanize" skill that does not exist in this environment; the
+intent is plain, readable prose.)
+**Apply:** When drafting or revising dissertation/manuscript text: no em dashes
+(restructure into separate sentences or use a colon/comma); keep sentences short, one
+idea each; prefer plain wording over dense academic phrasing. When the user asks for
+suggested text, provide exactly one version, not alternatives.
+**Formatting:** Never wrap suggested manuscript text in markdown blockquotes (`>`) or
+any other prefix decoration - it breaks copy-paste. Output it as plain paragraphs.
+**Separate copy from commentary:** Always mark which part of a reply is manuscript text
+to paste and which part is commentary to read. Use a heading before each block (e.g.
+"Copy into <section>" and "Read only, not for the manuscript"). Never mix notes,
+verdicts, or rationale into the paste-ready prose.
+**Skills:** `/humanizer-zh` and `/stop-slop` are installed in ~/.claude/skills and are
+the user's preferred tools for de-AI-ing prose; load them when asked to humanize.
+
 ## 2026-07-13 — Don't commit automatically by default
 **Remark:** "I do not want you to keep on commiting automatically. it was a one time
 request." A prior turn asked for one commit per recommendation while implementing a

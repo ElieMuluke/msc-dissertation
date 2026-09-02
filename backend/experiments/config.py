@@ -19,7 +19,7 @@ REPO_ROOT = BACKEND_DIR.parent
 RESULTS_DIR = EXPERIMENTS_DIR / "results"
 
 #: DFAH benchmark clone (dfah-bench 0.1.1 source checkout).
-DFAH_REPO = Path("/home/el/projects/dfah-repo")
+DFAH_REPO = Path("/home/eliem/Projects/dfah-repo")
 ALERTS_JSON = DFAH_REPO / "econometrics/benchmarks/compliance_triage/data/alerts.json"
 PERTURBATION_JSON = EXPERIMENTS_DIR / "perturbation_cases.json"
 

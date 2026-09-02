@@ -45,8 +45,8 @@ from collections import Counter, defaultdict
 from itertools import combinations
 from pathlib import Path
 
-BASE = Path("/home/el/projects/msc-dissertation/backend/experiments")
-ALERTS = Path("/home/el/projects/dfah-repo/econometrics/benchmarks/"
+BASE = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments")
+ALERTS = Path("/home/eliem/Projects/dfah-repo/econometrics/benchmarks/"
               "compliance_triage/data/alerts.json")
 
 # (label, context-2 dir [under audit, 0.32.6], original dir [0.31.1])

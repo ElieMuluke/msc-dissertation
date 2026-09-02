@@ -54,7 +54,7 @@ from pathlib import Path
 import numpy as np
 
 EXP = Path(__file__).resolve().parents[1]
-ALERTS = Path("/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
+ALERTS = Path("/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
 PERT = EXP / "perturbation_cases.json"
 
 OUTCOMES = ("escalate", "dismiss", "investigate", "malformed")  # canonical order (config.OUTCOMES)

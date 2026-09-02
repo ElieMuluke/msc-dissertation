@@ -32,15 +32,16 @@ from collections.abc import Sequence
 from collections import Counter
 from pathlib import Path
 
-ALERTS = Path(
-    "/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
+from experiments.config import (  # OUTCOMES: escalate, dismiss, investigate, malformed
+    ALERTS_JSON,
+    OUTCOMES,
 )
+
+ALERTS = ALERTS_JSON
 PERTS = Path(__file__).resolve().parents[1] / "perturbation_cases.json"
 
 DATA_TOOLS = {"check_sanctions_list", "get_customer_profile", "search_precedents"}
 POLICY_TOOLS = {"calculate_risk_score"}
-
-from experiments.config import OUTCOMES  # canonical order: escalate, dismiss, investigate, malformed
 
 
 def load_labels() -> dict[str, str]:

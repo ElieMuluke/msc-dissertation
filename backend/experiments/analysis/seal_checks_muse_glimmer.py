@@ -19,7 +19,7 @@ from collections import Counter
 from pathlib import Path
 
 RESULTS = Path(sys.argv[1] if len(sys.argv) > 1 else "experiments/results-muse-glimmer-30b")
-ALERTS = Path("/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
+ALERTS = Path("/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
 PERTS = Path("experiments/perturbation_cases.json")
 
 DATA_TOOLS = {"check_sanctions_list", "get_customer_profile", "search_precedents"}

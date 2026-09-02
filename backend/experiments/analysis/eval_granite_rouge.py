@@ -11,7 +11,7 @@ import os
 from collections import defaultdict
 from itertools import combinations
 
-RES = "/home/el/projects/msc-dissertation/backend/experiments/results-granite4.1-8b"
+RES = "/home/eliem/Projects/ai/msc-dissertation/backend/experiments/results-granite4.1-8b"
 NODE_ORDER = ("orchestrator", "data", "policy_risk", "reporting")
 
 

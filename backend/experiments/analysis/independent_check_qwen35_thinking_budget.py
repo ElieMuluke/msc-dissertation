@@ -33,7 +33,7 @@ TARGET = EXPERIMENTS / "results-qwen3.5-9b-thinking-budget"
 SEALED_THINKING_OFF = EXPERIMENTS / "results"          # qwen3.5:9b, think=false
 SIBLING_LFM = EXPERIMENTS / "results-lfm2.5-8b-thinking"  # 2048-budget sibling
 ALERTS_JSON = Path(
-    "/home/el/projects/dfah-repo/econometrics/benchmarks/"
+    "/home/eliem/Projects/dfah-repo/econometrics/benchmarks/"
     "compliance_triage/data/alerts.json"
 )
 PERTURBATION_JSON = EXPERIMENTS / "perturbation_cases.json"

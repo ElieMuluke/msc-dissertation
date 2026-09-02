@@ -21,9 +21,9 @@ from pathlib import Path
 
 import numpy as np
 
-RES = Path("/home/el/projects/msc-dissertation/backend/experiments/results-qwen2.5-7b")
-ALERTS = Path("/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
-PERT = Path("/home/el/projects/msc-dissertation/backend/experiments/perturbation_cases.json")
+RES = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments/results-qwen2.5-7b")
+ALERTS = Path("/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json")
+PERT = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments/perturbation_cases.json")
 
 VALID = {"escalate", "dismiss", "investigate", "malformed"}
 HNORM = math.log2(4.0)  # entropy normalized over the 4-way decision domain

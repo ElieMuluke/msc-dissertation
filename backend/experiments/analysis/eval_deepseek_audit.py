@@ -22,7 +22,7 @@ from pathlib import Path
 
 RES = Path("experiments/results-deepseek-r1-14b-thinking")
 LABELS_PATH = Path(
-    "/home/el/projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
+    "/home/eliem/Projects/dfah-repo/econometrics/benchmarks/compliance_triage/data/alerts.json"
 )
 PERT_PATH = Path("experiments/perturbation_cases.json")
 OUTCOMES = ("escalate", "dismiss", "investigate", "malformed")

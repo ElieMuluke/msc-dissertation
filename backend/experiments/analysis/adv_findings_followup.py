@@ -16,7 +16,7 @@ from experiments.analysis import metrics
 from experiments.harness.dfah_data import (
     ground_truth, load_primary_cases, load_perturbation_cases)
 
-BASE = Path("/home/el/projects/msc-dissertation/backend/experiments")
+BASE = Path("/home/eliem/Projects/ai/msc-dissertation/backend/experiments")
 PRIMARY = ground_truth(load_primary_cases())
 PERT_CASES = load_perturbation_cases()
 PERT = ground_truth(PERT_CASES)

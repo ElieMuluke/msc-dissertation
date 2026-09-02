@@ -10,6 +10,42 @@ Format:
 **Next:** <the next step to resume from>
 ```
 
+## 2026-09-02 — Figure regeneration from sweep journals (+ dissertation figure/Gantt work)
+**Done:** Added `backend/experiments/analysis/figures.py`, one entry point that rebuilds
+every data-derived dissertation figure (Figures 5–13) from the sweep journals and the DFAH
+labels alone. Prompted by the question "show me the code that generated Figure 13?" — the
+answer was no: only `docs/final-figs/gen_fig5_budget.py` was checked in, and Figures 5–13
+had been produced interactively with no surviving source. `arm_stats()` reuses the
+pre-registered `metrics.py` functions but skips the trajectory/ROUGE passes, so 18 sweeps
+render in seconds instead of tens of minutes. Sweep→bar mapping lives in module constants;
+missing sweeps render as NaN gaps rather than zero bars. Verified every output against
+Tables 8, 9 and 10 (alpha, flip rate, tokens, all twelve budget deltas reproduce exactly)
+and against the abstract's 1.8–3.1 token ratio. Added `docs/figures.md`,
+`experiments/tests/test_figures.py`, FEATURES.md F35.
+Also this session (deliverables in `~/Downloads/figs/`, outside the repo): grayscale mermaid
+sources for the RAG pipeline and MAS architecture diagrams; the project Gantt reworked
+(critical path + dependency arrows, computing-resources swimlane dropped, debugging moved
+earlier and widened, ethics row added, submission milestone at 2 September) and made
+reproducible via `make_gantt.py`.
+Created `backend/.venv` (Python 3.14.7, 213 packages from `requirements.txt`;
+`uv.lock` is an empty stub with zero `[[package]]` entries and `pyproject.toml` has no
+`[project]` table, so there was no lock to sync). Fixed the stale absolute paths left over
+from the original run machine: `config.DFAH_REPO` `/home/el/projects/dfah-repo` ->
+`/home/eliem/Projects/dfah-repo`, the same substitution across 17 one-off analysis scripts,
+and `/home/el/projects/msc-dissertation` -> `/home/eliem/Projects/ai/msc-dissertation`.
+`seal_checks.py` now imports `ALERTS_JSON` from config instead of keeping its own copy of
+the literal. Verified the path is not hashed: `manifest.py:167` hashes only `config_record`
+(model, think, num_ctx, num_predict, max_iterations, run_timeout_s, master_seed,
+conditions, and b32 iteration budgets), so no `config_hash` changes and no sweep is
+invalidated.
+**State:** Figures in `docs/final-figs/`. Full suite green: 306 passed, 1 skipped
+(was 299/7 failed before the path fix; all 7 failures were the one stale path).
+**Next:** Remaining unapplied dissertation edits are tracked in
+`~/Downloads/figs/suggested_changes.docx` and `suggested_section_4_2_2.docx`. Consider
+giving `pyproject.toml` a real `[project]` table so `uv sync` can reproduce the
+environment; the version pins that guard the wire-payload tests currently live only in a
+comment in `requirements.txt`.
+
 ## 2026-07-13 (even later) — Metrics grouped by layer (retrieval/generation × population)
 **Done:** User asked (1) to stop auto-committing — captured as a LEARNINGS entry (a prior
 "commit each rec" instruction was scoped to that task, not a standing policy; must not be
